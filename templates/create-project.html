@@ -23,6 +23,10 @@
     .back-btn {
       margin-top: 1.5rem;
     }
+    #loadingIndicator {
+      display: none;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -31,11 +35,17 @@
 
     <div class="card shadow tracker-card p-4">
       <div class="card-body">
-        <form method="POST">
+        <form method="POST" onsubmit="showLoadingMessage()">
           <div class="mb-4">
-            <label for="goal" class="form-label">Academic Goal</label>
-            <input type="text" class="form-control form-control-lg" id="goal" name="goal"
-                   placeholder="e.g., Submit paper to Nature" required />
+            <label for="title" class="form-label">Project Title</label>
+            <input type="text" class="form-control form-control-lg" id="title" name="title"
+                   placeholder="e.g., Thesis Chapter 1" required />
+          </div>
+          <div class="mb-4">
+            <label for="goal" class="form-label">Goal Description</label>
+            <textarea class="form-control form-control-lg" id="goal" name="goal"
+                      placeholder="e.g., Write and revise the first chapter of my PhD thesis on melanoma genomics"
+                      rows="3" required></textarea>
           </div>
           <div class="mb-4">
             <label for="deadline" class="form-label">Deadline</label>
@@ -44,11 +54,24 @@
           <button type="submit" class="btn btn-primary w-100">✨ Generate Milestones</button>
         </form>
 
+        <div id="loadingIndicator" class="text-center text-muted">
+          <div class="spinner-border text-primary mt-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2">Creating milestones...</p>
+        </div>
+
         <div class="text-center back-btn">
           <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
         </div>
       </div>
     </div>
   </div>
+
+  <script>
+    function showLoadingMessage() {
+      document.getElementById('loadingIndicator').style.display = 'block';
+    }
+  </script>
 </body>
 </html>
