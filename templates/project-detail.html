@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Milestone Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #f8f9fa;
+    }
+    .tracker-card {
+      margin: auto;
+      border-radius: 1rem;
+    }
+    .milestone-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #0d6efd;
+      margin-bottom: 1.25rem;
+    }
+    .back-btn {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-5">
+    <h1 class="milestone-title text-center">{{ goal }}</h1>
+
+    {% if milestones %}
+      <div class="card shadow tracker-card p-4">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover bg-white">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">Milestone</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Status</th>
+                <th scope="col">Update</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for id, _, milestone, due_date, status in milestones %}
+                <tr>
+                  <td>{{ milestone }}</td>
+                  <td>{{ due_date }}</td>
+                  <td>
+                    <span class="badge
+                      {% if status == 'Done' %}bg-success
+                      {% elif status == 'In Progress' %}bg-warning text-dark
+                      {% else %}bg-secondary
+                      {% endif %}">
+                      {{ status }}
+                    </span>
+                  </td>
+                  <td>
+                    <form method="POST" action="{{ url_for('update_status', project_id=project_id, milestone_id=id) }}">
+                      <input type="hidden" name="project_id" value="{{ project_id }}" />
+                      <select name="status" class="form-select form-select-sm d-inline w-auto">
+                        <option value="Not Started" {% if status == 'Not Started' %}selected{% endif %}>Not Started</option>
+                        <option value="In Progress" {% if status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="Done" {% if status == 'Done' %}selected{% endif %}>Done</option>
+                      </select>
+                      <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-info text-center mt-4">
+        No milestones found for this goal.
+      </div>
+    {% endif %}
+
+    <div class="text-center back-btn">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>
