@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, redirect, render_template, url_for
 from src.db.models import Project, SubProject, Milestone
 from src import db_session
+from src.openai_client import generate_milestones
 
 bp = Blueprint('project', __name__)
 
@@ -54,27 +55,3 @@ def view_project(project_id: int):
     except Exception as e:
         print("Error loading project:", e)
         return render_template("dashboard.html", projects=[], error="Error loading project.")
-
-
-@bp.route("/dashboard/projects/<int:project_id>", methods=["POST"])
-def add_subproject(project_id: int):
-    try:
-        project = db_session.query(Project).filter_by(id=project_id).first()
-        if not project:
-            return render_template("dashboard.html", projects=[], error="Project not found.")
-
-        title = request.form["title"]
-        description = request.form["description"]
-
-        new_subproject = SubProject(title=title, description=description, project_id=project_id,
-                                    created_at=int(datetime.now(timezone.utc).timestamp() * 1000))
-        db_session.add(new_subproject)
-        db_session.commit()
-        print("Added subproject:", title)
-
-        return redirect(url_for("project.view_project", project_id=project_id))
-    except Exception as e:
-        db_session.rollback()
-        print("Database error:", e)
-        return render_template("project-detail.html", project_id=project_id,
-                               error="Failed to add subproject. Please try again.")

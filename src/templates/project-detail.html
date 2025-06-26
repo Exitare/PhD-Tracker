@@ -40,7 +40,7 @@
                     {% if milestones %}
                     <ul class="mb-0">{{ milestones | length }}</ul>
                     {% else %}
-                    <em>0</em>
+                    <ul class="mb-0">0</ul>
                     {% endif %}
                 </td>
                 <td class="text-nowrap">
@@ -100,46 +100,69 @@
 </div>
 
 <div class="collapse mt-3" id="addSubprojectForm">
-    <form method="POST" action="{{ url_for('project.add_subproject', project_id=project.id) }}"
+    <form id="subprojectForm" method="POST" action="{{ url_for('subproject.create', project_id=project.id) }}"
           class="card card-body shadow-sm mt-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="mb-3">
-            <label for="subproject-title" class="form-label">Subproject Title</label>
+            <label for="subproject-title" class="form-label">Subproject Title <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="subproject-title" name="title" required>
         </div>
 
         <div class="mb-3">
-            <label for="subproject-description" class="form-label">Description</label>
+            <label for="subproject-description" class="form-label">Description <span
+                    class="text-danger">*</span></label>
             <textarea class="form-control" id="subproject-description" name="description" rows="3" required></textarea>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Milestone Generation</label>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="ai_option" id="ai_no" value="no" checked
-                       onchange="toggleDeadline(false)">
+                <input class="form-check-input" type="radio" name="ai_option" id="ai_no" value="no" checked>
                 <label class="form-check-label" for="ai_no">Create blank subproject</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="ai_option" id="ai_yes" value="yes"
-                       onchange="toggleDeadline(true)">
+                <input class="form-check-input" type="radio" name="ai_option" id="ai_yes" value="yes">
                 <label class="form-check-label" for="ai_yes">Use AI to generate milestones</label>
             </div>
         </div>
 
-        <div class="mb-3" id="deadline-group" style="display: none;">
-            <label for="deadline" class="form-label">Deadline (optional)</label>
+        <div class="mb-3">
+            <label for="deadline" class="form-label">Deadline <span class="text-danger">*</span></label>
             <input type="date" class="form-control" id="deadline" name="deadline">
         </div>
 
-        <button type="submit" class="btn btn-success">Save Subproject</button>
+        <button type="submit" class="btn btn-success" id="saveSubprojectBtn">Save Subproject</button>
     </form>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    document.getElementById("subprojectForm").addEventListener("submit", function (e) {
+        const title = document.getElementById("subproject-title").value.trim();
+        const description = document.getElementById("subproject-description").value.trim();
+        const deadline = document.getElementById("deadline").value.trim();
+        const aiSelected = document.querySelector('input[name="ai_option"]:checked');
+        const submitBtn = document.getElementById("saveSubprojectBtn");
+
+        if (!title || !description || !deadline || !aiSelected) {
+            e.preventDefault();
+            alert("Please fill out all required fields: title, description, AI selection, and deadline.");
+            return;
+        }
+
+        // ✅ Disable the button to prevent double submission
+        submitBtn.disabled = true;
+        // if ai option is checked, show loading message
+        if (aiSelected.value === "yes") {
+            submitBtn.textContent = "Creating milestones & saving...";
+        } else {
+            submitBtn.textContent = "Saving...";
+        }
+
+    });
+
     function toggleDeadline(show) {
         document.getElementById("deadline-group").style.display = show ? "block" : "none";
     }

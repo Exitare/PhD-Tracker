@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from openai import OpenAI
 import json, re, os
-from .models import Milestone
+from .models import AIMilestone
 from typing import List
 from dotenv import load_dotenv
 
@@ -10,7 +10,7 @@ load_dotenv()
 client = OpenAI(api_key=os.environ.get("OPENAI_KEY"))
 
 
-def generate_milestones(goal: str, deadline: str) -> List[Milestone]:
+def generate_milestones(goal: str, deadline: str) -> List[AIMilestone]:
     prompt = f"""
     I want to achieve the following academic goal: "{goal}" by {deadline}.
     Break this into ONlY 5-7 concrete milestones with recommended due dates. 
@@ -41,7 +41,7 @@ def generate_milestones(goal: str, deadline: str) -> List[Milestone]:
             content = re.sub(r"```(?:json)?", "", content).strip("` \n")
 
         raw_data = json.loads(content)
-        return [Milestone(**m) for m in raw_data]
+        return [AIMilestone(**m) for m in raw_data]
     except Exception as e:
         print("Error parsing milestones:", e)
         print("Raw content:\n", content)

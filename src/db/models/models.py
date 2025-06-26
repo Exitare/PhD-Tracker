@@ -38,7 +38,6 @@ class Milestone(Base):
 
     id = Column(Integer, primary_key=True)
     sub_project_id = Column(Integer, ForeignKey('sub_projects.id'), nullable=False)
-    goal_description = Column(Text)
     milestone = Column(Text)
     due_date = Column(String(10))  # Or Date if using date objects
     notes = Column(Text, default="")

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-class Milestone(BaseModel):
+class AIMilestone(BaseModel):
     milestone: str
     due_date: str
 
