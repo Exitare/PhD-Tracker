@@ -4,3 +4,4 @@ dotenv
 flask-wtf
 sqlalchemy
 wtforms
+flask-login

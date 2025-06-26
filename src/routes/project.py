@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, redirect, render_template, url_for
 from src.db.models import Project, SubProject, Milestone
 from src import db_session
-from src.openai_client import generate_milestones
+from flask_login import current_user
 
 bp = Blueprint('project', __name__)
 
@@ -14,7 +14,10 @@ def create_project():
         description = request.form["description"]
 
         try:
-            new_project = Project(title=title, description=description)
+            new_project: Project = Project(title=title,
+                                           description=description,
+                                           created_at=int(datetime.now(timezone.utc).timestamp() * 1000),
+                                           user_id=current_user.id)
             db_session.add(new_project)
             db_session.commit()
             print("Created new project:", title)
