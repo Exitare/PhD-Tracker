@@ -1,20 +1,42 @@
 from flask import Blueprint, render_template, redirect, url_for, request, abort
 from datetime import datetime, timezone
-from src.db.models import SubProject
+from src.db.models import SubProject, Milestone
 from src import db_session
 
 bp = Blueprint('subproject', __name__)
 
-@bp.route("/subprojects/<int:subproject_id>")
-def view(subproject_id):
-    sub = db_session.query(SubProject).filter_by(id=subproject_id).first()
+
+@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>")
+def view(project_id: int, subproject_id: int):
+    sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
         abort(404, description="Subproject not found")
-    return render_template("sub-project-detail.html", subproject=sub)
+
+    milestones = (
+        db_session.query(
+            Milestone.id,
+            SubProject.title,
+            Milestone.sub_project_id,
+            Milestone.milestone,
+            Milestone.due_date,
+            Milestone.status,
+            Milestone.notes
+        )
+        .filter(Milestone.sub_project_id == subproject_id)
+        .join(SubProject, Milestone.sub_project_id == SubProject.id)
+        .all()
+    )
+
+    return render_template(
+        "sub-project-detail.html",
+        project_title=sub.title,
+        project_id=project_id,
+        milestones=milestones
+    )
 
 
-@bp.route("/subprojects/<int:subproject_id>/edit", methods=["GET", "POST"])
-def edit(subproject_id):
+@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/edit", methods=["GET", "POST"])
+def edit(project_id: int, subproject_id: int):
     sub = db_session.query(SubProject).filter_by(id=subproject_id).first()
     if not sub:
         abort(404, description="Subproject not found")
@@ -28,8 +50,8 @@ def edit(subproject_id):
     return render_template("edit-subproject.html", subproject=sub)
 
 
-@bp.route("/subprojects/<int:subproject_id>/delete", methods=["POST"])
-def delete(subproject_id):
+@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/delete", methods=["POST"])
+def delete(project_id: int, subproject_id: int):
     sub = db_session.query(SubProject).filter_by(id=subproject_id).first()
     if not sub:
         abort(404, description="Subproject not found")
