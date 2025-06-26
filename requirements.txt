@@ -2,3 +2,5 @@ flask
 openai
 dotenv
 flask-wtf
+sqlalchemy
+wtforms

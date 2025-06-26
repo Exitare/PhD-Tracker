@@ -2,3 +2,4 @@
 .DS_Store
 .env
 milestones.db
+__pycache__
