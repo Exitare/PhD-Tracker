@@ -1,77 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI Academic Goal Tracker</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body {
-      background: #f8f9fa;
-    }
-    .tracker-card {
-      margin: auto;
-      border-radius: 1rem;
-    }
-    .form-label {
-      font-weight: 500;
-    }
-    .btn-primary {
-      font-weight: 500;
-      font-size: 1.1rem;
-    }
-    .back-btn {
-      margin-top: 1.5rem;
-    }
-    #loadingIndicator {
-      display: none;
-      margin-top: 1rem;
-    }
-  </style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>AI Academic Goal Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .tracker-card {
+            margin: auto;
+            border-radius: 1rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .back-btn {
+            margin-top: 1.5rem;
+        }
+
+        #loadingIndicator {
+            display: none;
+            margin-top: 1rem;
+        }
+    </style>
 </head>
 <body>
-  <div class="container py-5">
+<div class="container py-5">
     <h1 class="mb-4 text-center display-5 text-primary">🎯 AI Goal Planner</h1>
 
     <div class="card shadow tracker-card p-4">
-      <div class="card-body">
-        <form method="POST" onsubmit="showLoadingMessage()">
-          <div class="mb-4">
-            <label for="title" class="form-label">Project Title</label>
-            <input type="text" class="form-control form-control-lg" id="title" name="title"
-                   placeholder="e.g., Thesis Chapter 1" required />
-          </div>
-          <div class="mb-4">
-            <label for="goal" class="form-label">Goal Description</label>
-            <textarea class="form-control form-control-lg" id="goal" name="goal"
-                      placeholder="e.g., Write and revise the first chapter of my PhD thesis on melanoma genomics"
-                      rows="3" required></textarea>
-          </div>
-          <div class="mb-4">
-            <label for="deadline" class="form-label">Deadline</label>
-            <input type="date" class="form-control form-control-lg" id="deadline" name="deadline" required />
-          </div>
-          <button type="submit" class="btn btn-primary w-100">✨ Generate Milestones</button>
-        </form>
+        <div class="card-body">
+            <form method="POST" onsubmit="showLoadingMessage()">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-4">
+                    <label for="title" class="form-label">Project Title</label>
+                    <input type="text" class="form-control form-control-lg" id="title" name="title"
+                           placeholder="e.g., Thesis Chapter 1" required/>
+                </div>
+                <div class="mb-4">
+                    <label for="goal" class="form-label">Goal Description</label>
+                    <textarea class="form-control form-control-lg" id="goal" name="goal"
+                              placeholder="e.g., Write and revise the first chapter of my PhD thesis on melanoma genomics"
+                              rows="3" required></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="deadline" class="form-label">Deadline</label>
+                    <input type="date" class="form-control form-control-lg" id="deadline" name="deadline" required/>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">✨ Generate Milestones</button>
+            </form>
 
-        <div id="loadingIndicator" class="text-center text-muted">
-          <div class="spinner-border text-primary mt-3" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <p class="mt-2">Creating milestones...</p>
-        </div>
+            <div id="loadingIndicator" class="text-center text-muted">
+                <div class="spinner-border text-primary mt-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Creating milestones...</p>
+            </div>
 
-        <div class="text-center back-btn">
-          <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+            <div class="text-center back-btn">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <script>
+<script>
     function showLoadingMessage() {
-      document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('loadingIndicator').style.display = 'block';
     }
-  </script>
+</script>
 </body>
 </html>

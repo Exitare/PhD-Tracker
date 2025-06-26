@@ -9,6 +9,8 @@ import sqlite3
 import re
 from typing import List
 from dotenv import load_dotenv
+from flask_wtf.csrf import validate_csrf
+from wtforms.validators import ValidationError
 
 load_dotenv()
 
@@ -39,6 +41,10 @@ def init_db():
                          TEXT,
                          due_date
                          TEXT,
+                         notes
+                         TEXT
+                         DEFAULT
+                         '',
                          status
                          TEXT
                          DEFAULT
@@ -127,11 +133,14 @@ def view_project(project_id: int):
 
         if 0 <= project_id < len(all_goals):
             selected_goal = all_goals[project_id]
-            c.execute("SELECT id, project_title, goal_description, milestone, due_date, status FROM milestones WHERE goal_description = ?",
-                      (selected_goal,))
+            c.execute(
+                "SELECT id, project_title, goal_description, milestone, due_date, status, notes FROM milestones WHERE goal_description = ?",
+                (selected_goal,))
             milestones = c.fetchall()
+            print(milestones)
             return render_template("project-detail.html", goal=selected_goal, milestones=milestones,
-                                   project_id=project_id, project_title=milestones[0][1] if milestones else "No Milestones")
+                                   project_id=project_id,
+                                   project_title=milestones[0][1] if milestones else "No Milestones")
         else:
             return render_template("dashboard.html", goals=all_goals, error="Project not found.")
 
@@ -231,6 +240,37 @@ def update_milestone(project_id: int, milestone_id: int):
         conn.commit()
 
     return redirect(url_for("view_project", project_id=project_id))
+
+
+@app.route("/dashboard/projects/<int:project_id>/milestones/<int:milestone_id>/note", methods=["GET"])
+def get_note(project_id, milestone_id):
+    with sqlite3.connect(DB_NAME) as conn:
+        c = conn.cursor()
+        c.execute("SELECT notes FROM milestones WHERE id = ?", (milestone_id,))
+        row = c.fetchone()
+        return jsonify(note=row[0] if row else "")
+
+
+@app.route("/dashboard/projects/<int:project_id>/milestones/<int:milestone_id>/note", methods=["POST"])
+def save_note(project_id, milestone_id):
+    csrf_token = request.headers.get("X-CSRFToken")
+    try:
+        validate_csrf(csrf_token)
+    except ValidationError as e:
+        return jsonify(success=False, message="Invalid CSRF token."), 400
+
+    data = request.get_json()
+    note = data.get("note", "")
+    with sqlite3.connect(DB_NAME) as conn:
+        try:
+            c = conn.cursor()
+            c.execute("UPDATE milestones SET notes = ? WHERE id = ?", (note, milestone_id))
+            conn.commit()
+            print(f"Note  {note} saved for milestone {milestone_id}.")
+        except sqlite3.Error as e:
+            print("Database error:", e)
+            return jsonify(success=False, message="Failed to save note. Please try again."), 500
+    return jsonify(success=True)
 
 
 if __name__ == '__main__':
