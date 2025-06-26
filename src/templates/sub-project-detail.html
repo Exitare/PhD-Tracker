@@ -5,7 +5,8 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-column flex-md-row">
     <h1 class="milestone-title mb-3 mb-md-0 text-center">{{ subproject.title }}</h1>
-    <a href="{{ url_for('project.view_project', project_id=subproject.project_id) }}" class="btn btn-outline-secondary">← Back to Project</a>
+    <a href="{{ url_for('project.view_project', project_id=subproject.project_id) }}" class="btn btn-outline-secondary">←
+        Back to Project</a>
 </div>
 
 <div class="card shadow tracker-card p-4 mb-4">
@@ -30,7 +31,6 @@
             </thead>
             <tbody>
             {% for m in milestones %}
-            {{m}}
             <tr id="row-{{ m.id }}">
                 <td id="milestone-text-{{ m.id }}">{{ m.milestone }}</td>
                 <td id="due-date-text-{{ m.id }}">{{ m.due_date }}</td>
@@ -43,17 +43,19 @@
                     </span>
                 </td>
                 <td>
-                    <form method="POST" action="{{ url_for('subproject.update_status', subproject_id=subproject.id, milestone_id=m.id) }}">
+                    <form method="POST"
+                          action="{{ url_for('milestone.update_status',project_id=subproject.project_id, subproject_id=subproject.id, milestone_id=m.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                             {% for s in ['Not Started', 'In Progress', 'Done'] %}
-                            <option value="{{ s }}" {% if m.status == s %}selected{% endif %}>{{ s }}</option>
+                            <option value="{{ s }}" {% if m.status== s %}selected{% endif %}>{{ s }}</option>
                             {% endfor %}
                         </select>
                     </form>
                 </td>
                 <td>
-                    <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#commentModal" onclick="addComment({{ m.id }}, this)" data-note="{{ m.notes|default('')|e }}">
+                    <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#commentModal"
+                            onclick="addComment({{ m.id }}, this)" data-note="{{ m.notes|default('')|e }}">
                         <i class="fas fa-comment"></i>
                     </button>
                     <button class="btn btn-sm btn-outline-warning" onclick="enableEdit({{ m.id }})">
@@ -66,12 +68,18 @@
             </tr>
             <tr id="edit-row-{{ m.id }}" style="display: none;">
                 <td colspan="5">
-                    <form method="POST" action="{{ url_for('subproject.update_milestone', subproject_id=subproject.id, milestone_id=m.id) }}" class="d-flex flex-column flex-md-row gap-2 align-items-center">
+                    <form method="POST"
+                          action="{{ url_for('milestone.update', project_id=subproject.project_id, subproject_id=subproject.id, milestone_id=m.id) }}"
+                          class="d-flex flex-column flex-md-row gap-2 align-items-center">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="text" name="milestone" value="{{ m.milestone }}" class="form-control form-control-sm"/>
-                        <input type="date" name="due_date" value="{{ m.due_date }}" class="form-control form-control-sm"/>
+                        <input type="text" name="milestone" value="{{ m.milestone }}"
+                               class="form-control form-control-sm"/>
+                        <input type="date" name="due_date" value="{{ m.due_date }}"
+                               class="form-control form-control-sm"/>
                         <button type="submit" class="btn btn-sm btn-primary">Save</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelEdit({{ m.id }})">Cancel</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelEdit({{ m.id }})">
+                            Cancel
+                        </button>
                     </form>
                 </td>
             </tr>
@@ -97,7 +105,8 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <textarea id="commentText" name="note" class="form-control" rows="5" placeholder="Enter your note here..."></textarea>
+                    <textarea id="commentText" name="note" class="form-control" rows="5"
+                              placeholder="Enter your note here..."></textarea>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -107,6 +116,43 @@
         </form>
     </div>
 </div>
+
+<!-- Add New Milestone -->
+<div class="text-center mt-4">
+    <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#addMilestoneForm">
+        ➕ Add Milestone
+    </button>
+</div>
+
+<div class="collapse mt-3" id="addMilestoneForm">
+    <form method="POST"
+          action="{{ url_for('milestone.create', project_id=subproject.project_id, subproject_id=subproject.id) }}"
+          class="card card-body shadow-sm mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+            <label for="milestone-text" class="form-label">Milestone</label>
+            <input type="text" class="form-control" id="milestone-text" name="milestone" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="due-date" class="form-label">Due Date</label>
+            <input type="date" class="form-control" id="due-date" name="due_date">
+        </div>
+
+        <div class="mb-3">
+            <label for="status" class="form-label">Initial Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="Not Started" selected>Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-success">Save Milestone</button>
+    </form>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -127,7 +173,7 @@
 
         window.deleteMilestone = id => {
             if (confirm("Are you sure you want to delete this milestone?")) {
-                fetch(`/dashboard/subprojects/{{ subproject.id }}/milestones/${id}`, {
+                fetch(`/dashboard/projects/{{subproject.project_id}}/subprojects/{{ subproject.id }}/milestones/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -153,7 +199,7 @@
             e.preventDefault();
             const noteText = document.getElementById('commentText').value;
 
-            fetch(`/dashboard/subprojects/{{ subproject.id }}/milestones/${currentMilestoneId}/note`, {
+            fetch(`/dashboard/projects/{{subproject.project_id}}/subprojects/{{ subproject.id }}/milestones/${currentMilestoneId}/note`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

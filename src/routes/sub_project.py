@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, abort
 from datetime import datetime, timezone
-from src.db.models import SubProject, Milestone
+from src.db.models import SubProject, Milestone, Project
 from src import db_session
 
 bp = Blueprint('subproject', __name__)
@@ -13,41 +13,39 @@ def view(project_id: int, subproject_id: int):
         abort(404, description="Subproject not found")
 
     milestones = (
-        db_session.query(
-            Milestone.id,
-            SubProject.title,
-            Milestone.sub_project_id,
-            Milestone.milestone,
-            Milestone.due_date,
-            Milestone.status,
-            Milestone.notes
-        )
-        .filter(Milestone.sub_project_id == subproject_id)
-        .join(SubProject, Milestone.sub_project_id == SubProject.id)
+        db_session.query(Milestone)
+        .filter_by(sub_project_id=subproject_id)
         .all()
     )
 
+    project = db_session.query(Project).filter_by(id=project_id).first()
+    if not project:
+        abort(404, description="Project not found")
+
     return render_template(
         "sub-project-detail.html",
-        project_title=sub.title,
-        project_id=project_id,
+        project=project,
+        subproject=sub,
         milestones=milestones
     )
 
 
-@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/edit", methods=["GET", "POST"])
+@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["POST"])
 def edit(project_id: int, subproject_id: int):
-    sub = db_session.query(SubProject).filter_by(id=subproject_id).first()
+    sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
-        abort(404, description="Subproject not found")
+        abort(404)
 
-    if request.method == "POST":
-        sub.title = request.form["title"]
-        sub.description = request.form["description"]
+    sub.title = request.form.get("title", sub.title)
+    sub.description = request.form.get("description", sub.description)
+
+    try:
         db_session.commit()
-        return redirect(url_for("subproject.view", subproject_id=sub.id))
+    except Exception as e:
+        db_session.rollback()
+        print("Error editing subproject:", e)
 
-    return render_template("edit-subproject.html", subproject=sub)
+    return redirect(url_for("project.view_project", project_id=project_id))
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/delete", methods=["POST"])

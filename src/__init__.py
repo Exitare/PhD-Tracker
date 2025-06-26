@@ -2,7 +2,7 @@ from flask import Flask
 from flask_wtf import CSRFProtect
 from dotenv import load_dotenv
 from src.db import init_db, db_session
-from src.routes import dashboard, project, notes, sub_project
+from src.routes import dashboard, project, notes, sub_project, milestone
 import os
 from datetime import datetime, timezone
 
@@ -24,6 +24,7 @@ def create_app():
     app.register_blueprint(project.bp)
     app.register_blueprint(notes.bp)
     app.register_blueprint(sub_project.bp)
+    app.register_blueprint(milestone.bp)
 
     # Cleanup SQLAlchemy session after each request
     @app.teardown_appcontext

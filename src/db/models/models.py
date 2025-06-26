@@ -43,3 +43,5 @@ class Milestone(Base):
     due_date = Column(String(10))  # Or Date if using date objects
     notes = Column(Text, default="")
     status = Column(String(50), default="Not Started")
+
+    sub_project = relationship("SubProject", backref="milestones")

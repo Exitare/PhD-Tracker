@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from flask import Blueprint, request, redirect, render_template, url_for
-from src.db.models import Project, SubProject
+from src.db.models import Project, SubProject, Milestone
 from src import db_session
 
 bp = Blueprint('project', __name__)
@@ -34,8 +34,17 @@ def view_project(project_id: int):
         if not project:
             return render_template("dashboard.html", projects=[], error="Project not found.")
 
-        # Load subprojects related to the project
-        subprojects = db_session.query(SubProject).filter_by(project_id=project_id).all()
+        # Load subprojects + milestones related to the project
+        # Get all subprojects with their milestones
+        subprojects = []
+        raw_subs = db_session.query(SubProject).filter_by(project_id=project_id).all()
+        for sub in raw_subs:
+            milestones = db_session.query(Milestone).filter_by(sub_project_id=sub.id).all()
+            subprojects.append({
+                "subproject": sub,
+                "milestones": milestones
+            })
+        # subprojects = db_session.query(SubProject).filter_by(project_id=project_id).all()
 
         return render_template(
             "project-detail.html",
