@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Create Project{% endblock %}
+
+{% block content %}
+<h1 class="mb-4 text-center display-5 text-primary">📁 New Project</h1>
+
+<div class="card shadow tracker-card p-4">
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="mb-4">
+        <label for="title" class="form-label">Project Title</label>
+        <input type="text" class="form-control form-control-lg" id="title" name="title"
+               placeholder="e.g., Thesis" required/>
+      </div>
+      <div class="mb-4">
+        <label for="description" class="form-label">Project Description</label>
+        <textarea class="form-control form-control-lg" id="description" name="description"
+                  placeholder="e.g., This project includes all thesis-related writing and revision work."
+                  rows="3" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">📌 Save Project</button>
+    </form>
+
+    <div class="text-center back-btn">
+      <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
