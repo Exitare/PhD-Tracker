@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from sqlalchemy.sql.functions import user
 from src.db.models import User
 from src.db import init_db, db_session
-from src.routes import dashboard, project, notes, sub_project, milestone, auth
+from src.routes import dashboard, project, notes, sub_project, milestone, auth, home
 import os
 from datetime import datetime, timezone
 from flask_login import LoginManager
@@ -16,7 +16,7 @@ def create_app():
     load_dotenv()
 
     app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
-    app.secret_key = os.environ.get("FLASK_SECRET_KEY", "default_secret")
+    app.secret_key = os.environ.get("APP_SECRET", "default_secret")
     csrf.init_app(app)
 
     login_manager = LoginManager()
@@ -33,6 +33,7 @@ def create_app():
     app.register_blueprint(sub_project.bp)
     app.register_blueprint(milestone.bp)
     app.register_blueprint(auth.bp)
+    app.register_blueprint(home.bp)
 
     # Cleanup SQLAlchemy session after each request
     @app.teardown_appcontext

@@ -12,4 +12,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(f"Running server in {'development' if args.dev else 'production'} mode on port {args.port}")
     init_db()
-    app.run(debug=True, port=args.port)
+    app.run(debug=True, port=args.port, host='0.0.0.0')

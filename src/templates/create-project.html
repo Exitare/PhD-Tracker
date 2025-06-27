@@ -3,9 +3,9 @@
 {% block title %}Create Project{% endblock %}
 
 {% block content %}
-<h1 class="mb-4 text-center display-5 text-primary">📁 New Project</h1>
+<h1 class="mb-4 text-center display-5" style="color: #a18bff;">📁 New Project</h1>
 
-<div class="card shadow tracker-card p-4">
+<div class="tracker-card p-4 shadow-sm">
   <div class="card-body">
     <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

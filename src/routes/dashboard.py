@@ -6,7 +6,7 @@ from src import db_session
 bp = Blueprint('dashboard', __name__)
 
 
-@bp.route("/")
+@bp.route("/dashboard")
 @login_required
 def dashboard():
     try:
