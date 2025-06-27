@@ -1,0 +1,33 @@
+<!-- templates/about.html -->
+{% extends "base.html" %}
+
+{% block title %}About | My Academic Tracker{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="display-5 fw-bold">About This Project</h1>
+    <p class="lead text-muted">Built by someone who's been through the academic grind.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4">
+            <p>
+                This tool was created by a PhD student who experienced firsthand how overwhelming the academic journey can be.
+                With endless deadlines, scattered resources, and no streamlined way to set or track milestones, staying organized was a constant struggle.
+            </p>
+            <p>
+                Tools like OneNote, Notes, and spreadsheets helped for a while—but they quickly became cluttered, disjointed, and difficult to manage across projects.
+                There was no single space where academic progress could be visualized and aligned with long-term goals.
+            </p>
+            <p>
+                That's why this tracker was born. It's a purpose-built solution designed to bring structure to the chaos,
+                helping researchers focus less on managing the mess and more on making meaningful progress.
+            </p>
+            <p class="fw-bold text-end mt-4 mb-0">
+                — From one academic to another
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
