@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, abort
+from flask import Blueprint, render_template, redirect, url_for, request, abort, flash
 from datetime import datetime, timezone
 from src.db.models import SubProject, Milestone, Project
 from src import db_session
@@ -109,14 +109,38 @@ def edit(project_id: int, subproject_id: int):
     if not sub:
         abort(404)
 
-    sub.title = request.form.get("title", sub.title)
-    sub.description = request.form.get("description", sub.description)
+    title = request.form.get("title", "").strip()
+    description = request.form.get("description", "").strip()
+
+    if not title or not description:
+        flash("Title and description are required.", "danger")
+        return redirect(url_for("project.view_project", project_id=project_id))
+
+    # Check if the new title already exists for the same user but different subproject
+    duplicate = (
+        db_session.query(SubProject)
+        .join(Project)
+        .filter(
+            SubProject.title == title,
+            SubProject.id != sub.id,
+            Project.user_id == current_user.id
+        )
+        .first()
+    )
+    if duplicate:
+        flash("A subproject with this title already exists.", "danger")
+        return redirect(url_for("project.view_project", project_id=project_id))
+
+    sub.title = title
+    sub.description = description
 
     try:
         db_session.commit()
+        flash("Subproject updated successfully.", "success")
     except Exception as e:
         db_session.rollback()
         print("Error editing subproject:", e)
+        flash("An error occurred while saving the subproject.", "danger")
 
     return redirect(url_for("project.view_project", project_id=project_id))
 
