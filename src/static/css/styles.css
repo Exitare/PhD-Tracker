@@ -175,3 +175,21 @@ a:hover {
 .form-control::placeholder {
     color: #bbb;
 }
+
+select.form-select,
+.form-select {
+    background-color: #3a3455;
+    color: #fff;
+    border: 1px solid #554c75;
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+select.form-select:focus,
+.form-select:focus {
+    background-color: #40395d;
+    color: #fff;
+    border-color: #a18bff;
+    box-shadow: 0 0 0 0.2rem rgba(161, 139, 255, 0.25);
+}
