@@ -10,20 +10,49 @@
 {% endif %}
 
 {% if projects %}
-<ul class="list-group shadow-sm mb-4 tracker-card px-0">
-    {% for project in projects %}
-    <li class="list-group-item d-flex justify-content-between align-items-center flex-column flex-md-row bg-transparent border-0 text-light">
-        <div class="text-center text-md-start">
-            <h5 class="mb-1">{{ project.title }}</h5>
-            <small class="text-muted">{{ project.description }}</small>
+{% for project in projects %}
+<!-- View Card -->
+<div class="card tracker-card mb-3" id="view-card-{{ project.id }}">
+    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+        <div class="text-center text-md-start mb-3 mb-md-0">
+            <h5 class="card-title mb-1">{{ project.title }}</h5>
+            <p class="text-muted mb-0">{{ project.description }}</p>
         </div>
-        <a href="{{ url_for('project.view_project', project_id=project.id) }}"
-           class="btn btn-sm btn-outline-primary mt-2 mt-md-0">
-            View
-        </a>
-    </li>
-    {% endfor %}
-</ul>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('project.view_project', project_id=project.id) }}"
+               class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-eye"></i> View
+            </a>
+            <button class="btn btn-sm btn-outline-secondary"
+                    onclick="toggleEditMode({{ project.id }})">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Card -->
+<div class="card tracker-card mb-3 d-none" id="edit-card-{{ project.id }}">
+    <form method="POST" action="{{ url_for('project.edit', project_id=project.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+            <div class="text-center text-md-start mb-3 mb-md-0 w-100">
+                <input type="text" name="title" class="form-control mb-2" value="{{ project.title }}" required>
+                <input type="text" name="description" class="form-control" value="{{ project.description }}" required>
+            </div>
+            <div class="d-flex flex-column flex-md-row gap-2 mt-3 mt-md-0 ms-md-3">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary w-100"
+                        onclick="toggleEditMode({{ project.id }})">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endfor %}
 {% else %}
 <div class="alert alert-info text-center">
     No projects yet. <a href="{{ url_for('project.create_project') }}">Create one</a>.
@@ -33,4 +62,17 @@
 <div class="text-center mt-4">
     <a href="{{ url_for('project.create_project') }}" class="btn btn-outline-secondary">➕ Add New Project</a>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleEditMode(id) {
+        const view = document.getElementById(`view-card-${id}`);
+        const edit = document.getElementById(`edit-card-${id}`);
+        if (view && edit) {
+            view.classList.toggle('d-none');
+            edit.classList.toggle('d-none');
+        }
+    }
+</script>
 {% endblock %}

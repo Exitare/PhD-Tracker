@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from flask import Blueprint, request, redirect, render_template, url_for
+from flask import Blueprint, request, redirect, render_template, url_for, abort, flash
 from src.db.models import Project, SubProject, Milestone
 from src import db_session
 from flask_login import current_user, login_required
@@ -30,6 +30,7 @@ def create_project():
 
     return render_template("create-project.html")
 
+
 @bp.route("/dashboard/projects/<int:project_id>")
 @login_required
 def view_project(project_id: int):
@@ -59,3 +60,28 @@ def view_project(project_id: int):
     except Exception as e:
         print("Error loading project:", e)
         return render_template("dashboard.html", projects=[], error="Error loading project.")
+
+
+@bp.route("/dashboard/projects/<int:project_id>", methods=["POST"])
+@login_required
+def edit(project_id):
+    project = db_session.query(Project).filter_by(id=project_id).first()
+    if not project:
+        abort(404)
+
+    if project.user_id != current_user.id:
+        abort(403)
+
+    title = request.form.get("title", "").strip()
+    description = request.form.get("description", "").strip()
+
+    if not title or not description:
+        flash("Title and description are required.", "danger")
+        return redirect(url_for("project.view_project", project_id=project_id))
+
+    project.title = title
+    project.description = description
+    db_session.commit()
+
+    flash("Project updated successfully.", "success")
+    return redirect(url_for("dashboard.dashboard", project_id=project_id))
