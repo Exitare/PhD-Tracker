@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, abort
 from datetime import datetime, timezone
 from src.db.models import SubProject, Milestone, Project
 from src import db_session
-from src.openai_client import generate_milestones
+from src.openai_client import OpenAIService
 from flask_login import login_required, current_user
 import stripe
 import time
@@ -45,7 +45,7 @@ def create(project_id: int):
         # If AI is requested, generate and add milestones
         if ai_option == "yes" and current_user.plan == "student_plus":
             print("Generating milestones using AI...")
-            ai_milestones, usage = generate_milestones(title, deadline)
+            ai_milestones, usage = OpenAIService.generate_milestones(title, deadline)
             for ai_m in ai_milestones:
                 db_milestone = Milestone(
                     sub_project_id=new_subproject.id,
