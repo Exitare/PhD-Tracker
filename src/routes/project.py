@@ -2,19 +2,23 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, redirect, render_template, url_for
 from src.db.models import Project, SubProject, Milestone
 from src import db_session
-from src.openai_client import generate_milestones
+from flask_login import current_user, login_required
 
 bp = Blueprint('project', __name__)
 
 
 @bp.route("/create-project", methods=["GET", "POST"])
+@login_required
 def create_project():
     if request.method == "POST":
         title = request.form["title"]
         description = request.form["description"]
 
         try:
-            new_project = Project(title=title, description=description)
+            new_project: Project = Project(title=title,
+                                           description=description,
+                                           created_at=int(datetime.now(timezone.utc).timestamp() * 1000),
+                                           user_id=current_user.id)
             db_session.add(new_project)
             db_session.commit()
             print("Created new project:", title)
@@ -26,8 +30,8 @@ def create_project():
 
     return render_template("create-project.html")
 
-
 @bp.route("/dashboard/projects/<int:project_id>")
+@login_required
 def view_project(project_id: int):
     try:
         # Load the project

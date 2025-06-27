@@ -3,11 +3,15 @@ from datetime import datetime, timezone
 from src.db.models import SubProject, Milestone, Project
 from src import db_session
 from src.openai_client import generate_milestones
+from flask_login import login_required, current_user
+import stripe
+import time
 
 bp = Blueprint('subproject', __name__)
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects", methods=["POST"])
+@login_required
 def create(project_id: int):
     try:
         project = db_session.query(Project).filter_by(id=project_id).first()
@@ -19,9 +23,15 @@ def create(project_id: int):
         ai_option = request.form.get("ai_option", "")
         deadline = request.form.get("deadline", "").strip()
 
-        if not title or not description or not ai_option or not deadline:
+        print("Creating subproject with title:", title)
+
+        if not title or not description or not deadline:
             return render_template("project-detail.html", project_id=project_id, project=project,
-                                   error="All fields are required, including deadline and AI selection.")
+                                   error="All fields are required")
+
+        if ai_option == "yes" and current_user.plan != "student_plus":
+            return render_template("project-detail.html", project_id=project_id, project=project,
+                                   error="AI-generated milestones are only available for Student+ accounts.")
 
         new_subproject = SubProject(
             title=title,
@@ -33,9 +43,9 @@ def create(project_id: int):
         db_session.flush()  # Needed to get new_subproject.id before commit
 
         # If AI is requested, generate and add milestones
-        if ai_option:
+        if ai_option == "yes" and current_user.plan == "student_plus":
             print("Generating milestones using AI...")
-            ai_milestones = generate_milestones(title, deadline)
+            ai_milestones, usage = generate_milestones(title, deadline)
             for ai_m in ai_milestones:
                 db_milestone = Milestone(
                     sub_project_id=new_subproject.id,
@@ -45,6 +55,18 @@ def create(project_id: int):
                 db_session.add(db_milestone)
             print(f"{len(ai_milestones)} AI milestones created.")
 
+            token_count = usage.get("total_tokens", 0)
+            print(f"AI token usage: {token_count}")
+            # report usage
+            stripe.billing.MeterEvent.create(
+                event_name="tokenrequests",
+                payload={
+                    "value": str(token_count),
+                    "stripe_customer_id": current_user.stripe_customer_id,
+                }
+            )
+
+        print("Subproject created:", title)
         db_session.commit()
         return redirect(url_for("project.view_project", project_id=project_id))
 
@@ -56,6 +78,7 @@ def create(project_id: int):
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>")
+@login_required
 def view(project_id: int, subproject_id: int):
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
@@ -80,6 +103,7 @@ def view(project_id: int, subproject_id: int):
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["POST"])
+@login_required
 def edit(project_id: int, subproject_id: int):
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
@@ -98,6 +122,7 @@ def edit(project_id: int, subproject_id: int):
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/delete", methods=["POST"])
+@login_required
 def delete(project_id: int, subproject_id: int):
     sub = db_session.query(SubProject).filter_by(id=subproject_id).first()
     if not sub:
