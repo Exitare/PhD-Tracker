@@ -6,7 +6,8 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-column flex-md-row">
         <h1 class="milestone-title mb-3 mb-md-0 text-center">{{ subproject.title }}</h1>
-        <a href="{{ url_for('project.view_project', project_id=subproject.project_id) }}" class="btn btn-outline-secondary">← Back to Project</a>
+        <a href="{{ url_for('project.view_project', project_id=subproject.project_id) }}"
+           class="btn btn-outline-secondary">← Back to Project</a>
     </div>
 
     <div class="card tracker-card p-4 mb-4">
@@ -43,7 +44,8 @@
                         </span>
                     </td>
                     <td>
-                        <form method="POST" action="{{ url_for('milestone.update_status', project_id=subproject.project_id, subproject_id=subproject.id, milestone_id=m.id) }}">
+                        <form method="POST"
+                              action="{{ url_for('milestone.update_status', project_id=subproject.project_id, subproject_id=subproject.id, milestone_id=m.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                                 {% for s in ['Not Started', 'In Progress', 'Done'] %}
@@ -53,7 +55,9 @@
                         </form>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#commentModal" onclick="addComment({{ m.id }}, this)" data-note="{{ m.notes|default('')|e }}">
+                        <button class="btn btn-sm btn-outline-secondary"
+                                onclick="addComment({{ m.id }}, this)"
+                                data-note="{{ m.notes|default('')|e }}">
                             <i class="fas fa-comment"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-secondary" onclick="enableEdit({{ m.id }})">
@@ -66,12 +70,18 @@
                 </tr>
                 <tr id="edit-row-{{ m.id }}" style="display: none;">
                     <td colspan="5">
-                        <form method="POST" action="{{ url_for('milestone.update', project_id=subproject.project_id, subproject_id=subproject.id, milestone_id=m.id) }}" class="d-flex flex-column flex-md-row gap-2 align-items-center">
+                        <form method="POST"
+                              action="{{ url_for('milestone.update', project_id=subproject.project_id, subproject_id=subproject.id, milestone_id=m.id) }}"
+                              class="d-flex flex-column flex-md-row gap-2 align-items-center">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="text" name="milestone" value="{{ m.milestone }}" class="form-control form-control-sm" />
-                            <input type="date" name="due_date" value="{{ m.due_date }}" class="form-control form-control-sm" />
+                            <input type="text" name="milestone" value="{{ m.milestone }}"
+                                   class="form-control form-control-sm"/>
+                            <input type="date" name="due_date" value="{{ m.due_date }}"
+                                   class="form-control form-control-sm"/>
                             <button type="submit" class="btn btn-sm btn-primary">Save</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelEdit({{ m.id }})">Cancel</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    onclick="cancelEdit({{ m.id }})">Cancel
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -97,7 +107,8 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <textarea id="commentText" name="note" class="form-control" rows="5" placeholder="Enter your note here..."></textarea>
+                        <textarea id="commentText" name="note" class="form-control" rows="5"
+                                  placeholder="Enter your note here..."></textarea>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -110,11 +121,15 @@
 
     <!-- Add New Milestone -->
     <div class="text-center mt-4">
-        <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#addMilestoneForm">➕ Add Milestone</button>
+        <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse"
+                data-bs-target="#addMilestoneForm">➕ Add Milestone
+        </button>
     </div>
 
     <div class="collapse mt-3" id="addMilestoneForm">
-        <form method="POST" action="{{ url_for('milestone.create', project_id=subproject.project_id, subproject_id=subproject.id) }}" class="card tracker-card p-4">
+        <form method="POST"
+              action="{{ url_for('milestone.create', project_id=subproject.project_id, subproject_id=subproject.id) }}"
+              class="card tracker-card p-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="mb-3">
@@ -180,6 +195,10 @@
         window.addComment = (id, button) => {
             currentMilestoneId = id;
             document.getElementById('commentText').value = button.getAttribute('data-note') || '';
+
+            const modalElement = document.getElementById('commentModal');
+            const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+            modal.show();
         };
 
         document.getElementById('commentForm').addEventListener('submit', function (e) {
@@ -200,10 +219,9 @@
                         commentButton.setAttribute('data-note', noteText);
                     }
                     setTimeout(() => {
-                        bootstrap.Modal.getOrCreateInstance(document.getElementById('commentModal')).hide();
-                        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                        document.body.classList.remove('modal-open');
-                        document.body.style = '';
+                        const modalElement = document.getElementById('commentModal');
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        if (modal) modal.hide();
                     }, 10);
                 } else {
                     alert("Failed to save note.");
@@ -211,5 +229,7 @@
             });
         });
     });
+
+
 </script>
 {% endblock %}

@@ -193,3 +193,35 @@ select.form-select:focus,
     border-color: #a18bff;
     box-shadow: 0 0 0 0.2rem rgba(161, 139, 255, 0.25);
 }
+
+.modal-content {
+    background-color: #2b2640;
+    color: #f0f0f5;
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.modal-header,
+.modal-footer {
+    border: none;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #a18bff;
+}
+
+.modal-body textarea.form-control {
+    background-color: #3a3455;
+    color: #fff;
+    border: 1px solid #554c75;
+}
+
+.modal-body textarea.form-control:focus {
+    background-color: #40395d;
+    border-color: #a18bff;
+    box-shadow: 0 0 0 0.2rem rgba(161, 139, 255, 0.25);
+    color: #fff;
+}
