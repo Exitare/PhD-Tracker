@@ -9,8 +9,8 @@ if ENV == "production":
     DB_URL = os.environ.get("DATABASE_URL")  # e.g., "mysql+pymysql://user:pass@127.0.0.1:3307/dbname"
 else:
     DB_URL = "sqlite:///milestones.db"
-
-engine = create_engine(DB_URL, echo=(ENV != "production"))
+#echo=(ENV != "production")
+engine = create_engine(DB_URL)
 db_session = scoped_session(sessionmaker(bind=engine))
 
 Base = declarative_base()

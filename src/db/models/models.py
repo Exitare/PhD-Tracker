@@ -9,8 +9,13 @@ class User(Base, UserMixin):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
+    stripe_customer_id = Column(String, unique=True)
     email = Column(String(150), unique=True, nullable=False)
     password_hash = Column(String(200), nullable=False)
+    created_at = Column(BigInteger, nullable=False, default=int(datetime.now(timezone.utc).timestamp() * 1000))
+    plan = Column(String(50), default='student')
+    stripe_subscription_id = Column(String, nullable=True)
+    stripe_subscription_item_id = Column(String, nullable=True)
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
 

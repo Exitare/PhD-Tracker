@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Register - Step 2{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">Step 2: Choose Your Plan</h3>
+                <form method="POST" action="{{ url_for('auth.choose_plan') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <input type="hidden" name="password" value="{{ password }}">
+
+                    <div class="row g-4">
+                        <!-- Student Plan -->
+                        <div class="col-md-6">
+                            <input type="radio" class="btn-check" name="plan" id="student" value="student" autocomplete="off" required>
+                            <label class="card btn btn-outline-primary h-100" for="student">
+                                <div class="card-body">
+                                    <h5 class="card-title text-center">🎓 Student</h5>
+                                    <h6 class="text-center text-muted">Free</h6>
+                                    <ul class="mt-3">
+                                        <li>Track unlimited projects</li>
+                                        <li>Manual milestone creation</li>
+                                        <li>Offline access</li>
+                                        <li>Email reminders</li>
+                                    </ul>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Student+ Plan -->
+                        <div class="col-md-6">
+                            <input type="radio" class="btn-check" name="plan" id="student_plus" value="student_plus" autocomplete="off" required>
+                            <label class="card btn btn-outline-success h-100" for="student_plus">
+                                <div class="card-body">
+                                    <h5 class="card-title text-center">🚀 Student+</h5>
+                                    <h6 class="text-center text-muted">Pay-as-you-go</h6>
+                                    <ul class="mt-3">
+                                        <li>Everything in Student</li>
+                                        <li>AI-powered milestone generation</li>
+                                        <li>On-demand features billed per use</li>
+                                        <li>Priority email support</li>
+                                    </ul>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    {% if error %}
+                    <div class="alert alert-danger mt-3">{{ error }}</div>
+                    {% endif %}
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">Complete Registration</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

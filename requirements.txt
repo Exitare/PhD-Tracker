@@ -5,3 +5,4 @@ flask-wtf
 sqlalchemy
 wtforms
 flask-login
+stripe

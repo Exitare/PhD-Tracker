@@ -2,12 +2,13 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, redirect, render_template, url_for
 from src.db.models import Project, SubProject, Milestone
 from src import db_session
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 bp = Blueprint('project', __name__)
 
 
 @bp.route("/create-project", methods=["GET", "POST"])
+@login_required
 def create_project():
     if request.method == "POST":
         title = request.form["title"]
@@ -29,8 +30,8 @@ def create_project():
 
     return render_template("create-project.html")
 
-
 @bp.route("/dashboard/projects/<int:project_id>")
+@login_required
 def view_project(project_id: int):
     try:
         # Load the project

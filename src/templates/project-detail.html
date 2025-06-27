@@ -8,6 +8,14 @@
     <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
 </div>
 
+{% if error %}
+<div class="alert alert-danger text-center mt-3">
+    {{ error }}
+</div>
+{% endif %}
+
+<div class="alert alert-info">DEBUG: current_user.plan = {{ current_user.plan }}</div>
+
 <div class="card shadow tracker-card p-4 mb-4">
     <div class="card-body">
         <h5 class="card-title">Description</h5>
@@ -117,6 +125,7 @@
 
         <div class="mb-3">
             <label class="form-label">Milestone Generation</label>
+            {% if current_user.plan == "student_plus" %}
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="ai_option" id="ai_no" value="no" checked>
                 <label class="form-check-label" for="ai_no">Create blank subproject</label>
@@ -125,6 +134,12 @@
                 <input class="form-check-input" type="radio" name="ai_option" id="ai_yes" value="yes">
                 <label class="form-check-label" for="ai_yes">Use AI to generate milestones</label>
             </div>
+            {% else %}
+            <div class="alert alert-warning mt-2 mb-0">
+                AI milestone generation is available for Student+ plans only.
+            </div>
+            <input type="hidden" name="ai_option" value="no">
+            {% endif %}
         </div>
 
         <div class="mb-3">
@@ -143,29 +158,33 @@
         const title = document.getElementById("subproject-title").value.trim();
         const description = document.getElementById("subproject-description").value.trim();
         const deadline = document.getElementById("deadline").value.trim();
-        const aiSelected = document.querySelector('input[name="ai_option"]:checked');
+        const aiInputs = document.querySelectorAll('input[name="ai_option"]');
+        const aiOption = document.querySelector('input[name="ai_option"]:checked');
         const submitBtn = document.getElementById("saveSubprojectBtn");
 
-        if (!title || !description || !deadline || !aiSelected) {
+        if (!title || !description || !deadline) {
             e.preventDefault();
-            alert("Please fill out all required fields: title, description, AI selection, and deadline.");
+            alert("Please fill out all required fields: title, description, and deadline.");
+            return;
+        }
+
+        // Only validate AI option if the AI radio buttons are actually present and visible
+        if (aiInputs.length > 0 && aiInputs[0].offsetParent !== null && !aiOption) {
+            e.preventDefault();
+            alert("Please select a milestone generation option.");
             return;
         }
 
         // ✅ Disable the button to prevent double submission
         submitBtn.disabled = true;
-        // if ai option is checked, show loading message
-        if (aiSelected.value === "yes") {
+
+        if (aiOption && aiOption.value === "yes") {
             submitBtn.textContent = "Creating milestones & saving...";
         } else {
             submitBtn.textContent = "Saving...";
         }
-
     });
 
-    function toggleDeadline(show) {
-        document.getElementById("deadline-group").style.display = show ? "block" : "none";
-    }
 
     function enableEdit(id) {
         document.getElementById(`row-${id}`).style.display = "none";
