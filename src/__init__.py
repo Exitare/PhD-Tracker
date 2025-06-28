@@ -8,6 +8,7 @@ from src.routes import dashboard, project, notes, sub_project, milestone, auth, 
 import os
 from datetime import datetime, timezone
 from flask_login import LoginManager
+from datetime import datetime
 
 csrf = CSRFProtect()
 
@@ -17,6 +18,7 @@ def create_app():
 
     app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
     app.secret_key = os.environ.get("APP_SECRET", "default_secret")
+    app.jinja_env.globals['now'] = datetime.now(timezone.utc)
     csrf.init_app(app)
 
     login_manager = LoginManager()
