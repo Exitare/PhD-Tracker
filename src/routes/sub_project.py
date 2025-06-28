@@ -33,6 +33,16 @@ def create(project_id: int):
                                    error="AI-generated milestones are only available for Student+ accounts.",
                                    now=datetime.now(timezone.utc))
 
+        deadline_str = request.form.get("deadline", "").strip()
+        try:
+            deadline_date = datetime.strptime(deadline_str, "%Y-%m-%d").date()
+            if deadline_date < datetime.now(timezone.utc).date():
+                return render_template("project-detail.html", project_id=project_id, project=project,
+                                       error="Deadline cannot be earlier than today.")
+        except ValueError:
+            return render_template("project-detail.html", project_id=project_id, project=project,
+                                   error="Invalid date format for deadline.")
+
         # check if the title already exists for the same user but different subproject
         duplicate = (
             db_session.query(SubProject)
