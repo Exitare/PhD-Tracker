@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Start Revision - {{ project.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-column flex-md-row">
+        <h1 class="milestone-title text-center mb-3 mb-md-0">📬 Start Revision: {{ project.title }}</h1>
+        <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary">
+            ← Back to Project
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger text-center">{{ error }}</div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success text-center">{{ success }}</div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('revision.submit', project_id=project.id) }}"
+          enctype="multipart/form-data" class="card tracker-card p-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+            <label for="review_file" class="form-label">Upload Reviewer Comments (PDF or Text) <span class="text-danger">*</span></label>
+            <input type="file" class="form-control" id="review_file" name="review_file" accept=".pdf,.txt" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="raw_text" class="form-label">Or Paste Reviewer Comments</label>
+            <textarea class="form-control" id="raw_text" name="raw_text" rows="6" placeholder="Paste comments here if not uploading a file..."></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="deadline" class="form-label">Revision Deadline <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="deadline" name="deadline"
+                   min="{{ now.strftime('%Y-%m-%d') }}" required>
+        </div>
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-success">Generate Reply & Plan</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

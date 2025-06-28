@@ -4,7 +4,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-column flex-md-row">
     <h1 class="milestone-title mb-3 mb-md-0 text-center">{{ project.title }}</h1>
-    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+    <div class="d-flex flex-column flex-md-row gap-2">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+        <a href="{{ url_for('revision.start', project_id=project.id) }}" class="btn btn-primary">
+            📬 Start Revision
+        </a>
+    </div>
 </div>
 
 {% if error %}

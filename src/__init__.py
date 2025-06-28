@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from sqlalchemy.sql.functions import user
 from src.db.models import User
 from src.db import init_db, db_session
-from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about
+from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision
 import os
 from datetime import datetime, timezone
 from flask_login import LoginManager
@@ -37,6 +37,7 @@ def create_app():
     app.register_blueprint(auth.bp)
     app.register_blueprint(home.bp)
     app.register_blueprint(about.bp)
+    app.register_blueprint(revision.bp)
 
     # Cleanup SQLAlchemy session after each request
     @app.teardown_appcontext
