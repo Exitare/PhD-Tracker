@@ -1,4 +1,5 @@
-from flask import Blueprint, request, redirect, url_for, abort, jsonify
+from flask import Blueprint, request, redirect, url_for, abort, jsonify, flash
+from datetime import datetime
 from src.db.models import Milestone
 from src import db_session
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,17 +10,37 @@ bp = Blueprint('milestone', __name__)
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones", methods=["POST"])
 def create(project_id: int, subproject_id: int):
     form = request.form
+    milestone_text = form.get("milestone", "").strip()
+    due_date_str = form.get("due_date", "").strip()
+    status = form.get("status", "Not Started").strip()
+
+    # Check all fields
+    if not milestone_text or not due_date_str:
+        flash("All fields are required.", "danger")
+        return redirect(url_for("subproject.view", project_id=project_id, subproject_id=subproject_id))
+
+    # Validate date
+    try:
+        due_date = datetime.strptime(due_date_str, "%Y-%m-%d").date()
+        if due_date < datetime.today().date():
+            flash("Due date cannot be in the past.", "danger")
+            return redirect(url_for("subproject.view", project_id=project_id, subproject_id=subproject_id))
+    except ValueError:
+        flash("Invalid date format.", "danger")
+        return redirect(url_for("subproject.view", project_id=project_id, subproject_id=subproject_id))
+
+    # Create and save milestone
     milestone = Milestone(
         sub_project_id=subproject_id,
-        milestone=form["milestone"],
-        due_date=form.get("due_date") or "",
-        status=form.get("status") or "Not Started",
+        milestone=milestone_text,
+        due_date=due_date_str,
+        status=status,
         notes=""
     )
     db_session.add(milestone)
     db_session.commit()
-    return redirect(
-        url_for("subproject.view", project_id=milestone.sub_project.project_id, subproject_id=subproject_id))
+
+    return redirect(url_for("subproject.view", project_id=project_id, subproject_id=subproject_id))
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>",

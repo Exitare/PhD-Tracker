@@ -5,7 +5,6 @@ from src import db_session
 from src.openai_client import OpenAIService
 from flask_login import login_required, current_user
 import stripe
-import time
 
 bp = Blueprint('subproject', __name__)
 
@@ -27,11 +26,50 @@ def create(project_id: int):
 
         if not title or not description or not deadline:
             return render_template("project-detail.html", project_id=project_id, project=project,
-                                   error="All fields are required")
+                                   error="All fields are required", now=datetime.now(timezone.utc))
 
         if ai_option == "yes" and current_user.plan != "student_plus":
             return render_template("project-detail.html", project_id=project_id, project=project,
-                                   error="AI-generated milestones are only available for Student+ accounts.")
+                                   error="AI-generated milestones are only available for Student+ accounts.",
+                                   now=datetime.now(timezone.utc))
+
+        # check if the title already exists for the same user but different subproject
+        duplicate = (
+            db_session.query(SubProject)
+            .join(Project)
+            .filter(
+                SubProject.title == title,
+                Project.user_id == current_user.id,
+                SubProject.project_id == project_id
+            )
+            .first()
+        )
+
+        if duplicate:
+            flash("A subproject with this title already exists.", "danger")
+
+            project = db_session.query(Project).filter_by(id=project_id).first()
+            subprojects = (
+                db_session.query(SubProject)
+                .filter_by(project_id=project_id)
+                .all()
+            )
+
+            # For milestone counts
+            subprojects_with_milestones = []
+            for sub in subprojects:
+                milestones = db_session.query(Milestone).filter_by(sub_project_id=sub.id).all()
+                subprojects_with_milestones.append({
+                    "subproject": sub,
+                    "milestones": milestones
+                })
+
+            return render_template(
+                "project-detail.html",
+                project=project,
+                subprojects=subprojects_with_milestones,
+                now=datetime.now(timezone.utc)
+            )
 
         new_subproject = SubProject(
             title=title,
@@ -74,7 +112,7 @@ def create(project_id: int):
         db_session.rollback()
         print("Database error:", e)
         return render_template("project-detail.html", project_id=project_id,
-                               error="Failed to add subproject. Please try again.")
+                               error="Failed to add subproject. Please try again.", now=datetime.now(timezone.utc))
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>")
@@ -87,6 +125,7 @@ def view(project_id: int, subproject_id: int):
     milestones = (
         db_session.query(Milestone)
         .filter_by(sub_project_id=subproject_id)
+        .order_by(Milestone.due_date.asc())
         .all()
     )
 
@@ -98,7 +137,8 @@ def view(project_id: int, subproject_id: int):
         "sub-project-detail.html",
         project=project,
         subproject=sub,
-        milestones=milestones
+        milestones=milestones,
+        now=datetime.now(timezone.utc)
     )
 
 
