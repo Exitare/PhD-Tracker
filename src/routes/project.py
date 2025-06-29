@@ -77,7 +77,7 @@ def edit(project_id):
 
     if not title or not description:
         flash("Title and description are required.", "danger")
-        return redirect(url_for("project.view_project", project_id=project_id))
+        return redirect(url_for("project.view", project_id=project_id))
 
     project.title = title
     project.description = description

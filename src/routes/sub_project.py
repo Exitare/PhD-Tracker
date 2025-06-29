@@ -117,7 +117,7 @@ def create(project_id: int):
 
         print("Subproject created:", title)
         db_session.commit()
-        return redirect(url_for("project.view_project", project_id=project_id))
+        return redirect(url_for("project.view", project_id=project_id))
 
     except Exception as e:
         db_session.rollback()
@@ -165,7 +165,7 @@ def edit(project_id: int, subproject_id: int):
 
     if not title or not description:
         flash("Title and description are required.", "danger")
-        return redirect(url_for("project.view_project", project_id=project_id))
+        return redirect(url_for("project.view", project_id=project_id))
 
     # Check if the new title already exists for the same user but different subproject
     duplicate = (
@@ -180,7 +180,7 @@ def edit(project_id: int, subproject_id: int):
     )
     if duplicate:
         flash("A subproject with this title already exists.", "danger")
-        return redirect(url_for("project.view_project", project_id=project_id))
+        return redirect(url_for("project.view", project_id=project_id))
 
     sub.title = title
     sub.description = description
@@ -193,7 +193,7 @@ def edit(project_id: int, subproject_id: int):
         print("Error editing subproject:", e)
         flash("An error occurred while saving the subproject.", "danger")
 
-    return redirect(url_for("project.view_project", project_id=project_id))
+    return redirect(url_for("project.view", project_id=project_id))
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/delete", methods=["POST"])
@@ -206,4 +206,4 @@ def delete(project_id: int, subproject_id: int):
     project_id = sub.project_id
     db_session.delete(sub)
     db_session.commit()
-    return redirect(url_for("project.view_project", project_id=project_id))
+    return redirect(url_for("project.view", project_id=project_id))
