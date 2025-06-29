@@ -33,7 +33,7 @@ def create_project():
 
 @bp.route("/dashboard/projects/<int:project_id>")
 @login_required
-def view_project(project_id: int):
+def view(project_id: int):
     try:
         # Load the project
         project = db_session.query(Project).filter_by(id=project_id).first()

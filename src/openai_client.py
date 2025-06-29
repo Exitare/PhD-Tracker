@@ -10,6 +10,7 @@ load_dotenv()
 
 client = OpenAI(api_key=os.environ.get("OPENAI_KEY"))
 model: str = os.environ.get("OPENAI_MODEL")
+METER_NAME: str = "tokenrequests"
 
 
 class OpenAIService:

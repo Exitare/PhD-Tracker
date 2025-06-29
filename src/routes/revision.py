@@ -5,17 +5,31 @@ from src import db_session
 from werkzeug.utils import secure_filename
 from flask_login import current_user, login_required
 from pathlib import Path
+from sqlalchemy import select
+import stripe
+from src.openai_client import OpenAIService, METER_NAME
 
-from src.openai_client import OpenAIService
-
-bp = Blueprint('revision', __name__, template_folder="templates/revision")
+bp = Blueprint('revision', __name__)
 
 
 @bp.route("/dashboard/projects/<int:project_id>/revision/start", methods=["GET"])
 @login_required
 def start(project_id):
+    try:
+        stmt = select(Project).where(
+            Project.id == project_id,
+            Project.user_id == current_user.id
+        )
+        project = db_session.scalars(stmt).first()
+        if not project:
+            abort(404)
+    except Exception as e:
+        print("Error loading project:", e)
+        flash("Failed to load project. Please try again.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     # logic to show upload form and revision deadline
-    return render_template("start.html", project_id=project_id)
+    return render_template("revision/start.html", project_id=project_id, project=project)
 
 
 @bp.route("/dashboard/projects/<int:project_id>/revision/start>", methods=["POST"])
@@ -42,12 +56,26 @@ def submit(project_id: int):
         flash("Revision deadline cannot be earlier than today.", "danger")
         return redirect(url_for("revision.start", project_id=project_id))
 
-        # === Step 1: Call OpenAI to generate milestones ===
-    milestones, usage_info = OpenAIService.submit_reviewer_feedback_milestone_generation(
-        reviewer_text=raw_text,
-        deadline=deadline_str
-    )
+    if current_user.plan == "student_plus":
+        # ===Call OpenAI to generate milestones ===
+        milestones, usage = OpenAIService.submit_reviewer_feedback_milestone_generation(
+            reviewer_text=raw_text,
+            deadline=deadline_str
+        )
 
+        if len(milestones) != 0:
+            print(f"Generated {len(milestones)} milestones from OpenAI.")
+            # report usage to the user
+            token_count = usage.get("total_tokens", 0)
+            print(f"AI token usage: {token_count}")
+            # report usage
+            stripe.billing.MeterEvent.create(
+                event_name=METER_NAME,
+                payload={
+                    "value": str(token_count),
+                    "stripe_customer_id": current_user.stripe_customer_id,
+                }
+            )
 
     # === Step 2: Find next available revision title ===
     base_title = "Revision"
@@ -61,7 +89,8 @@ def submit(project_id: int):
     new_subproject = SubProject(
         project_id=project_id,
         title=subproject_title,
-        description="Automatically generated revision plan based on reviewer feedback."
+        description="Automatically generated revision plan based on reviewer feedback.",
+        created_at=int(datetime.now(timezone.utc).timestamp() * 1000)
     )
     db_session.add(new_subproject)
     db_session.commit()
@@ -72,7 +101,6 @@ def submit(project_id: int):
             sub_project_id=new_subproject.id,
             milestone=m.milestone,
             due_date=m.due_date  # assumed to be a 'YYYY-MM-DD' string
-            # notes and status will default automatically
         )
         db_session.add(milestone)
 

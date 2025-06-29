@@ -6,7 +6,7 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-column flex-md-row">
         <h1 class="milestone-title mb-3 mb-md-0 text-center">{{ subproject.title }}</h1>
-        <a href="{{ url_for('project.view_project', project_id=subproject.project_id) }}"
+        <a href="{{ url_for('project.view', project_id=subproject.project_id) }}"
            class="btn btn-outline-secondary">← Back to Project</a>
     </div>
 
@@ -33,7 +33,10 @@
                 <tbody>
                 {% for m in milestones %}
                 <tr id="row-{{ m.id }}">
-                    <td id="milestone-text-{{ m.id }}">{{ m.milestone }}</td>
+                    <td id="milestone-text-{{ m.id }}" class="py-3"
+                        style="word-wrap: break-word; max-width: 300px;">
+                        {{ m.milestone }}
+                    </td>
                     <td id="due-date-text-{{ m.id }}">{{ m.due_date }}</td>
                     <td>
                         <span class="badge
