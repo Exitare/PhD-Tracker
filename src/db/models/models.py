@@ -56,9 +56,20 @@ class Milestone(Base):
 
     id = Column(Integer, primary_key=True)
     sub_project_id = Column(Integer, ForeignKey('sub_projects.id'), nullable=False)
-    milestone = Column(Text)
-    due_date = Column(String(10))  # Or Date if using date objects
+    milestone = Column(Text, nullable=False)
+    due_date = Column(String(10), nullable=False)
     notes = Column(Text, default="")
     status = Column(String(50), default="Not Started")
 
     sub_project = relationship("SubProject", backref="milestones")
+
+    def __str__(self):
+        return f"Milestone(id={self.id}, sub_project_id={self.sub_project_id}, milestone='{self.milestone}', due_date='{self.due_date}', status='{self.status}')"
+
+    def to_json(self) -> dict:
+        return {
+            "id": self.id,
+            "milestone": self.milestone,
+            "due_date": self.due_date,
+            "status": self.status
+        }

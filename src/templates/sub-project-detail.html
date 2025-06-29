@@ -37,7 +37,6 @@
                         </a>
                     </li>
                     {% endif %}
-
                 </ul>
             </div>
         </div>
@@ -47,6 +46,44 @@
         <div class="card-body">
             <h5 class="card-title">Description</h5>
             <p class="card-text">{{ subproject.description }}</p>
+
+            <p class="mt-3 mb-2">
+                <strong>Deadline:</strong>
+                {{ subproject.deadline | dateformat}}
+            </p>
+
+            {% if milestones %}
+            {% set total = milestones | length %}
+            {% set done = milestones | selectattr("status", "equalto", "Done") | list | length %}
+            {% set in_progress = milestones | selectattr("status", "equalto", "In Progress") | list | length %}
+            {% set done_percent = (done / total * 100) | round(0, 'floor') %}
+            {% set in_progress_percent = (in_progress / total * 100) | round(0, 'floor') %}
+            {% set remaining_percent = 100 - done_percent - in_progress_percent %}
+
+            <div class="progress mt-3" style="height: 20px;">
+                {% if done_percent > 0 %}
+                <div class="progress-bar bg-success" role="progressbar" style="width: {{ done_percent }}%;"
+                     aria-valuenow="{{ done_percent }}" aria-valuemin="0" aria-valuemax="100">
+                    {% if done_percent >= 15 %} {{ done_percent }}% Done {% endif %}
+                </div>
+                {% endif %}
+
+                {% if in_progress_percent > 0 %}
+                <div class="progress-bar bg-warning text-dark" role="progressbar"
+                     style="width: {{ in_progress_percent }}%;"
+                     aria-valuenow="{{ in_progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+                    {% if in_progress_percent >= 15 %} {{ in_progress_percent }}% In Progress {% endif %}
+                </div>
+                {% endif %}
+
+                {% if remaining_percent > 0 %}
+                <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ remaining_percent }}%;"
+                     aria-valuenow="{{ remaining_percent }}" aria-valuemin="0" aria-valuemax="100">
+                    {% if remaining_percent >= 15 %} {{ remaining_percent }}% Not Started {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -132,6 +169,42 @@
         No milestones found for this subproject.
     </div>
     {% endif %}
+
+    {% if current_user.plan == "student_plus" %}
+    <div class="row py-5">
+        <div class="text-center mb-4">
+            <button class="btn btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#llmCollapse"
+                    aria-expanded="false" aria-controls="llmCollapse">
+                🤖 Improve Milestones with AI
+            </button>
+        </div>
+
+        <div class="collapse mt-3" id="llmCollapse">
+            <form id="llmContextForm"
+                  action="{{ url_for('milestone.refine', project_id=subproject.project_id, subproject_id=subproject.id) }}"
+                  method="POST"
+                  class="card tracker-card p-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3">
+                    <label for="userContext" class="form-label">Provide Additional Context</label>
+                    <textarea id="userContext" name="context" class="form-control" rows="4"
+                              placeholder="e.g. Reviewer 2 wants more detail on timeline. We're behind on the introduction."
+                              required></textarea>
+                </div>
+                <div class="d-grid">
+                    <button id="refineBtn" type="submit" class="btn btn-primary">Refine Milestones</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center mt-4">
+        AI milestone refinement is available for Student+ plans only.
+    </div>
+    {% endif %}
+
 
     <!-- Comment Modal -->
     <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
@@ -229,6 +302,16 @@
                 } else {
                     alert("Failed to save note.");
                 }
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("llmContextForm");
+            const button = document.getElementById("refineBtn");
+
+            form.addEventListener("submit", function () {
+                button.disabled = true;
+                button.textContent = "Refining...";
             });
         });
     });

@@ -4,6 +4,9 @@ from src.db.models import Milestone, SubProject
 from flask_login import current_user, login_required
 from src import db_session
 from sqlalchemy.exc import SQLAlchemyError
+from typing import List
+from src.models import AIMilestone
+from src.openai_client import OpenAIService
 
 bp = Blueprint('milestone', __name__)
 
@@ -111,3 +114,51 @@ def delete_milestone(project_id: int, subproject_id: int, milestone_id: int):
         print("Database error:", e)
         db_session.rollback()
         return jsonify(success=False, message="Failed to delete milestone. Please try again."), 500
+
+
+@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/refine", methods=["POST"])
+@login_required
+def refine(project_id: int, subproject_id: int):
+    context: str = request.form.get("context", "")
+    subproject: SubProject = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
+    if not subproject or subproject.project.user_id != current_user.id:
+        return redirect(url_for('dashboard.dashboard'))
+
+    existing_milestones: List[Milestone] = db_session.query(Milestone).filter_by(sub_project_id=subproject_id).all()
+    # convert deadline to a string for LLM processing
+
+    deadline_str = datetime.fromtimestamp(subproject.deadline / 1000).strftime("%Y-%m-%d")
+
+    # 👇 Generate improved milestones via LLM
+    milestones, usage = OpenAIService.refine_milestones(project_description=subproject.project.description,
+                                                        subproject_description=subproject.description,
+                                                        milestones=existing_milestones, additional_user_context=context,
+                                                        deadline=deadline_str)
+
+    print(milestones)
+
+    # Fine milestones based on Milestone ids
+    existing_ids = {m.id for m in existing_milestones}
+
+    for m in milestones:
+        if m.id in existing_ids:
+            print(f"Updating existing milestone {m.id} with new data: {m.milestone}, {m.due_date}")
+            # Update existing milestone
+            db_milestone = db_session.query(Milestone).filter_by(id=m.id, sub_project_id=subproject_id).first()
+            if db_milestone:
+                db_milestone.milestone = m.milestone
+                db_milestone.due_date = m.due_date
+        else:
+            print(f"Creating new milestone with data: {m.milestone}, {m.due_date}")
+            # Create new milestone
+            db_milestone = Milestone(
+                sub_project_id=subproject_id,
+                milestone=m.milestone,
+                due_date=m.due_date,
+            )
+            db_session.add(db_milestone)
+
+    db_session.commit()
+
+    # Reload the subproject view
+    return redirect(url_for("subproject.view", project_id=project_id, subproject_id=subproject_id))

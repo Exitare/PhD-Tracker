@@ -51,6 +51,13 @@ def create_app():
         except Exception as e:
             return "Invalid timestamp"
 
+    @app.template_filter('dateformat')
+    def dateformat(value, format="%Y-%m-%d"):
+        try:
+            return datetime.fromtimestamp(value / 1000).strftime(format)
+        except Exception as e:
+            return "Invalid timestamp"
+
     @login_manager.user_loader
     def load_user(user_id):
         return db_session.get(User, int(user_id))  # or db_session.query(User).get(int(user_id))
