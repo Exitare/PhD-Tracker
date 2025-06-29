@@ -4,14 +4,87 @@ import json, re, os
 from .models import AIMilestone
 from typing import List, Tuple, Dict, Any
 from dotenv import load_dotenv
+from datetime import date
 
 load_dotenv()
 
 client = OpenAI(api_key=os.environ.get("OPENAI_KEY"))
 model: str = os.environ.get("OPENAI_MODEL")
+METER_NAME: str = "tokenrequests"
 
 
 class OpenAIService:
+
+    @staticmethod
+    def generate_reviewer_reply(reviewer_text: str) -> str:
+        reply_prompt = f"""You are a scientific writing assistant. 
+        Based on the following reviewer feedback, generate a polite and structured response to each point, assuming the author agrees to revise:
+
+        Reviewer Comments:
+        {reviewer_text}
+
+        Respond point-by-point with a heading for each reviewer (e.g., Reviewer 1, Reviewer 2)."""
+
+        # Generate polite response
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "user", "content": reply_prompt}
+            ],
+            temperature=0.7
+        )
+
+        return response.choices[0].message.content.strip()
+
+    @staticmethod
+    def submit_reviewer_feedback_milestone_generation(reviewer_text: str, deadline: str) -> Tuple[
+        List[AIMilestone], Dict[str, Any]]:
+        current_day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        milestone_prompt = f"""You are a scientific writer.
+        Based on the following reviewer feedback, generate a revision plan with 5-7 concrete milestones with recommended due dates before {deadline}. 
+        Return only raw JSON as a list of objects with fields: milestone, due_date (YYYY-MM-DD).
+        Do not include explanations or markdown.
+
+        Reviewer Comments:
+        {reviewer_text}
+        """
+
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        f"You are a helpful assistant that generates academic milestones. Always return raw JSON, "
+                        f"never explanations or markdown. The json should contain the fields: milestone, due_date. "
+                        f"The current day is {current_day}."
+                    )
+                },
+                {"role": "user", "content": milestone_prompt}
+            ],
+            temperature=0.7
+        )
+
+        content = response.choices[0].message.content.strip()
+
+        try:
+            # Clean up markdown or code blocks if present
+            if content.startswith("```"):
+                content = re.sub(r"```(?:json)?", "", content).strip("` \n")
+
+            raw_data = json.loads(content)
+            milestones = [AIMilestone(**m) for m in raw_data]
+
+            usage = response.usage.model_dump() if hasattr(response.usage, 'model_dump') else dict(response.usage)
+
+            return milestones, usage
+
+        except Exception as e:
+            print("Error parsing reviewer feedback milestones:", e)
+            print("Raw content:\n", content)
+            return [], {"error": str(e), "raw_content": content}
+
     @staticmethod
     def generate_milestones(goal: str, deadline: str) -> Tuple[List[AIMilestone], Dict[str, Any]]:
         prompt = f"""
@@ -53,4 +126,4 @@ class OpenAIService:
         except Exception as e:
             print("Error parsing milestones:", e)
             print("Raw content:\n", content)
-            return []
+            return [], {"error": str(e), "raw_content": content}

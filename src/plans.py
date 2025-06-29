@@ -1,4 +1,5 @@
+from enum import Enum
 
-
-class Plans:
-    pass
+class Plans(Enum):
+    Student = "student"
+    StudentPlus = "student_plus"

@@ -39,7 +39,7 @@ class SubProject(Base):
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
-    created_at = Column(BigInteger, nullable=False)
+    created_at = Column(BigInteger, nullable=False, default=lambda: int(datetime.now(timezone.utc).timestamp() * 1000))
 
     # add relationship to Project if needed
     project = relationship("Project", back_populates="sub_projects")
