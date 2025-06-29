@@ -1,10 +1,25 @@
-from flask import Blueprint, request, redirect, url_for, abort, jsonify, flash
+from flask import Blueprint, request, redirect, url_for, abort, jsonify, flash, render_template
 from datetime import datetime
-from src.db.models import Milestone
+from src.db.models import Milestone, SubProject
+from flask_login import current_user, login_required
 from src import db_session
 from sqlalchemy.exc import SQLAlchemyError
 
 bp = Blueprint('milestone', __name__)
+
+
+@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones", methods=["GET"])
+def view(project_id: int, subproject_id: int):
+    # Get the subproject and check if it exists
+    subproject = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
+
+    # Check if subproject exists and belongs to the current user
+    if not subproject or subproject.project.user_id != current_user.id:
+        flash("Subproject not found or access denied.", "danger")
+        return redirect(url_for("dashboard"))
+
+    return render_template("create-milestone.html", project_id=project_id, subproject_id=subproject_id,
+                           subproject=subproject)
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones", methods=["POST"])

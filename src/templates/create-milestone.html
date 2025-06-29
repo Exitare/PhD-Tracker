@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Create Milestone - {{ subproject.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center mb-4 text-center text-md-start">
+        <!-- Back Button -->
+        <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
+            <a href="{{ url_for('subproject.view', project_id=subproject.project_id, subproject_id=subproject.id) }}"
+               class="btn btn-outline-secondary">
+                ← Back to Subproject
+            </a>
+        </div>
+
+        <!-- Centered Title -->
+        <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
+            <h1 class="milestone-title m-0">New Milestone</h1>
+        </div>
+
+        <!-- Placeholder for additional controls -->
+        <div class="col-12 col-md-4 text-md-end">
+        </div>
+    </div>
+
+    <!-- Milestone Form -->
+    <div class="collapse show" id="addMilestoneForm">
+        <form id="milestoneForm"
+              method="POST"
+              action="{{ url_for('milestone.create', project_id=subproject.project_id, subproject_id=subproject.id) }}"
+              class="card card-body tracker-card mt-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="mb-3">
+                <label for="milestone-text" class="form-label">Milestone <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="milestone-text" name="milestone" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="due-date" class="form-label">Due Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="due-date" name="due_date"
+                       min="{{ now.strftime('%Y-%m-%d') }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="status" class="form-label">Initial Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="Not Started" selected>Not Started</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Done">Done</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success" id="saveMilestoneBtn">Save Milestone</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById("milestoneForm").addEventListener("submit", function (e) {
+        const milestone = document.getElementById("milestone-text").value.trim();
+        const dueDate = document.getElementById("due-date").value.trim();
+        const submitBtn = document.getElementById("saveMilestoneBtn");
+
+        if (!milestone || !dueDate) {
+            e.preventDefault();
+            alert("Please fill out all required fields: milestone and due date.");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Saving...";
+    });
+</script>
+{% endblock %}
