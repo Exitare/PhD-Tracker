@@ -5,7 +5,7 @@ from flask_login import current_user, login_required
 from src import db_session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List
-from src.models import AIMilestone
+import stripe
 from src.openai_client import OpenAIService
 
 bp = Blueprint('milestone', __name__)
@@ -119,6 +119,10 @@ def delete_milestone(project_id: int, subproject_id: int, milestone_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/refine", methods=["POST"])
 @login_required
 def refine(project_id: int, subproject_id: int):
+    if current_user.plan != "StudentPlus":
+        flash("This feature is only available for Student Plus plan users.", "danger")
+        return redirect(url_for('dashboard.dashboard'))
+
     context: str = request.form.get("context", "")
     subproject: SubProject = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not subproject or subproject.project.user_id != current_user.id:
@@ -135,7 +139,16 @@ def refine(project_id: int, subproject_id: int):
                                                         milestones=existing_milestones, additional_user_context=context,
                                                         deadline=deadline_str)
 
-    print(milestones)
+    token_count = usage.get("total_tokens", 0)
+    print(f"AI token usage: {token_count}")
+    # report usage
+    stripe.billing.MeterEvent.create(
+        event_name="tokenrequests",
+        payload={
+            "value": str(token_count),
+            "stripe_customer_id": current_user.stripe_customer_id,
+        }
+    )
 
     # Fine milestones based on Milestone ids
     existing_ids = {m.id for m in existing_milestones}
