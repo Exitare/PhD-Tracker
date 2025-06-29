@@ -225,3 +225,21 @@ select.form-select:focus,
     box-shadow: 0 0 0 0.2rem rgba(161, 139, 255, 0.25);
     color: #fff;
 }
+
+/* App Footer */
+.app-footer {
+    background-color: #2a2540;
+    color: #f0f0f5;
+    border-top: 1px solid #3d355a;
+}
+
+.app-footer a.footer-link {
+    color: #ccc;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+.app-footer a.footer-link:hover {
+    color: #a18bff;
+    text-decoration: underline;
+}

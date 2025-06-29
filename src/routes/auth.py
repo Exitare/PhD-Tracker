@@ -10,8 +10,7 @@ import stripe
 import os
 from src.plans import Plans
 
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
-print("Stripe API Key:", stripe.api_key)
+
 
 bp = Blueprint("auth", __name__)
 

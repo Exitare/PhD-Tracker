@@ -1,0 +1,239 @@
+/* Base solarized dark theme */
+body {
+    background-color: #002b36;
+    color: #839496;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.text-muted {
+    color: #aebbc1 !important;
+}
+
+a,
+a.text-decoration-none {
+    color: #268bd2;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #2aa198;
+    text-decoration: underline;
+}
+
+/* Cards */
+.card, .tracker-card {
+    background-color: #073642;
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    color: #839496;
+}
+
+.card-title,
+.milestone-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #268bd2;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #93a1a1;
+}
+
+.form-control {
+    background-color: #002b36;
+    color: #eee8d5;
+    border: 1px solid #586e75;
+}
+
+.form-control:focus {
+    background-color: #073642;
+    color: #fdf6e3;
+    border-color: #268bd2;
+    box-shadow: 0 0 0 0.2rem rgba(38, 139, 210, 0.25);
+}
+
+.btn {
+    font-weight: 500;
+    font-size: 1.05rem;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease-in-out;
+    border: none;
+    color: #fdf6e3;
+    background-color: #268bd2;
+}
+
+.btn-primary {
+    background-color: #268bd2;
+    color: #fdf6e3;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #2aa198;
+    color: #fdf6e3;
+}
+
+.btn-outline-secondary {
+    background-color: transparent;
+    color: #268bd2;
+    border: 1px solid #268bd2;
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus {
+    background-color: #073642;
+    color: #fdf6e3;
+    border-color: #2aa198;
+}
+
+.btn-success {
+    background-color: #859900;
+    color: #fdf6e3;
+}
+
+.btn-success:hover {
+    background-color: #93a1a1;
+    color: #002b36;
+}
+
+.btn-danger {
+    background-color: #dc322f;
+    color: #fdf6e3;
+}
+
+.btn-danger:hover {
+    background-color: #cb4b16;
+    color: #fdf6e3;
+}
+
+/* Flash alerts */
+.alert {
+    border-radius: 0.75rem;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: #073642;
+    color: #b58900;
+    border-color: #859900;
+}
+
+.alert-danger {
+    background-color: #3e1e2a;
+    color: #fdf6e3;
+    border-color: #dc322f;
+}
+
+.alert-warning {
+    background-color: #44391e;
+    color: #fdf6e3;
+    border-color: #b58900;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #073642;
+    border-bottom: 1px solid #586e75;
+}
+
+.nav-link {
+    color: #93a1a1 !important;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    color: #fdf6e3 !important;
+}
+
+.back-btn {
+    margin-top: 1.5rem;
+}
+
+#loadingIndicator {
+    display: none;
+    margin-top: 1rem;
+}
+
+::placeholder {
+    color: #657b83;
+    opacity: 1;
+}
+
+.form-control::placeholder {
+    color: #657b83;
+}
+
+select.form-select,
+.form-select {
+    background-color: #002b36;
+    color: #fdf6e3;
+    border: 1px solid #586e75;
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+select.form-select:focus,
+.form-select:focus {
+    background-color: #073642;
+    color: #fdf6e3;
+    border-color: #268bd2;
+    box-shadow: 0 0 0 0.2rem rgba(38, 139, 210, 0.25);
+}
+
+.modal-content {
+    background-color: #073642;
+    color: #eee8d5;
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.modal-header,
+.modal-footer {
+    border: none;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #268bd2;
+}
+
+.modal-body textarea.form-control {
+    background-color: #002b36;
+    color: #fdf6e3;
+    border: 1px solid #586e75;
+}
+
+.modal-body textarea.form-control:focus {
+    background-color: #073642;
+    border-color: #268bd2;
+    box-shadow: 0 0 0 0.2rem rgba(38, 139, 210, 0.25);
+    color: #fdf6e3;
+}
+
+.app-footer {
+    background-color: #073642;
+    color: #93a1a1;
+    border-top: 1px solid #586e75;
+}
+
+.app-footer a.footer-link {
+    color: #93a1a1;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+.app-footer a.footer-link:hover {
+    color: #2aa198;
+    text-decoration: underline;
+}

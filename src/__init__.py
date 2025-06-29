@@ -4,13 +4,16 @@ from dotenv import load_dotenv
 from sqlalchemy.sql.functions import user
 from src.db.models import User
 from src.db import init_db, db_session
-from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision
+from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision, account
 import os
 from datetime import datetime, timezone
 from flask_login import LoginManager
 from datetime import datetime
+import stripe
 
 csrf = CSRFProtect()
+
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 
 def create_app():
@@ -38,6 +41,7 @@ def create_app():
     app.register_blueprint(home.bp)
     app.register_blueprint(about.bp)
     app.register_blueprint(revision.bp)
+    app.register_blueprint(account.bp)
 
     # Cleanup SQLAlchemy session after each request
     @app.teardown_appcontext
@@ -57,6 +61,15 @@ def create_app():
             return datetime.fromtimestamp(value / 1000).strftime(format)
         except Exception as e:
             return "Invalid timestamp"
+
+    @app.template_filter('planFormat')
+    def plan_format(value):
+        """
+        Formats plan names like 'student_plus' → 'Student+'
+        """
+        if not isinstance(value, str):
+            return value
+        return value.replace("_plus", "+").replace("_", " ").title()
 
     @login_manager.user_loader
     def load_user(user_id):
