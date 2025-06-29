@@ -15,13 +15,15 @@ bp = Blueprint('subproject', __name__)
 def create(project_id: int):
     try:
         project = db_session.query(Project).filter_by(id=project_id).first()
-        if not project:
+        # Ensure the project exists and belongs to the current user
+        if not project or project.user_id != current_user.id:
             return render_template("dashboard.html", projects=[], error="Project not found.")
 
         title = request.form.get("title", "").strip()
         description = request.form.get("description", "").strip()
         ai_option = request.form.get("ai_option", "")
         deadline = request.form.get("deadline", "").strip()
+        sub_project_type: str = request.form.get("type", "default").strip()
 
         print("Creating subproject with title:", title)
 
@@ -60,6 +62,9 @@ def create(project_id: int):
             flash("A subproject with this title already exists.", "danger")
 
             project = db_session.query(Project).filter_by(id=project_id).first()
+            if not project or project.user_id != current_user.id:
+                return render_template("dashboard.html", projects=[], error="Project not found.")
+
             subprojects = (
                 db_session.query(SubProject)
                 .filter_by(project_id=project_id)
@@ -86,7 +91,8 @@ def create(project_id: int):
             title=title,
             description=description,
             project_id=project_id,
-            created_at=int(datetime.now(timezone.utc).timestamp() * 1000)
+            created_at=int(datetime.now(timezone.utc).timestamp() * 1000),
+            type=sub_project_type
         )
         db_session.add(new_subproject)
         db_session.flush()  # Needed to get new_subproject.id before commit

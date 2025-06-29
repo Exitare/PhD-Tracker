@@ -1,5 +1,5 @@
 from flask_login import UserMixin
-from sqlalchemy import Column, Integer, String, Text, BigInteger, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, BigInteger, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from src.db import Base
 from datetime import timezone, datetime
@@ -37,7 +37,9 @@ class SubProject(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
+    type = Column(Enum("revision", "normal", name="subproject_type"), nullable=False, default="normal")
     title = Column(String(255), nullable=False)
+    reviewer_comments = Column(Text, default="")
     description = Column(Text, nullable=False)
     created_at = Column(BigInteger, nullable=False, default=lambda: int(datetime.now(timezone.utc).timestamp() * 1000))
 

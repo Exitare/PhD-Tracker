@@ -23,7 +23,7 @@ class OpenAIService:
         Reviewer Comments:
         {reviewer_text}
 
-        Respond point-by-point with a heading for each reviewer (e.g., Reviewer 1, Reviewer 2)."""
+        Respond point-by-point with a heading for each reviewer (e.g., Reviewer 1, Reviewer 2)  if available."""
 
         # Generate polite response
         response = client.chat.completions.create(

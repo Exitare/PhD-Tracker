@@ -76,23 +76,16 @@ def choose_plan():
                     customer=current_user.stripe_customer_id,
                     payment_method_types=['card'],
                     line_items=[{
-                        'price': "price_1ReRzTDanNlk6y5aszKHM0mU",
+                        'price': "price_1ReTECDanNlk6y5aUQGf9a1P",
                     }],
                     mode='subscription',  # change to 'payment' if it's a one-time purchase
-                    subscription_data={
-                        'billing_thresholds': {
-                            'amount_gte': 5000  # Amount in cents: $50.00
-                        }
-                    },
                     success_url=url_for('auth.stripe_success', _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
                     cancel_url=url_for('auth.choose_plan', _external=True),
                 )
                 return redirect(checkout_session.url)
             except Exception as e:
                 print(f"Stripe error: {e}")
-                # set customer plan to 'student' if checkout fails
-                current_user.plan = Plans.Student.value
-                db_session.commit()
+                flash("An error occurred while creating the Stripe checkout session. Please try again.", "danger")
 
                 return redirect(url_for('auth.choose_plan'))
 
@@ -151,6 +144,16 @@ def stripe_success():
             return redirect(url_for('dashboard.dashboard'))
 
         subscription = stripe.Subscription.retrieve(subscription_id)
+        try:
+            stripe.Subscription.modify(
+                subscription["id"],
+                billing_thresholds={
+                    "amount_gte": 2500  # $50 in cents
+                }
+            )
+        except Exception as e:
+            print("Stripe billing threshold error:", e)
+            print("Subscription details:", subscription)
 
         # Get the first subscription item (usually one per sub)
         if subscription["items"]["data"]:

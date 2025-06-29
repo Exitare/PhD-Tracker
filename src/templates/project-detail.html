@@ -2,13 +2,33 @@
 {% block title %}Project Details - {{ project.title }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4 flex-column flex-md-row">
-    <h1 class="milestone-title mb-3 mb-md-0 text-center">{{ project.title }}</h1>
-    <div class="d-flex flex-column flex-md-row gap-2">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+    <!-- Back Button (Left) -->
+    <div class="order-1 order-md-0">
         <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
-        <a href="{{ url_for('revision.start', project_id=project.id) }}" class="btn btn-primary">
-            📬 Start Revision
-        </a>
+    </div>
+
+    <!-- Title (Center) -->
+    <div class="flex-grow-1 text-center order-0 order-md-1 mb-3 mb-md-0">
+        <h1 class="milestone-title m-0">{{ project.title }}</h1>
+    </div>
+
+    <!-- Split Dropdown Button (Right) -->
+    <div class="order-2">
+        <div class="btn-group">
+            <a href="{{ url_for('revision.view', project_id=project.id) }}" class="btn btn-primary">
+                📬 Create Revision
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#">Share Project</a></li>
+                <li><a class="dropdown-item" href="#">Duplicate</a></li>
+                <li><a class="dropdown-item" href="#">Export as PDF</a></li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -124,6 +144,15 @@
                     class="text-danger">*</span></label>
             <textarea class="form-control" id="subproject-description" name="description" rows="3" required></textarea>
         </div>
+
+        <div class="mb-3">
+            <label for="subproject-type" class="form-label">Type <span class="text-danger">*</span></label>
+            <select class="form-control" id="subproject-type" name="type" required>
+                <option value="normal" selected>Normal</option>
+                <option value="revision">Revision</option>
+            </select>
+        </div>
+
 
         <div class="mb-3">
             <label class="form-label">Milestone Generation</label>

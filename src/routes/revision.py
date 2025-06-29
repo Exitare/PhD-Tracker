@@ -13,9 +13,9 @@ from src.plans import Plans
 bp = Blueprint('revision', __name__)
 
 
-@bp.route("/dashboard/projects/<int:project_id>/revision/start", methods=["GET"])
+@bp.route("/dashboard/projects/<int:project_id>/revision", methods=["GET"])
 @login_required
-def start(project_id):
+def view(project_id):
     try:
         stmt = select(Project).where(
             Project.id == project_id,
@@ -33,9 +33,9 @@ def start(project_id):
     return render_template("revision/start.html", project_id=project_id, project=project)
 
 
-@bp.route("/dashboard/projects/<int:project_id>/revision/start>", methods=["POST"])
+@bp.route("/dashboard/projects/<int:project_id>/revision>", methods=["POST"])
 @login_required
-def submit(project_id: int):
+def create(project_id: int):
     raw_text = request.form.get("raw_text", "").strip()
     deadline_str = request.form.get("deadline")
 
@@ -92,7 +92,8 @@ def submit(project_id: int):
         project_id=project_id,
         title=subproject_title,
         description="Automatically generated revision plan based on reviewer feedback.",
-        created_at=int(datetime.now(timezone.utc).timestamp() * 1000)
+        created_at=int(datetime.now(timezone.utc).timestamp() * 1000),
+        type="revision"
     )
     db_session.add(new_subproject)
     db_session.commit()
