@@ -5,6 +5,7 @@ from src import db_session
 from src.openai_client import OpenAIService
 from flask_login import login_required, current_user
 import stripe
+from src.plans import Plans
 
 bp = Blueprint('subproject', __name__)
 
@@ -28,7 +29,7 @@ def create(project_id: int):
             return render_template("project-detail.html", project_id=project_id, project=project,
                                    error="All fields are required", now=datetime.now(timezone.utc))
 
-        if ai_option == "yes" and current_user.plan != "student_plus":
+        if ai_option == "yes" and current_user.plan != Plans.StudentPlus.value:
             return render_template("project-detail.html", project_id=project_id, project=project,
                                    error="AI-generated milestones are only available for Student+ accounts.",
                                    now=datetime.now(timezone.utc))
@@ -91,7 +92,7 @@ def create(project_id: int):
         db_session.flush()  # Needed to get new_subproject.id before commit
 
         # If AI is requested, generate and add milestones
-        if ai_option == "yes" and current_user.plan == "student_plus":
+        if ai_option == "yes" and current_user.plan == Plans.StudentPlus.value:
             print("Generating milestones using AI...")
             ai_milestones, usage = OpenAIService.generate_milestones(title, deadline)
             for ai_m in ai_milestones:

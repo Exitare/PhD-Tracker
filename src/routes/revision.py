@@ -8,6 +8,7 @@ from pathlib import Path
 from sqlalchemy import select
 import stripe
 from src.openai_client import OpenAIService, METER_NAME
+from src.plans import Plans
 
 bp = Blueprint('revision', __name__)
 
@@ -56,7 +57,8 @@ def submit(project_id: int):
         flash("Revision deadline cannot be earlier than today.", "danger")
         return redirect(url_for("revision.start", project_id=project_id))
 
-    if current_user.plan == "student_plus":
+    milestones = []
+    if current_user.plan == Plans.StudentPlus.value:
         # ===Call OpenAI to generate milestones ===
         milestones, usage = OpenAIService.submit_reviewer_feedback_milestone_generation(
             reviewer_text=raw_text,
@@ -96,13 +98,14 @@ def submit(project_id: int):
     db_session.commit()
 
     # === Step 4: Save milestones to DB ===
-    for m in milestones:
-        milestone = Milestone(
-            sub_project_id=new_subproject.id,
-            milestone=m.milestone,
-            due_date=m.due_date  # assumed to be a 'YYYY-MM-DD' string
-        )
-        db_session.add(milestone)
+    if len(milestones) != 0:
+        for m in milestones:
+            milestone = Milestone(
+                sub_project_id=new_subproject.id,
+                milestone=m.milestone,
+                due_date=m.due_date  # assumed to be a 'YYYY-MM-DD' string
+            )
+            db_session.add(milestone)
 
     db_session.commit()
 

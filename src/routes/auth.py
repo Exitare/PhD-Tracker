@@ -8,6 +8,7 @@ from src.db import db_session
 from flask_login import login_required, current_user
 import stripe
 import os
+from src.plans import Plans
 
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 print("Stripe API Key:", stripe.api_key)
@@ -65,7 +66,7 @@ def choose_plan():
     if request.method == 'POST':
         plan = request.form.get('plan')
 
-        if plan == 'student_plus':
+        if plan == Plans.StudentPlus.value:
             if not current_user.stripe_customer_id:
                 flash("Stripe customer not found for this account.", "danger")
                 return redirect(url_for('auth.choose_plan'))
@@ -78,6 +79,11 @@ def choose_plan():
                         'price': "price_1ReRzTDanNlk6y5aszKHM0mU",
                     }],
                     mode='subscription',  # change to 'payment' if it's a one-time purchase
+                    subscription_data={
+                        'billing_thresholds': {
+                            'amount_gte': 5000  # Amount in cents: $50.00
+                        }
+                    },
                     success_url=url_for('auth.stripe_success', _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
                     cancel_url=url_for('auth.choose_plan', _external=True),
                 )
@@ -85,13 +91,13 @@ def choose_plan():
             except Exception as e:
                 print(f"Stripe error: {e}")
                 # set customer plan to 'student' if checkout fails
-                current_user.plan = 'student'
+                current_user.plan = Plans.Student.value
                 db_session.commit()
 
                 return redirect(url_for('auth.choose_plan'))
 
         elif plan == 'student':
-            current_user.plan = 'student'
+            current_user.plan = Plans.Student.value
             db_session.commit()
             flash("You've successfully selected the Student plan!", "success")
             return redirect(url_for('dashboard.dashboard'))
@@ -151,7 +157,7 @@ def stripe_success():
             item_id = subscription["items"]["data"][0]["id"]
             current_user.stripe_subscription_id = subscription_id
             current_user.stripe_subscription_item_id = item_id
-            current_user.plan = 'student_plus'
+            current_user.plan = Plans.StudentPlus.value
             db_session.commit()
             flash("Your Student+ subscription is now active!", "success")
         else:
