@@ -52,6 +52,10 @@ def view(project_id: int):
             })
         # subprojects = db_session.query(SubProject).filter_by(project_id=project_id).all()
 
+        for item in subprojects:
+            sub = item["subproject"]
+            sub.deadline_dt = datetime.fromtimestamp(sub.deadline / 1000, tz=timezone.utc)
+
         return render_template(
             "project-detail.html",
             project=project,

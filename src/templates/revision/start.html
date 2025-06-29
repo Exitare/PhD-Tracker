@@ -3,12 +3,25 @@
 
 {% block content %}
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-column flex-md-row">
-        <h1 class="milestone-title text-center mb-3 mb-md-0">📬 Start Revision for project: {{ project.title }}</h1>
-        <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary">
-            ← Back to Project
-        </a>
+    <div class="row align-items-center mb-4">
+        <!-- Back Button (Left) -->
+        <div class="col-12 col-md-4 order-1 order-md-0 mb-2 mb-md-0">
+            <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary">
+                ← Back to Project
+            </a>
+        </div>
+
+        <!-- Title (Center) -->
+        <div class="col-12 col-md-6 text-center order-0 order-md-1 mb-2 mb-md-0">
+            <h1 class="milestone-title m-0">📬 Start Revision for project: {{ project.title }}</h1>
+        </div>
+
+        <!-- Right-Side Placeholder (Optional dropdowns/actions) -->
+        <div class="col-12 col-md-2 order-2 text-md-end d-none d-md-block">
+            <!-- Add right-side actions here if needed -->
+        </div>
     </div>
+
 
     {% if error %}
     <div class="alert alert-danger text-center">{{ error }}</div>

@@ -42,12 +42,13 @@ class SubProject(Base):
     reviewer_comments = Column(Text, default="")
     description = Column(Text, nullable=False)
     created_at = Column(BigInteger, nullable=False, default=lambda: int(datetime.now(timezone.utc).timestamp() * 1000))
+    deadline = Column(BigInteger, nullable=False)
 
     # add relationship to Project if needed
     project = relationship("Project", back_populates="sub_projects")
 
     def __str__(self):
-        return f"SubProject(id={self.id}, title='{self.title}', description='{self.description}', created_at={self.created_at})"
+        return f"SubProject(id={self.id}, title='{self.title}', description='{self.description}', created_at={self.created_at}, deadline={self.deadline}, type='{self.type}')"
 
 
 class Milestone(Base):

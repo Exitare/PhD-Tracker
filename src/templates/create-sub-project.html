@@ -1,59 +1,83 @@
-{ % extends "base.html" %}
+{% extends "base.html" %}
+
 {% block title %}Create Subproject - {{ project.title }}{% endblock %}
 
 {% block content %}
-<div class="collapse mt-3" id="addSubprojectForm">
-    <form id="subprojectForm" method="POST" action="{{ url_for('subproject.create', project_id=project.id) }}"
-          class="card card-body tracker-card mt-3">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="container">
+    <div class="row align-items-center mb-4 text-center text-md-start">
+    <!-- Back Button -->
+    <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
+        <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary">
+            ← Back to Project
+        </a>
+    </div>
 
-        <div class="mb-3">
-            <label for="subproject-title" class="form-label">Subproject Title <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="subproject-title" name="title" required>
-        </div>
+    <!-- Centered Title -->
+    <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
+        <h1 class="milestone-title m-0">New Subproject</h1>
+    </div>
 
-        <div class="mb-3">
-            <label for="subproject-description" class="form-label">Description <span
-                    class="text-danger">*</span></label>
-            <textarea class="form-control" id="subproject-description" name="description" rows="3" required></textarea>
-        </div>
+    <!-- Dropdown or Actions -->
+    <div class="col-12 col-md-4 text-md-end">
 
-        <div class="mb-3">
-            <label for="subproject-type" class="form-label">Type <span class="text-danger">*</span></label>
-            <select class="form-control" id="subproject-type" name="type" required>
-                <option value="normal" selected>Normal</option>
-                <option value="revision">Revision</option>
-            </select>
-        </div>
+    </div>
+</div>
 
+    <!-- Subproject Form -->
+    <div class="collapse show" id="addSubprojectForm">
+        <form id="subprojectForm" method="POST" action="{{ url_for('subproject.create', project_id=project.id) }}"
+              class="card card-body tracker-card mt-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="mb-3">
-            <label class="form-label">Milestone Generation</label>
-            {% if current_user.plan == "student_plus" %}
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="ai_option" id="ai_no" value="no" checked>
-                <label class="form-check-label" for="ai_no">Create blank subproject</label>
+            <div class="mb-3">
+                <label for="subproject-title" class="form-label">Subproject Title <span
+                        class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="subproject-title" name="title" required>
             </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="ai_option" id="ai_yes" value="yes">
-                <label class="form-check-label" for="ai_yes">Use AI to generate milestones</label>
-            </div>
-            {% else %}
-            <div class="alert alert-warning mt-2 mb-0">
-                AI milestone generation is available for Student+ plans only.
-            </div>
-            <input type="hidden" name="ai_option" value="no">
-            {% endif %}
-        </div>
 
-        <div class="mb-3">
-            <label for="deadline" class="form-label">Deadline <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="deadline" name="deadline" required
-                   min="{{ now.strftime('%Y-%m-%d') }}">
-        </div>
+            <div class="mb-3">
+                <label for="subproject-description" class="form-label">Description <span
+                        class="text-danger">*</span></label>
+                <textarea class="form-control" id="subproject-description" name="description" rows="3"
+                          required></textarea>
+            </div>
 
-        <button type="submit" class="btn btn-success" id="saveSubprojectBtn">Save Subproject</button>
-    </form>
+            <div class="mb-3">
+                <label for="subproject-type" class="form-label">Type <span class="text-danger">*</span></label>
+                <select class="form-control" id="subproject-type" name="type" required>
+                    <option value="normal" selected>Normal</option>
+                    <option value="revision">Revision</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Milestone Generation</label>
+                {% if current_user.plan == "student_plus" %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="ai_option" id="ai_no" value="no" checked>
+                    <label class="form-check-label" for="ai_no">Create blank subproject</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="ai_option" id="ai_yes" value="yes">
+                    <label class="form-check-label" for="ai_yes">Use AI to generate milestones</label>
+                </div>
+                {% else %}
+                <div class="alert alert-warning mt-2 mb-0">
+                    AI milestone generation is available for Student+ plans only.
+                </div>
+                <input type="hidden" name="ai_option" value="no">
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="deadline" class="form-label">Deadline <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="deadline" name="deadline" required
+                       min="{{ now.strftime('%Y-%m-%d') }}">
+            </div>
+
+            <button type="submit" class="btn btn-success" id="saveSubprojectBtn">Save Subproject</button>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
@@ -87,6 +111,5 @@
             submitBtn.textContent = "Saving...";
         }
     });
-
 </script>
 {% endblock %}

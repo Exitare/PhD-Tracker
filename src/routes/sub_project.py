@@ -10,6 +10,19 @@ from src.plans import Plans
 bp = Blueprint('subproject', __name__)
 
 
+@bp.route("/dashboard/projects/<int:project_id>/subprojects/create", methods=["GET"])
+@login_required
+def show_sub_project_form(project_id: int):
+    try:
+        project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
+        if not project:
+            return render_template("dashboard.html", projects=[], error="Project not found.")
+
+        return render_template("create-sub-project.html", project=project, now=datetime.now(timezone.utc))
+    except Exception as e:
+        print("Error loading project for subproject creation:", e)
+        return render_template("dashboard.html", projects=[], error="Failed to load project. Please try again.")
+
 @bp.route("/dashboard/projects/<int:project_id>/subprojects", methods=["POST"])
 @login_required
 def create(project_id: int):
@@ -92,7 +105,8 @@ def create(project_id: int):
             description=description,
             project_id=project_id,
             created_at=int(datetime.now(timezone.utc).timestamp() * 1000),
-            type=sub_project_type
+            type=sub_project_type,
+            deadline=int(deadline_date.strftime("%s")) * 1000,  # Convert to milliseconds
         )
         db_session.add(new_subproject)
         db_session.flush()  # Needed to get new_subproject.id before commit
@@ -132,7 +146,7 @@ def create(project_id: int):
                                error="Failed to add subproject. Please try again.", now=datetime.now(timezone.utc))
 
 
-@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>")
+@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["GET"])
 @login_required
 def view(project_id: int, subproject_id: int):
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()

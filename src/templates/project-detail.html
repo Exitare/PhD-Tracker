@@ -2,29 +2,35 @@
 {% block title %}Project Details - {{ project.title }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+<div class="row align-items-center mb-4 text-center text-md-start">
     <!-- Back Button (Left) -->
-    <div class="order-1 order-md-0">
-        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+    <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">
+            ← Back to Dashboard
+        </a>
     </div>
 
     <!-- Title (Center) -->
-    <div class="flex-grow-1 text-center order-0 order-md-1 mb-3 mb-md-0">
+    <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
         <h1 class="milestone-title m-0">{{ project.title }}</h1>
     </div>
 
     <!-- Split Dropdown Button (Right) -->
-    <div class="order-2">
+    <div class="col-12 col-md-4 text-md-end">
         <div class="btn-group">
-            <a href="{{ url_for('revision.view', project_id=project.id) }}" class="btn btn-primary">
-                📬 Create Revision
+            <a href="{{ url_for('subproject.show_sub_project_form', project_id=project.id) }}" class="btn btn-primary">
+                📬 Create Sub Project
             </a>
             <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
                     data-bs-toggle="dropdown" aria-expanded="false">
                 <span class="visually-hidden">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#">Share Project</a></li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('revision.view', project_id=project.id) }}">
+                        📬 Create Revision
+                    </a>
+                </li>
                 <li><a class="dropdown-item" href="#">Duplicate</a></li>
                 <li><a class="dropdown-item" href="#">Export as PDF</a></li>
             </ul>
@@ -58,7 +64,7 @@
                     <h5 class="card-title">{{ sub.title }}</h5>
                     <p class="mb-1 text-muted">{{ sub.description }}</p>
                     <p class="mb-1"><strong>Created:</strong> {{ sub.created_at | datetimeformat }}</p>
-                    <p class="mb-1"><strong>Due:</strong> {{ (milestones[-1].due_date) if milestones else "N/A" }}</p>
+                    <p class="mb-1"><strong>Deadline:</strong> {{ sub.deadline | datetimeformat}}</p>
                     <p class="mb-0"><strong>Milestones:</strong> {{ milestones | length if milestones else 0 }}</p>
                 </div>
                 <div class="mt-3 d-flex justify-content-between flex-wrap gap-2">
@@ -82,36 +88,47 @@
             </div>
 
             <!-- Edit Card -->
-            <div id="edit-row-{{ sub.id }}"
-                 class="card tracker-card p-3 h-100 d-flex flex-column justify-content-between d-none mt-3">
-                <form method="POST"
-                      action="{{ url_for('subproject.edit', project_id=sub.project_id, subproject_id=sub.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div>
-                        <div class="mb-2">
-                            <label for="title-{{ sub.id }}" class="form-label">Subproject Title</label>
-                            <input type="text" id="title-{{ sub.id }}" name="title" value="{{ sub.title }}"
-                                   class="form-control" required>
-                        </div>
-                        <div class="mb-2">
-                            <label for="description-{{ sub.id }}" class="form-label">Description</label>
-                            <input type="text" id="description-{{ sub.id }}" name="description"
-                                   value="{{ sub.description }}" class="form-control" required>
-                        </div>
-                        <p class="mb-1"><strong>Created:</strong> {{ sub.created_at | datetimeformat }}</p>
-                        <p class="mb-3"><strong>Milestones:</strong> {{ milestones | length if milestones else 0 }}</p>
-                    </div>
-                    <div class="d-flex justify-content-between gap-2 mt-auto">
-                        <button type="submit" class="btn btn-primary flex-fill">
-                            <i class="fas fa-save"></i> Save
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary flex-fill"
-                                onclick="cancelEdit({{ sub.id }})">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
+            <!-- Edit Card -->
+            <form id="edit-row-{{ sub.id }}" method="POST"
+                  action="{{ url_for('subproject.edit', project_id=project.id, subproject_id=sub.id) }}"
+                  class="card card-body tracker-card mt-4 d-none">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3">
+                    <label for="edit-title-{{ sub.id }}" class="form-label">Subproject Title <span
+                            class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="edit-title-{{ sub.id }}" name="title"
+                           value="{{ sub.title }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="edit-description-{{ sub.id }}" class="form-label">Description <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="edit-description-{{ sub.id }}" name="description" rows="3"
+                              required>{{ sub.description }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="edit-type-{{ sub.id }}" class="form-label">Type <span
+                            class="text-danger">*</span></label>
+                    <select class="form-control" id="edit-type-{{ sub.id }}" name="type" required>
+                        <option value="normal" {% if sub.type=='normal' %}selected{% endif %}>Normal</option>
+                        <option value="revision" {% if sub.type=='revision' %}selected{% endif %}>Revision</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="edit-deadline-{{ sub.id }}" class="form-label">Deadline <span
+                            class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="edit-deadline-{{ sub.id }}" name="deadline"
+                           value="{{ sub.deadline_dt.strftime('%Y-%m-%d') }}"
+                           min="{{ now.strftime('%Y-%m-%d') }}" required>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                    <button type="submit" class="btn btn-success">Update Subproject</button>
+                    <button type="button" class="btn btn-secondary" onclick="cancelEdit({{ sub.id }})">Cancel</button>
+                </div>
+            </form>
         </div>
         {% endfor %}
     </div>
@@ -122,99 +139,11 @@
 </div>
 {% endif %}
 
-<div class="text-center mt-4">
-    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse"
-            data-bs-target="#addSubprojectForm">
-        ➕ Add Subproject
-    </button>
-</div>
 
-<div class="collapse mt-3" id="addSubprojectForm">
-    <form id="subprojectForm" method="POST" action="{{ url_for('subproject.create', project_id=project.id) }}"
-          class="card card-body tracker-card mt-3">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-        <div class="mb-3">
-            <label for="subproject-title" class="form-label">Subproject Title <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="subproject-title" name="title" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="subproject-description" class="form-label">Description <span
-                    class="text-danger">*</span></label>
-            <textarea class="form-control" id="subproject-description" name="description" rows="3" required></textarea>
-        </div>
-
-        <div class="mb-3">
-            <label for="subproject-type" class="form-label">Type <span class="text-danger">*</span></label>
-            <select class="form-control" id="subproject-type" name="type" required>
-                <option value="normal" selected>Normal</option>
-                <option value="revision">Revision</option>
-            </select>
-        </div>
-
-
-        <div class="mb-3">
-            <label class="form-label">Milestone Generation</label>
-            {% if current_user.plan == "student_plus" %}
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="ai_option" id="ai_no" value="no" checked>
-                <label class="form-check-label" for="ai_no">Create blank subproject</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="ai_option" id="ai_yes" value="yes">
-                <label class="form-check-label" for="ai_yes">Use AI to generate milestones</label>
-            </div>
-            {% else %}
-            <div class="alert alert-warning mt-2 mb-0">
-                AI milestone generation is available for Student+ plans only.
-            </div>
-            <input type="hidden" name="ai_option" value="no">
-            {% endif %}
-        </div>
-
-        <div class="mb-3">
-            <label for="deadline" class="form-label">Deadline <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="deadline" name="deadline" required
-                   min="{{ now.strftime('%Y-%m-%d') }}">
-        </div>
-
-        <button type="submit" class="btn btn-success" id="saveSubprojectBtn">Save Subproject</button>
-    </form>
-</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.getElementById("subprojectForm").addEventListener("submit", function (e) {
-        const title = document.getElementById("subproject-title").value.trim();
-        const description = document.getElementById("subproject-description").value.trim();
-        const deadline = document.getElementById("deadline").value.trim();
-        const aiInputs = document.querySelectorAll('input[name="ai_option"]');
-        const aiOption = document.querySelector('input[name="ai_option"]:checked');
-        const submitBtn = document.getElementById("saveSubprojectBtn");
-
-        if (!title || !description || !deadline) {
-            e.preventDefault();
-            alert("Please fill out all required fields: title, description, and deadline.");
-            return;
-        }
-
-        if (aiInputs.length > 0 && aiInputs[0].offsetParent !== null && !aiOption) {
-            e.preventDefault();
-            alert("Please select a milestone generation option.");
-            return;
-        }
-
-        submitBtn.disabled = true;
-
-        if (aiOption && aiOption.value === "yes") {
-            submitBtn.textContent = "Creating milestones & saving...";
-        } else {
-            submitBtn.textContent = "Saving...";
-        }
-    });
-
 
     function enableEdit(id) {
         document.getElementById(`row-${id}`).classList.add("d-none");
