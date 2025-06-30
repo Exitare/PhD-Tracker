@@ -6,6 +6,7 @@ from flask_login import login_required, current_user, logout_user
 from src.forms import EmailForm, PasswordForm, ThemeForm
 from werkzeug.security import check_password_hash, generate_password_hash
 import stripe
+from src.services.jwt_service import JWTService
 
 bp = Blueprint("account", __name__)
 
@@ -112,3 +113,34 @@ def manage_subscriptions():
         print(f"Stripe error: {e}")
         flash("An error occurred while managing subscriptions. Please try again.", "danger")
         return redirect(url_for('account.panel'))
+
+@bp.route("/account/verify-email/<token>", methods=["GET"])
+def verify_email(token):
+    try:
+        email = JWTService.verify_email_token(token)
+        if not email:
+            flash("Invalid or expired verification link.", "error")
+            return redirect(url_for('auth.login'))
+
+        user = db_session.query(User).filter_by(email=email).first()
+        if not user:
+            print("User not found for email:", email)
+            flash("Token invalid.", "error")
+            return redirect(url_for('auth.login'))
+
+        if user.email_verified:
+            print("Email already verified.")
+            flash("Token invalid.", "info")
+            return redirect(url_for('auth.login'))
+
+        user.email_verified = True
+        user.email_verified_at = datetime.now(timezone.utc).timestamp() * 1000
+        db_session.commit()
+
+        flash("Email successfully verified! You can now log in.", "success")
+        return redirect(url_for('auth.login'))
+
+    except Exception as e:
+        print(f"Error verifying email: {e}")
+        flash("An error occurred while verifying your email. Please try again.", "error")
+        return redirect(url_for('auth.login'))

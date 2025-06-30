@@ -47,11 +47,14 @@
                     {% if user.plan == 'student' %}
                     <span class="text-success">Active (Student)</span>
                     {% elif user.stripe_subscription_expires_at %}
-                    {% set expiry = user.stripe_subscription_expires_at | msToDatetime %}
-                    {% if expiry > now %}
-                    <span class="text-success">Active until {{ expiry.strftime('%Y-%m-%d') }}</span>
+                    {% if user.stripe_subscription_expires_at > now %}
+                    <span class="text-success">
+                        Active until {{ user.stripe_subscription_expires_at | datetimeformat }}
+                     </span>
                     {% else %}
-                    <span class="text-warning">Expired on {{ expiry.strftime('%Y-%m-%d') }}</span>
+                    <span class="text-warning">
+                        Expired on {{ user.stripe_subscription_expires_at | datetimeformat }}
+                    </span>
                     {% endif %}
                     {% else %}
                     <span class="text-warning">Inactive</span>

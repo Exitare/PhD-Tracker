@@ -157,19 +157,27 @@ def stripe_success():
             print("Subscription details:", subscription)
 
         # Get the first subscription item (usually one per sub)
-        if subscription["items"]["data"]:
-            item_id = subscription["items"]["data"][0]["id"]
-            current_user.stripe_subscription_id = subscription_id
-            current_user.stripe_subscription_item_id = item_id
-            price_id = subscription["items"]["data"][0]["price"]["id"]
-            current_user.plan = Plans.from_stripe_price_id(price_id)
-            current_user.stripe_subscription_expires_at = subscription["current_period_end"] * 1000
-            db_session.commit()
-            flash("Your Student+ subscription is now active!", "success")
-        else:
-            flash("No subscription items found. Contact support.", "danger")
+        try:
+            if subscription["items"]["data"]:
+                item_id = subscription["items"]["data"][0]["id"]
+                current_user.stripe_subscription_id = subscription_id
+                current_user.stripe_subscription_item_id = item_id
+                price_id = subscription["items"]["data"][0]["price"]["id"]
+                current_user.plan = Plans.from_stripe_price_id(price_id)
+                item = subscription["items"]["data"][0]
+                current_user.stripe_subscription_expires_at = int(item["current_period_end"] * 1000)
+                db_session.commit()
+                flash("Your Student+ subscription is now active!", "success")
+            else:
+                flash("No subscription items found. Contact support.", "danger")
+
+        except Exception as e:
+            print(subscription)
+            print("Error processing subscription items:", e)
+            flash("There was an issue processing your subscription. Please contact support.", "danger")
 
     except Exception as e:
+
         print("Stripe post-checkout error:", e)
         flash("There was an issue activating your plan. Please contact support.", "danger")
 

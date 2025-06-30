@@ -23,6 +23,13 @@ class User(Base, UserMixin):
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
 
+    def __str__(self):
+        return (f"User(id={self.id}, email='{self.email}', created_at={self.created_at}, plan='{self.plan}', stripe_customer_id='{self.stripe_customer_id}',"
+                f" email_verified={self.email_verified}, email_verified_at={self.email_verified_at}, pending_email='{self.pending_email}',"
+                f" password_hash='{self.password_hash}', stripe_subscription_id='{self.stripe_subscription_id}',"
+                f" stripe_subscription_item_id='{self.stripe_subscription_item_id}',"
+                f" stripe_subscription_expires_at={self.stripe_subscription_expires_at})")
+
 
 class Project(Base):
     __tablename__ = 'projects'

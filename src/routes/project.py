@@ -59,7 +59,8 @@ def view(project_id: int):
         return render_template(
             "project-detail.html",
             project=project,
-            subprojects=subprojects
+            subprojects=subprojects,
+            now=datetime.now()
         )
     except Exception as e:
         print("Error loading project:", e)
