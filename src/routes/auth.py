@@ -157,7 +157,9 @@ def stripe_success():
             item_id = subscription["items"]["data"][0]["id"]
             current_user.stripe_subscription_id = subscription_id
             current_user.stripe_subscription_item_id = item_id
-            current_user.plan = Plans.StudentPlus.value
+            price_id = subscription["items"]["data"][0]["price"]["id"]
+            current_user.plan = Plans.from_stripe_price_id(price_id)
+            current_user.stripe_subscription_expires_at = subscription["current_period_end"] * 1000
             db_session.commit()
             flash("Your Student+ subscription is now active!", "success")
         else:

@@ -4,6 +4,7 @@ from src.db.models import User
 from src.db import db_session
 from flask_login import login_required, current_user, logout_user
 from src.forms import EmailForm, PasswordForm, ThemeForm
+from werkzeug.security import check_password_hash, generate_password_hash
 import stripe
 
 bp = Blueprint("account", __name__)
@@ -49,7 +50,31 @@ def update_email():
 @bp.route("/account/password", methods=["POST"])
 @login_required
 def update_password():
-    pass
+    form = PasswordForm(request.form)
+
+    if form.validate():
+        # Check if the current password is correct
+        if not check_password_hash(current_user.password_hash, form.current_password.data):
+            flash("Current password is incorrect.", "danger")
+            return redirect(url_for("account.panel"))
+
+        # Prevent using the same password again
+        if check_password_hash(current_user.password_hash, form.password.data):
+            flash("New password cannot be the same as the current password.", "warning")
+            return redirect(url_for("account.panel"))
+
+        # Update password
+        current_user.password_hash = generate_password_hash(form.password.data)
+        db_session.commit()
+        flash("Your password has been updated.", "success")
+
+    else:
+        # Show form validation errors
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"{getattr(form, field).label.text}: {error}", "danger")
+
+    return redirect(url_for("account.panel"))
 
 
 @bp.route("/account/theme", methods=["POST"])

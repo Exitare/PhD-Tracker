@@ -44,8 +44,15 @@
             <div>
                 <div class="text-muted small">Status</div>
                 <div class="fw-semibold">
-                    {% if user.plan %}
-                    <span class="text-success">Active</span>
+                    {% if user.plan == 'student' %}
+                    <span class="text-success">Active (Student)</span>
+                    {% elif user.stripe_subscription_expires_at %}
+                    {% set expiry = user.stripe_subscription_expires_at | msToDatetime %}
+                    {% if expiry > now %}
+                    <span class="text-success">Active until {{ expiry.strftime('%Y-%m-%d') }}</span>
+                    {% else %}
+                    <span class="text-warning">Expired on {{ expiry.strftime('%Y-%m-%d') }}</span>
+                    {% endif %}
                     {% else %}
                     <span class="text-warning">Inactive</span>
                     {% endif %}
@@ -56,7 +63,7 @@
 
     <!-- Design Theme -->
     <form method="POST" action="{{ url_for('account.update_theme') }}" class="mt-4">
-        {{ theme_form.hidden_tag() }}
+        <input type="hidden" name="csrf_token" value="{{ theme_form.csrf_token.current_token }}">
         <label for="{{ theme_form.theme.id }}" class="form-label">Design Theme</label>
         <div class="d-flex align-items-center gap-2">
             {{ theme_form.theme(class="form-control") }}
@@ -79,7 +86,7 @@
     <div class="card p-4 shadow-sm">
         <h5 class="card-title mb-3">Update Email</h5>
         <form method="POST" action="{{ url_for('account.update_email') }}">
-            {{ email_form.hidden_tag() }}
+            <input type="hidden" name="csrf_token" value="{{ email_form.csrf_token.current_token }}">
             <label for="{{ email_form.email.id }}" class="form-label">New Email</label>
             {{ email_form.email(class="form-control", placeholder="your@email.com") }}
             <button class="btn btn-primary mt-2" type="submit">Update Email</button>
@@ -92,8 +99,12 @@
     <div class="card p-4 shadow-sm">
         <h5 class="card-title mb-3">Update Password</h5>
         <form method="POST" action="{{ url_for('account.update_password') }}">
-            {{ password_form.hidden_tag() }}
-            <label for="{{ password_form.password.id }}" class="form-label">New Password</label>
+            <input type="hidden" name="csrf_token" value="{{ password_form.csrf_token.current_token }}">
+
+            <label for="{{ password_form.current_password.id }}" class="form-label">Current Password</label>
+            {{ password_form.current_password(class="form-control", placeholder="Current password") }}
+
+            <label for="{{ password_form.password.id }}" class="form-label mt-3">New Password</label>
             {{ password_form.password(class="form-control", placeholder="New password") }}
 
             <label for="{{ password_form.confirm.id }}" class="form-label mt-3">Confirm Password</label>
