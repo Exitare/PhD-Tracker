@@ -9,6 +9,7 @@ from flask_login import login_required, current_user
 import stripe
 import os
 from src.plans import Plans
+from src.services.mail_service import MailService
 
 bp = Blueprint("auth", __name__)
 
@@ -44,6 +45,9 @@ def register_step1():
             )
             db_session.add(user)
             db_session.commit()
+
+            # send verification email
+            MailService.send_verification_email(user)
 
             login_user(user)
             return redirect(url_for('auth.choose_plan'))

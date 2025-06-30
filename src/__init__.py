@@ -12,6 +12,8 @@ from datetime import datetime
 import stripe
 from multiprocessing import Process, Event
 from src.tasks.downgrade_users import run_downgrade_loop
+from .extensions import mail
+from flask_mail import Mail
 
 _shutdown_event = Event()
 _downgrade_process = None
@@ -48,6 +50,17 @@ def create_app():
     app.register_blueprint(revision.bp)
     app.register_blueprint(account.bp)
     app.register_blueprint(webhooks.bp)
+
+    app.config.update(
+        MAIL_SERVER='mail.smtp2go.com',
+        MAIL_PORT=587,
+        MAIL_USE_TLS=True,
+        MAIL_USERNAME=os.environ.get('SMTP2GO_USER'),
+        MAIL_PASSWORD=os.environ.get('SMTP2GO_PASSWORD'),
+        MAIL_DEFAULT_SENDER='noreply@anobrain.ai'
+    )
+
+    mail.init_app(app)
 
     # Cleanup SQLAlchemy session after each request
     @app.teardown_appcontext

@@ -6,3 +6,5 @@ sqlalchemy
 wtforms
 flask-login
 stripe
+Flask-Mail
+PyJWT

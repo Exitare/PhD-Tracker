@@ -1,5 +1,5 @@
 from flask_login import UserMixin
-from sqlalchemy import Column, Integer, String, Text, BigInteger, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Text, BigInteger, ForeignKey, Enum, Boolean
 from sqlalchemy.orm import relationship
 from src.db import Base
 from datetime import timezone, datetime
@@ -11,6 +11,9 @@ class User(Base, UserMixin):
     id = Column(Integer, primary_key=True)
     stripe_customer_id = Column(String, unique=True)
     email = Column(String(150), unique=True, nullable=False)
+    email_verified = Column(Boolean, default=False, nullable=False)
+    email_verified_at = Column(BigInteger, nullable=True, default=None)
+    pending_email = Column(String(150), nullable=True)
     password_hash = Column(String(200), nullable=False)
     created_at = Column(BigInteger, nullable=False, default=int(datetime.now(timezone.utc).timestamp() * 1000))
     plan = Column(String(50), default='student')
