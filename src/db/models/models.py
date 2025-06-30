@@ -16,6 +16,7 @@ class User(Base, UserMixin):
     plan = Column(String(50), default='student')
     stripe_subscription_id = Column(String, nullable=True)
     stripe_subscription_item_id = Column(String, nullable=True)
+    stripe_subscription_expires_at = Column(BigInteger, nullable=True)
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
 
@@ -73,3 +74,12 @@ class Milestone(Base):
             "due_date": self.due_date,
             "status": self.status
         }
+
+
+class StripeWebhookEvent(Base):
+    __tablename__ = "stripe_webhook_events"
+
+    id = Column(Integer, primary_key=True)
+    event_id = Column(String(100), unique=True, nullable=False)  # Stripe's unique ID for the event
+    event_type = Column(String(100), nullable=False)  # e.g., 'invoice.payment_succeeded'
+    received_at = Column(BigInteger, nullable=False, default=lambda: int(datetime.now(timezone.utc).timestamp() * 1000))

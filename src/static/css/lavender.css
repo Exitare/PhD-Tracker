@@ -243,3 +243,21 @@ select.form-select:focus,
     color: #a18bff;
     text-decoration: underline;
 }
+
+.selectable-card {
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.selectable-card:hover {
+    border-color: #b8aaff; /* Slightly brighter than selected lavender */
+    background-color: #3a3455; /* Slightly lighter than the card background */
+    box-shadow: 0 0 8px rgba(161, 139, 255, 0.3); /* Soft lavender glow */
+}
+
+.btn-check:checked + .selectable-card {
+    border-color: #a18bff;
+    background-color: #2b2640;
+    box-shadow: 0 0 0 2px rgba(161, 139, 255, 0.4); /* Focus ring feel */
+}
