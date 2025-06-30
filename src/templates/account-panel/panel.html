@@ -3,98 +3,104 @@
 
 {% block content %}
 <div class="card p-4 shadow-lg mb-4">
-  <h2 class="card-title mb-4">Account Overview</h2>
+    <h2 class="card-title mb-4">Account Overview</h2>
 
-  <!-- Account Summary -->
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <div class="text-muted small">Email</div>
-          <div class="fw-semibold">{{ current_user.email }}</div>
+    <!-- Account Summary -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small">Email</div>
+                    <div class="fw-semibold">{{ current_user.email }}</div>
+                </div>
+                <a data-bs-toggle="collapse" href="#emailFormCollapse" role="button" aria-expanded="false"
+                   aria-controls="emailFormCollapse" class="text-decoration-none text-light">
+                    <i class="fas fa-pen-to-square"></i>
+                </a>
+            </div>
         </div>
-        <a data-bs-toggle="collapse" href="#emailFormCollapse" role="button" aria-expanded="false" aria-controls="emailFormCollapse" class="text-decoration-none text-light">
-          <i class="fas fa-pen-to-square"></i>
+
+        <div class="col-md-6 mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small">Password</div>
+                    <div class="fw-semibold">••••••••</div>
+                </div>
+                <a data-bs-toggle="collapse" href="#passwordFormCollapse" role="button" aria-expanded="false"
+                   aria-controls="passwordFormCollapse" class="text-decoration-none text-light">
+                    <i class="fas fa-key"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div>
+                <div class="text-muted small">Subscription Plan</div>
+                <div class="fw-semibold">{{ (user.plan | planFormat) or "None" }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div>
+                <div class="text-muted small">Status</div>
+                <div class="fw-semibold">
+                    {% if user.plan %}
+                    <span class="text-success">Active</span>
+                    {% else %}
+                    <span class="text-warning">Inactive</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Design Theme -->
+    <form method="POST" action="{{ url_for('account.update_theme') }}" class="mt-4">
+        {{ theme_form.hidden_tag() }}
+        <label for="{{ theme_form.theme.id }}" class="form-label">Design Theme</label>
+        <div class="d-flex align-items-center gap-2">
+            {{ theme_form.theme(class="form-control") }}
+            <button class="btn btn-primary" type="submit">Apply</button>
+        </div>
+    </form>
+
+    <!-- Stripe Controls -->
+    <div class="mt-4">
+        <a href="{{ url_for('account.manage_subscriptions') }}"
+           class="btn btn-success"
+           onclick="this.classList.add('disabled'); this.innerText='Loading data...';">
+            Manage via Stripe
         </a>
-      </div>
     </div>
-
-    <div class="col-md-6 mb-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <div class="text-muted small">Password</div>
-          <div class="fw-semibold">••••••••</div>
-        </div>
-        <a data-bs-toggle="collapse" href="#passwordFormCollapse" role="button" aria-expanded="false" aria-controls="passwordFormCollapse" class="text-decoration-none text-light">
-          <i class="fas fa-key"></i>
-        </a>
-      </div>
-    </div>
-
-    <div class="col-md-6 mb-3">
-      <div>
-        <div class="text-muted small">Subscription Plan</div>
-        <div class="fw-semibold">{{ (user.plan | planFormat) or "None" }}</div>
-      </div>
-    </div>
-
-    <div class="col-md-6 mb-3">
-      <div>
-        <div class="text-muted small">Status</div>
-        <div class="fw-semibold">
-          {% if user.plan %}
-            <span class="text-success">Active</span>
-          {% else %}
-            <span class="text-warning">Inactive</span>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Design Theme -->
-  <form method="POST" action="{{ url_for('account.update_theme') }}" class="mt-4">
-    {{ theme_form.hidden_tag() }}
-    <label for="{{ theme_form.theme.id }}" class="form-label">Design Theme</label>
-    <div class="d-flex align-items-center gap-2">
-      {{ theme_form.theme(class="form-control") }}
-      <button class="btn btn-primary" type="submit">Apply</button>
-    </div>
-  </form>
-
-  <!-- Stripe Controls -->
-  <div class="mt-4">
-    <a href="{{ url_for('account.manage_subscriptions') }}" class="btn btn-success">Manage via Stripe</a>
-  </div>
 </div>
 
 <!-- Email Update (Collapsible) -->
 <div class="collapse mb-4" id="emailFormCollapse">
-  <div class="card p-4 shadow-sm">
-    <h5 class="card-title mb-3">Update Email</h5>
-    <form method="POST" action="{{ url_for('account.update_email') }}">
-      {{ email_form.hidden_tag() }}
-      <label for="{{ email_form.email.id }}" class="form-label">New Email</label>
-      {{ email_form.email(class="form-control", placeholder="your@email.com") }}
-      <button class="btn btn-primary mt-2" type="submit">Update Email</button>
-    </form>
-  </div>
+    <div class="card p-4 shadow-sm">
+        <h5 class="card-title mb-3">Update Email</h5>
+        <form method="POST" action="{{ url_for('account.update_email') }}">
+            {{ email_form.hidden_tag() }}
+            <label for="{{ email_form.email.id }}" class="form-label">New Email</label>
+            {{ email_form.email(class="form-control", placeholder="your@email.com") }}
+            <button class="btn btn-primary mt-2" type="submit">Update Email</button>
+        </form>
+    </div>
 </div>
 
 <!-- Password Update (Collapsible) -->
 <div class="collapse mb-4" id="passwordFormCollapse">
-  <div class="card p-4 shadow-sm">
-    <h5 class="card-title mb-3">Update Password</h5>
-    <form method="POST" action="{{ url_for('account.update_password') }}">
-      {{ password_form.hidden_tag() }}
-      <label for="{{ password_form.password.id }}" class="form-label">New Password</label>
-      {{ password_form.password(class="form-control", placeholder="New password") }}
+    <div class="card p-4 shadow-sm">
+        <h5 class="card-title mb-3">Update Password</h5>
+        <form method="POST" action="{{ url_for('account.update_password') }}">
+            {{ password_form.hidden_tag() }}
+            <label for="{{ password_form.password.id }}" class="form-label">New Password</label>
+            {{ password_form.password(class="form-control", placeholder="New password") }}
 
-      <label for="{{ password_form.confirm.id }}" class="form-label mt-3">Confirm Password</label>
-      {{ password_form.confirm(class="form-control", placeholder="Confirm password") }}
+            <label for="{{ password_form.confirm.id }}" class="form-label mt-3">Confirm Password</label>
+            {{ password_form.confirm(class="form-control", placeholder="Confirm password") }}
 
-      <button class="btn btn-primary mt-3" type="submit">Update Password</button>
-    </form>
-  </div>
+            <button class="btn btn-primary mt-3" type="submit">Update Password</button>
+        </form>
+    </div>
 </div>
 {% endblock %}

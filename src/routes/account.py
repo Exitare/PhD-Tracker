@@ -4,6 +4,7 @@ from src.db.models import User
 from src.db import db_session
 from flask_login import login_required, current_user, logout_user
 from src.forms import EmailForm, PasswordForm, ThemeForm
+import stripe
 
 bp = Blueprint("account", __name__)
 
@@ -67,7 +68,22 @@ def update_theme():
     return redirect(url_for('account.panel'))
 
 
-@bp.route("/account/stripe", methods=["POST"])
+@bp.route("/account/stripe", methods=["GET"])
 @login_required
 def manage_subscriptions():
-    pass
+    try:
+        # open stripe customer portal
+        if not current_user.stripe_customer_id:
+            flash("You need to set up a Stripe customer ID first.", "warning")
+            return redirect(url_for('account.panel'))
+
+        stripe_customer_id = current_user.stripe_customer_id
+        stripe_portal_session = stripe.billing_portal.Session.create(
+            customer=stripe_customer_id,
+            return_url=url_for('account.panel', _external=True)
+        )
+        return redirect(stripe_portal_session.url)
+    except Exception as e:
+        print(f"Stripe error: {e}")
+        flash("An error occurred while managing subscriptions. Please try again.", "danger")
+        return redirect(url_for('account.panel'))
