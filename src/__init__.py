@@ -4,12 +4,17 @@ from dotenv import load_dotenv
 from sqlalchemy.sql.functions import user
 from src.db.models import User
 from src.db import init_db, db_session
-from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision, account
+from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision, account, webhooks
 import os
 from datetime import datetime, timezone
 from flask_login import LoginManager
 from datetime import datetime
 import stripe
+from multiprocessing import Process, Event
+from src.tasks.downgrade_users import run_downgrade_loop
+
+_shutdown_event = Event()
+_downgrade_process = None
 
 csrf = CSRFProtect()
 
@@ -42,6 +47,7 @@ def create_app():
     app.register_blueprint(about.bp)
     app.register_blueprint(revision.bp)
     app.register_blueprint(account.bp)
+    app.register_blueprint(webhooks.bp)
 
     # Cleanup SQLAlchemy session after each request
     @app.teardown_appcontext
@@ -76,3 +82,22 @@ def create_app():
         return db_session.get(User, int(user_id))  # or db_session.query(User).get(int(user_id))
 
     return app
+
+
+def start_background_downgrade_process():
+    global _downgrade_process
+    _downgrade_process = Process(target=run_downgrade_loop, args=(_shutdown_event,))
+    _downgrade_process.start()
+    print(f"[Flask] Started background downgrade process with PID {_downgrade_process.pid}")
+
+
+def stop_background_downgrade_process():
+    global _downgrade_process
+    if _downgrade_process is not None:
+        print("[Flask] Shutting down background downgrade process...")
+        _shutdown_event.set()
+        _downgrade_process.join(timeout=10)
+        if _downgrade_process.is_alive():
+            print("[Flask] Background process did not shut down in time.")
+        else:
+            print("[Flask] Background process shut down cleanly.")

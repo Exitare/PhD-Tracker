@@ -237,3 +237,21 @@ select.form-select:focus,
     color: #2aa198;
     text-decoration: underline;
 }
+
+.selectable-card {
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.selectable-card:hover {
+  border-color: #2aa198; /* Slightly brighter than selected color */
+  background-color: #003845; /* A touch lighter than your dark card bg */
+  box-shadow: 0 0 8px rgba(38, 139, 210, 0.3); /* Soft blue glow */
+}
+
+.btn-check:checked + .selectable-card {
+  border-color: #268bd2;
+  background-color: #002b36;
+  box-shadow: 0 0 0 2px rgba(38, 139, 210, 0.4); /* Focus ring feel */
+}

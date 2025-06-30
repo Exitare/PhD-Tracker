@@ -10,8 +10,6 @@ import stripe
 import os
 from src.plans import Plans
 
-
-
 bp = Blueprint("auth", __name__)
 
 
@@ -75,7 +73,7 @@ def choose_plan():
                     customer=current_user.stripe_customer_id,
                     payment_method_types=['card'],
                     line_items=[{
-                        'price': "price_1ReTECDanNlk6y5aUQGf9a1P",
+                        'price': os.environ.get("STUDENT_PLUS_PRICE_ID"),
                     }],
                     mode='subscription',  # change to 'payment' if it's a one-time purchase
                     success_url=url_for('auth.stripe_success', _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
