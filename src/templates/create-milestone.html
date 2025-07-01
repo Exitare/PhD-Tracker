@@ -39,7 +39,7 @@
             <div class="mb-3">
                 <label for="due-date" class="form-label">Due Date <span class="text-danger">*</span></label>
                 <input type="date" class="form-control" id="due-date" name="due_date"
-                       min="{{ now.strftime('%Y-%m-%d') }}" required>
+                       min="{{ now | dateformat }}" required>
             </div>
 
             <div class="mb-3">
