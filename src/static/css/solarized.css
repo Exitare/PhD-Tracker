@@ -255,3 +255,11 @@ select.form-select:focus,
   background-color: #002b36;
   box-shadow: 0 0 0 2px rgba(38, 139, 210, 0.4); /* Focus ring feel */
 }
+
+.form-control-disabled {
+    background-color: #002b36 !important; /* match .form-control */
+    color: #fdf6e3 !important;            /* improve contrast */
+    opacity: 1 !important;                /* override default dimming */
+    cursor: not-allowed;
+    border: 1px solid #586e75;
+}

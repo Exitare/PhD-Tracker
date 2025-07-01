@@ -1,5 +1,5 @@
 from flask_login import UserMixin
-from sqlalchemy import Column, Integer, String, Text, BigInteger, ForeignKey, Enum, Boolean
+from sqlalchemy import Column, Integer, String, Text, BigInteger, ForeignKey, Enum, Boolean, JSON
 from sqlalchemy.orm import relationship
 from src.db import Base
 from datetime import timezone, datetime
@@ -24,11 +24,12 @@ class User(Base, UserMixin):
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
 
     def __str__(self):
-        return (f"User(id={self.id}, email='{self.email}', created_at={self.created_at}, plan='{self.plan}', stripe_customer_id='{self.stripe_customer_id}',"
-                f" email_verified={self.email_verified}, email_verified_at={self.email_verified_at}, pending_email='{self.pending_email}',"
-                f" password_hash='{self.password_hash}', stripe_subscription_id='{self.stripe_subscription_id}',"
-                f" stripe_subscription_item_id='{self.stripe_subscription_item_id}',"
-                f" stripe_subscription_expires_at={self.stripe_subscription_expires_at})")
+        return (
+            f"User(id={self.id}, email='{self.email}', created_at={self.created_at}, plan='{self.plan}', stripe_customer_id='{self.stripe_customer_id}',"
+            f" email_verified={self.email_verified}, email_verified_at={self.email_verified_at}, pending_email='{self.pending_email}',"
+            f" password_hash='{self.password_hash}', stripe_subscription_id='{self.stripe_subscription_id}',"
+            f" stripe_subscription_item_id='{self.stripe_subscription_item_id}',"
+            f" stripe_subscription_expires_at={self.stripe_subscription_expires_at})")
 
 
 class Project(Base):
@@ -38,6 +39,11 @@ class Project(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
+    type = Column(Enum("paper", "poster", name="project_type"), nullable=False, default="paper")
+    selected_venue = Column(String(255), nullable=True)
+    selected_venue_url = Column(String(255), nullable=True)
+    venue_recommendations = Column(JSON, nullable=True)
+    venue_requirements = Column(Text, nullable=True)
     created_at = Column(BigInteger, nullable=False, default=datetime.now(timezone.utc).timestamp())
     user = relationship("User", back_populates="projects")
     sub_projects = relationship("SubProject", back_populates="project", cascade="all, delete-orphan")

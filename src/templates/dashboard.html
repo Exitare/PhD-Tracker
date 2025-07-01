@@ -23,6 +23,7 @@
                     <!-- Description in the middle -->
                     <p class="text-muted flex-grow-1 mb-3">{{ project.description }}</p>
                     <p class="text-muted mb-1"><small>{{ project.sub_projects|length }} subproject{{ 's' if project.sub_projects|length != 1 else '' }}</small></p>
+                    <p class="text-muted mb-1"><small>{{project.created_at | datetimeformat }}</small></p>
 
                     <!-- Buttons at the bottom -->
                     <div class="d-flex justify-content-end gap-2 mt-auto">
@@ -30,37 +31,8 @@
                            class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-eye"></i> View
                         </a>
-                        <button class="btn btn-sm btn-outline-secondary"
-                                onclick="toggleEditMode({{ project.id }})">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
                     </div>
                 </div>
-            </div>
-
-            <!-- Edit Card -->
-            <div class="card tracker-card mb-3 d-none" id="edit-card-{{ project.id }}">
-                <form method="POST" action="{{ url_for('project.edit', project_id=project.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="card-body d-flex flex-column h-100">
-                        <!-- Editable fields -->
-                        <input type="text" name="title" class="form-control mb-2" value="{{ project.title }}" required>
-
-                        <!-- Multiline description -->
-                        <textarea name="description" class="form-control mb-3" rows="4" required>{{ project.description }}</textarea>
-
-                        <!-- Save / Cancel Buttons -->
-                        <div class="d-flex justify-content-end gap-2 mt-auto">
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <i class="fas fa-save"></i> Save
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary"
-                                    onclick="toggleEditMode({{ project.id }})">
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </form>
             </div>
         </div>
         {% endfor %}
@@ -79,13 +51,5 @@
 
 {% block scripts %}
 <script>
-    function toggleEditMode(id) {
-        const view = document.getElementById(`view-card-${id}`);
-        const edit = document.getElementById(`edit-card-${id}`);
-        if (view && edit) {
-            view.classList.toggle('d-none');
-            edit.classList.toggle('d-none');
-        }
-    }
 </script>
 {% endblock %}

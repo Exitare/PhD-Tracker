@@ -68,7 +68,7 @@ def view(project_id: int):
 
 @bp.route("/dashboard/projects/<int:project_id>", methods=["POST"])
 @login_required
-def edit(project_id):
+def edit(project_id: int):
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         abort(404)
@@ -78,6 +78,9 @@ def edit(project_id):
 
     title = request.form.get("title", "").strip()
     description = request.form.get("description", "").strip()
+    proj_type = request.form.get("type", "").strip()
+    selected_venue = request.form.get("selected_venue", "").strip()
+    selected_venue_url = request.form.get("selected_venue_url", "").strip()
 
     if not title or not description:
         flash("Title and description are required.", "danger")
@@ -85,7 +88,16 @@ def edit(project_id):
 
     project.title = title
     project.description = description
-    db_session.commit()
+    project.type = proj_type or None  # Optional
+    project.selected_venue = selected_venue or None  # Optional
+    project.selected_venue_url = selected_venue_url or None  # Optional
 
+    db_session.commit()
     flash("Project updated successfully.", "success")
-    return redirect(url_for("dashboard.dashboard", project_id=project_id))
+
+    # Conditional redirect
+    to_project: bool = request.args.get("to_project", "false").lower() == "true"
+    if to_project:
+        return redirect(url_for("project.view", project_id=project_id))
+    else:
+        return redirect(url_for("dashboard.dashboard"))
