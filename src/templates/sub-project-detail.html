@@ -179,12 +179,14 @@
 
     {% if current_user.plan == "student_plus" %}
     <div class="row py-5">
+        {% if milestones|length > 0 %}
         <div class="text-center mb-4">
             <button class="btn btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#llmCollapse"
                     aria-expanded="false" aria-controls="llmCollapse">
                 🤖 Improve Milestones with AI
             </button>
         </div>
+        {% endif %}
 
         <div class="collapse mt-3" id="llmCollapse">
             <form id="llmContextForm"
