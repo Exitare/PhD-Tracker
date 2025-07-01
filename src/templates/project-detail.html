@@ -64,7 +64,7 @@
                     <h5 class="card-title">{{ sub.title }}</h5>
                     <p class="mb-1 text-muted">{{ sub.description }}</p>
                     <p class="mb-1"><strong>Created:</strong> {{ sub.created_at | datetimeformat }}</p>
-                    <p class="mb-1"><strong>Deadline:</strong> {{ sub.deadline | datetimeformat}}</p>
+                    <p class="mb-1"><strong>Deadline:</strong> {{ sub.deadline | dateformat}}</p>
                     <p class="mb-0"><strong>Milestones:</strong> {{ milestones | length if milestones else 0 }}</p>
                 </div>
                 <div class="mt-3 d-flex justify-content-between flex-wrap gap-2">
