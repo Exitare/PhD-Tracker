@@ -8,3 +8,4 @@ flask-login
 stripe
 Flask-Mail
 PyJWT
+email-validator

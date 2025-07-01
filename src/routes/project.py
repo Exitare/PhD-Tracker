@@ -50,7 +50,6 @@ def view(project_id: int):
                 "subproject": sub,
                 "milestones": milestones
             })
-        # subprojects = db_session.query(SubProject).filter_by(project_id=project_id).all()
 
         for item in subprojects:
             sub = item["subproject"]

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from src.db.models import User
 from src.db import db_session
 from flask_login import login_required, current_user, logout_user
@@ -7,10 +7,14 @@ from src.forms import EmailForm, PasswordForm, ThemeForm
 from werkzeug.security import check_password_hash, generate_password_hash
 import stripe
 from src.services.jwt_service import JWTService
+import re
+from src.services.mail_service import MailService
+from sqlalchemy.exc import IntegrityError
 
 bp = Blueprint("account", __name__)
 
 ALLOWED_THEMES = {"lavender", "dark", "light", "solarized"}
+EMAIL_REGEX = r"[^@]+@[^@]+\.[^@]+"
 
 
 @bp.route("/account", methods=["GET"])
@@ -45,7 +49,41 @@ def panel():
 @bp.route("/account/email", methods=["POST"])
 @login_required
 def update_email():
-    pass
+    form = EmailForm(request.form)
+
+    if form.validate():
+        new_email = form.email.data.strip().lower()
+        password = form.password.data
+
+        if not check_password_hash(current_user.password_hash, password):
+            flash("Incorrect password.", "danger")
+            return redirect(url_for("account.panel"))
+
+        if new_email == current_user.email:
+            flash("New email must be different from your current email.", "warning")
+            return redirect(url_for("account.panel"))
+
+        if db_session.query(User).filter(User.email == new_email).first():
+            flash("If the email is valid and available, you'll receive a verification link shortly.", "danger")
+            return redirect(url_for("account.panel"))
+
+        try:
+            current_user.pending_email = new_email
+            db_session.commit()
+            MailService.send_verification_email(current_user)
+
+            flash("If the email is valid and available, you'll receive a verification link shortly.", "success")
+            return redirect(url_for("account.panel"))
+        except IntegrityError:
+            db_session.rollback()
+            flash("Could not update email due to a database error.", "danger")
+            return redirect(url_for("account.panel"))
+
+    # If validation fails
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{getattr(form, field).label.text}: {error}", "danger")
+    return redirect(url_for("account.panel"))
 
 
 @bp.route("/account/password", methods=["POST"])
@@ -114,6 +152,7 @@ def manage_subscriptions():
         flash("An error occurred while managing subscriptions. Please try again.", "danger")
         return redirect(url_for('account.panel'))
 
+
 @bp.route("/account/verify-email/<token>", methods=["GET"])
 def verify_email(token):
     try:
@@ -132,6 +171,11 @@ def verify_email(token):
             print("Email already verified.")
             flash("Token invalid.", "info")
             return redirect(url_for('auth.login'))
+
+        if user.pending_email == email:
+            # Promote pending_email to main email
+            user.email = user.pending_email
+            user.pending_email = None
 
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).timestamp() * 1000

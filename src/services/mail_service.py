@@ -14,6 +14,21 @@ class MailService:
             mail.send(msg)
 
     @staticmethod
+    def send_password_updated_email(user):
+        msg = Message(
+            subject='Your password has been updated',
+            recipients=[user.email],
+            body='Your password has been successfully updated.'
+        )
+
+        # Launch in a background thread
+        threading.Thread(
+            target=MailService._send_async_email,
+            args=(current_app._get_current_object(), msg),
+            daemon=True  # Optional: daemon=True ends the thread with the main process
+        ).start()
+
+    @staticmethod
     def send_verification_email(user):
         token = JWTService.generate_email_token(user.email)
         verify_url = url_for('account.verify_email', token=token, _external=True)
