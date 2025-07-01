@@ -37,6 +37,13 @@
                         </a>
                     </li>
                     {% endif %}
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2"
+                           href="{{ url_for('milestone.download_milestone_calendar', project_id=subproject.project_id, subproject_id=subproject.id) }}">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Export Milestones (.ics)</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

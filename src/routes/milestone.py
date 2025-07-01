@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, abort, jsonify, flash, render_template
+from flask import Blueprint, request, redirect, url_for, abort, jsonify, flash, render_template, Response
 from datetime import datetime
 from src.db.models import Milestone, SubProject
 from flask_login import current_user, login_required
@@ -7,8 +7,29 @@ from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 import stripe
 from src.openai_client import OpenAIService
+from src.services.calendar_service import CalendarService
+from ics import Calendar
 
 bp = Blueprint('milestone', __name__)
+
+
+@bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/calendar.ics")
+def download_milestone_calendar(project_id: int, subproject_id: int):
+    # check that current user has access to the subproject
+    subproject = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
+    if not subproject or subproject.project.user_id != current_user.id:
+        flash("Subproject not found or access denied.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
+    milestones: List[Milestone] = subproject.milestones
+
+    # Generate the calendar file
+    calendar: Calendar = CalendarService.generate_milestones_ics(milestones=milestones)
+    return Response(
+        str(calendar),
+        mimetype="text/calendar",
+        headers={"Content-Disposition": "attachment; filename=milestones.ics"}
+    )
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones", methods=["GET"])

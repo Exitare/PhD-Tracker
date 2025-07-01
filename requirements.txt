@@ -9,3 +9,4 @@ stripe
 Flask-Mail
 PyJWT
 email-validator
+ics
