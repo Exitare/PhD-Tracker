@@ -38,8 +38,9 @@ class OpenAIService:
         return response.choices[0].message.content.strip()
 
     @staticmethod
-    def submit_reviewer_feedback_milestone_generation(reviewer_text: str, deadline: str) -> Tuple[
-        List[AIMilestone], Dict[str, Any]]:
+    def submit_reviewer_feedback_milestone_generation(reviewer_text: str, additional_context: str, deadline: str) -> \
+            Tuple[
+                List[AIMilestone], Dict[str, Any]]:
         current_day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         milestone_prompt = f"""You are a scientific writer.
@@ -50,6 +51,9 @@ class OpenAIService:
         Reviewer Comments:
         {reviewer_text}
         """
+
+        if additional_context:
+            milestone_prompt += f"\nAdditional context: {additional_context}"
 
         response = client.chat.completions.create(
             model=model,

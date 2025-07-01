@@ -37,6 +37,7 @@ def view(project_id):
 @login_required
 def create(project_id: int):
     raw_text = request.form.get("raw_text", "").strip()
+    additional_context = request.form.get("additional_context", "").strip()
     deadline_str = request.form.get("deadline")
 
     if not raw_text:
