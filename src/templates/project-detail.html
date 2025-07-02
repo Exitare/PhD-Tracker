@@ -189,7 +189,8 @@
                             <label for="created_at">📅 Created</label>
                         </div>
                         <div class="col-md-8">
-                            <input type="text" id="created_at" class="form-control form-control-lg form-control-disabled"
+                            <input type="text" id="created_at"
+                                   class="form-control form-control-lg form-control-disabled"
                                    value="{{ project.created_at | datetimeformat }}" disabled>
                         </div>
                     </div>
@@ -203,6 +204,38 @@
             </div>
         </form>
     </div>
+
+    {% if project.type == "paper" and current_user.plan == "student_plus" %}
+    <div class="row mb-4">
+        <div class="col text-center">
+            {% if not recommendations %}
+            <form method="POST" action="{{ url_for('project.generate_recommendations', project_id=project.id) }}">
+                <button class="btn btn-primary" type="submit">Generate Journal Recommendations</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if recommendations %}
+    <div class="row">
+        {% for journal in project.venue_recommendations %}
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ journal.name }}</h5>
+                    <p class="card-text">
+                        <strong>Scope:</strong> {{ journal.scope }}<br>
+                        <strong>Impact Factor:</strong> {{ journal.impact_factor }}<br>
+                        <strong>Open Access:</strong> {{ 'Yes' if journal.open_access else 'No' }}
+                    </p>
+                    <a href="{{ journal.link }}" class="btn btn-success" target="_blank">Visit Journal</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
 
     {% if subprojects %}
     <div class="container">

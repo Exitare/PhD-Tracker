@@ -4,6 +4,8 @@ from src.db.models import Project, SubProject, Milestone
 from src import db_session
 from flask_login import current_user, login_required
 
+from src.openai_client import OpenAIService
+
 bp = Blueprint('project', __name__)
 
 
@@ -101,3 +103,28 @@ def edit(project_id: int):
         return redirect(url_for("project.view", project_id=project_id))
     else:
         return redirect(url_for("dashboard.dashboard"))
+
+
+@bp.route("/dashboard/projects/<int:project_id>/journal_recommendations", methods=["POST"])
+@login_required
+def get_journal_recommendations(project_id: int):
+    project = db_session.query(Project).filter_by(id=project_id).first()
+    if not project:
+        abort(404)
+
+    if project.user_id != current_user.id:
+        abort(403)
+
+
+    OpenAIService.generate_reviewer_reply()
+
+    venue_recommendations = request.form.get("venue_recommendations", "").strip()
+    venue_requirements = request.form.get("venue_requirements", "").strip()
+
+    project.venue_recommendations = venue_recommendations or None
+    project.venue_requirements = venue_requirements or None
+
+    db_session.commit()
+    flash("Journal recommendations updated successfully.", "success")
+
+    return redirect(url_for("project.view", project_id=project_id))

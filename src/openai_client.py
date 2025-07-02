@@ -17,6 +17,41 @@ METER_NAME: str = "tokenrequests"
 class OpenAIService:
 
     @staticmethod
+    def generate_journal_recommendations(project_description: str):
+        prompt = f"""You are a helpful assistant that recommends academic journals.
+        Based on the following project description, recommend 5-7 suitable journals for publication.
+        Provide the journal name, a brief description, and a link to the journal's website.
+
+        Project Description:
+        {project_description}
+
+        Return only raw JSON as a list of objects with fields: journal_name, description, link.
+        Do not include explanations or markdown."""
+
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+
+        content = response.choices[0].message.content.strip()
+
+        try:
+            # Clean up markdown or code blocks if present
+            if content.startswith("```"):
+                content = re.sub(r"```(?:json)?", "", content).strip("` \n")
+
+            raw_data = json.loads(content)
+            return raw_data
+
+        except Exception as e:
+            print("Error parsing journal recommendations:", e)
+            print("Raw content:\n", content)
+            return []
+
+    @staticmethod
     def generate_reviewer_reply(reviewer_text: str) -> str:
         reply_prompt = f"""You are a scientific writing assistant. 
         Based on the following reviewer feedback, generate a polite and structured response to each point, assuming the author agrees to revise:
