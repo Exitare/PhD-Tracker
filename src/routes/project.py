@@ -153,11 +153,18 @@ def select_journal(project_id: int):
         abort(403)
 
     try:
-        db_session.delete(project)
+        selected_journal = request.form.get("journal_name", "").strip()
+        selected_journal_url = request.form.get("journal_link", "").strip()
+        if not selected_journal:
+            flash("Please select a journal.", "danger")
+            return redirect(url_for("project.view", project_id=project_id))
+
+        project.selected_venue = selected_journal
+        project.selected_venue_url = selected_journal_url
         db_session.commit()
-        flash("Project deleted successfully.", "success")
+        flash("Journal selected successfully.", "success")
     except Exception as e:
         db_session.rollback()
         flash("Failed to delete project. Please try again.", "danger")
 
-    return redirect(url_for("dashboard.dashboard"))
+    return redirect(url_for("project.view", project_id=project_id))

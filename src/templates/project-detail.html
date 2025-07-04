@@ -35,9 +35,7 @@
                         </a>
                     </li>
 
-                    <li><a class="dropdown-item"
-                           href="{{ url_for('project.get_journal_recommendations', project_id=project.id) }}">Recommend
-                        Journals</a></li>
+
                     {% if project.selected_venue %}
                     <li><a class="dropdown-item" href="#">Journal Requirements</a></li>
                     {% endif %}
@@ -224,43 +222,60 @@
         </form>
     </div>
 
-    {% if project.venue_recommendations %}
+
+    {% if project.type == 'paper' and project.venue_recommendations %}
     <div class="row">
-        {% for journal in project.venue_recommendations %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card mb-4 h-100">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title text-primary fw-semibold">
-                        <i class="fas fa-book-open me-2" aria-hidden="true"></i>{{ journal.name }}
-                    </h5>
+        <div class="mb-3 text-end">
+            <button class="btn btn-outline-secondary btn-sm"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#journalRecommendationsCollapse"
+                    aria-expanded="{{ 'true' if not project.selected_venue else 'false' }}"
+                    aria-controls="journalRecommendationsCollapse">
+                <i class="fas fa-filter me-1"></i>
+                {{ 'Hide' if not project.selected_venue else 'Show' }} Journal Recommendations
+            </button>
+        </div>
+    </div>
 
-                    <ul class="list-unstyled small mb-4">
-                        <li><strong>Scope:</strong> {{ journal.scope }}</li>
-                        <li><strong>Impact Factor:</strong> {{ journal.impact_factor or 'N/A' }}</li>
-                        <li><strong>Open Access:</strong> {{ 'Yes' if journal.open_access else 'No' }}</li>
-                    </ul>
+    <div class="collapse {% if not project.selected_venue %}show{% endif %}" id="journalRecommendationsCollapse">
+        <div class="row">
+            {% for journal in project.venue_recommendations %}
+            <div class="col-md-6 col-lg-4 py-2">
+                <div class="card mb-4 h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-primary fw-semibold">
+                            <i class="fas fa-book-open me-2" aria-hidden="true"></i>{{ journal.name }}
+                        </h5>
 
-                    <div class="mt-auto d-flex flex-wrap gap-2">
-                        <form method="POST" action="{{ url_for('project.select_journal', project_id=project.id) }}">
-                            <input type="hidden" name="journal_name" value="{{ journal.name }}">
-                            <input type="hidden" name="journal_link" value="{{ journal.link }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-primary btn-sm"
-                                    aria-label="Select {{ journal.name }} as target journal">
-                                <i class="fas fa-check me-1" aria-hidden="true"></i> Select
-                            </button>
-                        </form>
+                        <ul class="list-unstyled small mb-4">
+                            <li><strong>Scope:</strong> {{ journal.scope }}</li>
+                            <li><strong>Impact Factor:</strong> {{ journal.impact_factor or 'N/A' }}</li>
+                            <li><strong>Open Access:</strong> {{ 'Yes' if journal.open_access else 'No' }}</li>
+                        </ul>
 
-                        <a href="{{ journal.link }}" class="btn btn-outline-secondary btn-sm" target="_blank"
-                           rel="noopener"
-                           aria-label="Visit the {{ journal.name }} journal website">
-                            <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i> Visit
-                        </a>
+                        <div class="mt-auto d-flex flex-wrap gap-2">
+                            <form method="POST" action="{{ url_for('project.select_journal', project_id=project.id) }}">
+                                <input type="hidden" name="journal_name" value="{{ journal.name }}">
+                                <input type="hidden" name="journal_link" value="{{ journal.link }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-primary btn-sm"
+                                        aria-label="Select {{ journal.name }} as target journal">
+                                    <i class="fas fa-check me-1" aria-hidden="true"></i> Select
+                                </button>
+                            </form>
+
+                            <a href="{{ journal.link }}" class="btn btn-outline-secondary btn-sm" target="_blank"
+                               rel="noopener"
+                               aria-label="Visit the {{ journal.name }} journal website">
+                                <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i> Visit
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
     {% endif %}
 
@@ -370,6 +385,21 @@
 
 {% block scripts %}
 <script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.querySelector('[data-bs-target="#journalRecommendationsCollapse"]');
+        const collapseEl = document.getElementById('journalRecommendationsCollapse');
+
+        if (toggleBtn && collapseEl) {
+            collapseEl.addEventListener('shown.bs.collapse', function () {
+                toggleBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Hide Journal Recommendations';
+            });
+
+            collapseEl.addEventListener('hidden.bs.collapse', function () {
+                toggleBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show Journal Recommendations';
+            });
+        }
+    });
 
     function enableEdit(id) {
         document.getElementById(`row-${id}`).classList.add("d-none");
