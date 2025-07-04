@@ -10,7 +10,6 @@
                 ← Back to Dashboard
             </a>
         </div>
-
         <!-- Title (Center) -->
         <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
             <h1 class="milestone-title m-0">{{ project.title }}</h1>
@@ -37,8 +36,22 @@
 
 
                     {% if project.selected_venue %}
-                    <li><a class="dropdown-item" href="#">Journal Requirements</a></li>
+                    <li>
+                        {% if project.venue_requirements is none %}
+                        <a class="dropdown-item" href="#" id="journal-req-link"
+                           data-journal="{{ project.selected_venue }}">
+                            Get Journal Requirements
+                        </a>
+                        {% else %}
+                        <a class="dropdown-item" href="#"
+                           data-journal="{{ project.selected_venue }}">
+                            Journal Requirements
+                        </a>
+                        {% endif %}
+                    </li>
                     {% endif %}
+
+
                     {% endif %}
 
 
@@ -69,10 +82,10 @@
                     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h3 class="card-title mb-0" style="color: #a18bff;">📌 Project Details</h3>
                         <div class="d-flex gap-2">
-                            {% if project.type == "paper" and current_user.plan == "student_plus" and not
+                            {% if project.type == "paper" and current_user.plan != "student" and not
                             recommendations %}
                             <form method="POST"
-                                  action="{{ url_for('project.get_journal_recommendations', project_id=project.id) }}">
+                                  action="{{ url_for('journal.get_recommendations', project_id=project.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button class="btn btn-sm btn-outline-primary" type="submit"
                                         onclick="setTimeout(() => { this.innerHTML = 'Generating...'; this.disabled = true; }, 10);">
@@ -80,6 +93,7 @@
                                 </button>
                             </form>
                             {% endif %}
+
                             <button onclick="enableProjectEdit()" class="btn btn-outline-primary btn-sm">✏️ Edit
                             </button>
                         </div>
@@ -255,7 +269,7 @@
                         </ul>
 
                         <div class="mt-auto d-flex flex-wrap gap-2">
-                            <form method="POST" action="{{ url_for('project.select_journal', project_id=project.id) }}">
+                            <form method="POST" action="{{ url_for('journal.select', project_id=project.id) }}">
                                 <input type="hidden" name="journal_name" value="{{ journal.name }}">
                                 <input type="hidden" name="journal_link" value="{{ journal.link }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -399,6 +413,49 @@
                 toggleBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show Journal Recommendations';
             });
         }
+
+        document.getElementById("journal-req-link")?.addEventListener("click", function (e) {
+            e.preventDefault();
+
+            console.log("Starting LLM request for journal:", this.dataset.journal);
+
+            const journal = this.dataset.journal;
+            const link = this;
+
+            // Disable the link
+            link.classList.add("disabled");
+
+            // Step 1: Start background job
+            fetch(`/dashboard/projects/{{project.id}}/journal/${encodeURIComponent(journal)}/requirements`)
+                .then(res => res.json())
+                .then(() => {
+                    pollForResult(journal);
+                })
+                .catch(err => {
+                    console.error(err);
+                    link.classList.remove("disabled");
+                    alert("❌ Failed to start LLM request.");
+                });
+
+            // Step 2: Poll every 30s until result is ready
+            function pollForResult(journalName) {
+                fetch(`/dashboard/projects/{{project.id}}/journal/${encodeURIComponent(journal)}/requirements/result`)
+                    .then(response => {
+                        if (response.status === 200) {
+                            return response.json();
+                        } else {
+                            throw new Error("Still processing");
+                        }
+                    })
+                    .then(() => {
+                        location.reload(); // trigger flash message display
+                    })
+                    .catch(() => {
+                        // Still processing, try again in 30 seconds
+                        setTimeout(() => pollForResult(journalName), 5000);
+                    });
+            }
+        });
     });
 
     function enableEdit(id) {

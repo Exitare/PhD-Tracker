@@ -1,11 +1,10 @@
 from flask import Flask
 from flask_wtf import CSRFProtect
 from dotenv import load_dotenv
-from sqlalchemy.sql.functions import user
 from src.db.models import User
 from src.db import init_db, db_session
 from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision, account, \
-    webhooks
+    webhooks, journal
 import os
 from datetime import datetime, timezone
 from flask_login import LoginManager
@@ -14,7 +13,6 @@ import stripe
 from multiprocessing import Process, Event
 from src.tasks.downgrade_users import run_downgrade_loop
 from .extensions import mail
-from flask_mail import Mail
 
 _shutdown_event = Event()
 _downgrade_process = None
@@ -51,6 +49,7 @@ def create_app():
     app.register_blueprint(revision.bp)
     app.register_blueprint(account.bp)
     app.register_blueprint(webhooks.bp)
+    app.register_blueprint(journal.bp)
 
     app.config.update(
         MAIL_SERVER='mail.smtp2go.com',
