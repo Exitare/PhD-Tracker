@@ -26,10 +26,13 @@ def register_step1():
             error = "Email and password are required."
             return render_template('auth/register_step1.html', error=error, email=email)
 
+
+        # TODO: Add email validation regex
+        # TODO: Add password strength validation
         # Check if user already exists
         existing_user = db_session.query(User).filter_by(email=email).first()
         if existing_user:
-            error = "Email already registered."
+            error = "If the email is valid and available, you'll receive a verification link shortly."
             return render_template('auth/register_step1.html', error=error, email=email)
 
         try:

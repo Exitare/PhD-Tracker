@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from openai import OpenAI
 import json, re, os
-from .models import AIMilestone
+from .models import AIMilestone, AIJournalRecommendation
 from src.db.models import Milestone
 from typing import List, Tuple, Dict, Any
 from dotenv import load_dotenv
@@ -17,7 +17,71 @@ METER_NAME: str = "tokenrequests"
 class OpenAIService:
 
     @staticmethod
+    def generate_journal_recommendations(project_description: str) -> Tuple[
+        List[AIJournalRecommendation], Dict[str, Any]]:
+        # TODO: Add option for users to increase or decrease amount of journals returned
+        prompt = f"""You are a helpful assistant that recommends academic journals.
+        Based on the following project description, recommend 6 suitable journals for publication.
+        Provide the journal name, a brief description, and a link to the journal's website.
+
+        Project Description:
+        {project_description}
+
+        Return only raw JSON as a list of objects with the following fields:
+        - name (string)
+        - scope (string)
+        - impact_factor (float or null)
+        - open_access (true or false)
+        - link (string)
+
+        Do not include explanations or markdown. Do not make information up — verify the journal names and links.
+
+        Example:
+        [
+            {{
+                "name": "Open Access AI Journal",
+                "scope": "Artificial intelligence and machine learning",
+                "impact_factor": 3.8,
+                "open_access": true,
+                "link": "https://example.com/journal3"
+            }}
+        ]
+        """
+
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+        )
+
+        content = response.choices[0].message.content.strip()
+
+        try:
+            if content.startswith("```"):
+                content = re.sub(r"```(?:json)?", "", content).strip("` \n")
+
+            content = content.strip()
+            if not content.startswith("["):
+                raise ValueError("Expected JSON list as output.")
+
+            raw_data = json.loads(content)
+            recommendations: List[AIJournalRecommendation] = [AIJournalRecommendation(**r) for r in raw_data]
+            recommendations = [r for r in recommendations if r.impact_factor is not None]
+
+            usage = response.usage.model_dump() if hasattr(response.usage, 'model_dump') else dict(response.usage)
+
+            return recommendations, usage
+
+        except Exception as e:
+            print("Error parsing journal recommendations:", e)
+            print("Raw content:\n", content)
+            return [], {"error": str(e), "raw_content": content}
+
+    @staticmethod
     def generate_reviewer_reply(reviewer_text: str) -> str:
+        # TODO: FIX and return usage
         reply_prompt = f"""You are a scientific writing assistant. 
         Based on the following reviewer feedback, generate a polite and structured response to each point, assuming the author agrees to revise:
 

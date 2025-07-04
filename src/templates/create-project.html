@@ -9,17 +9,40 @@
   <div class="card-body">
     <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
       <div class="mb-4">
         <label for="title" class="form-label">Project Title</label>
         <input type="text" class="form-control form-control-lg" id="title" name="title"
                placeholder="e.g., Thesis" required/>
       </div>
+
       <div class="mb-4">
         <label for="description" class="form-label">Project Description</label>
         <textarea class="form-control form-control-lg" id="description" name="description"
-                  placeholder="e.g., This project includes all thesis-related writing and revision work."
+                  placeholder="e.g., This project includes all thesis-related writing and revision work. For best AI results be as detailed as possible."
                   rows="3" required></textarea>
       </div>
+
+      <div class="mb-4">
+        <label for="type" class="form-label">Project Type</label>
+        <select class="form-control form-control-lg" id="type" name="type">
+          <option value="paper" selected>Paper</option>
+          <option value="poster">Poster</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label for="selected_venue" class="form-label">Selected Venue</label>
+        <input type="text" class="form-control form-control-lg" id="selected_venue" name="selected_venue"
+               placeholder="e.g., Nature Communications"/>
+      </div>
+
+      <div class="mb-4">
+        <label for="selected_venue_url" class="form-label">Venue URL</label>
+        <input type="url" class="form-control form-control-lg" id="selected_venue_url" name="selected_venue_url"
+               placeholder="e.g., https://www.nature.com/ncomms/"/>
+      </div>
+
       <button type="submit" class="btn btn-primary w-100">📌 Save Project</button>
     </form>
 

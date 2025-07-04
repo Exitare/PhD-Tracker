@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from src.db.models import User
 from src.db import db_session
 from flask_login import login_required, current_user, logout_user
@@ -7,7 +7,6 @@ from src.forms import EmailForm, PasswordForm, ThemeForm
 from werkzeug.security import check_password_hash, generate_password_hash
 import stripe
 from src.services.jwt_service import JWTService
-import re
 from src.services.mail_service import MailService
 from sqlalchemy.exc import IntegrityError
 
@@ -106,6 +105,7 @@ def update_password():
         current_user.password_hash = generate_password_hash(form.password.data)
         db_session.commit()
         flash("Your password has been updated.", "success")
+        # TODO: Send password change notification email
 
     else:
         # Show form validation errors

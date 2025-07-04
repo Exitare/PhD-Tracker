@@ -2,157 +2,404 @@
 {% block title %}Project Details - {{ project.title }}{% endblock %}
 
 {% block content %}
-<div class="row align-items-center mb-4 text-center text-md-start">
-    <!-- Back Button (Left) -->
-    <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
-        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">
-            ← Back to Dashboard
-        </a>
-    </div>
-
-    <!-- Title (Center) -->
-    <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
-        <h1 class="milestone-title m-0">{{ project.title }}</h1>
-    </div>
-
-    <!-- Split Dropdown Button (Right) -->
-    <div class="col-12 col-md-4 text-md-end">
-        <div class="btn-group">
-            <a href="{{ url_for('subproject.show_sub_project_form', project_id=project.id) }}" class="btn btn-primary">
-                📬 Create Sub Project
+<div class="container">
+    <div class="row align-items-center mb-4 text-center text-md-start">
+        <!-- Back Button (Left) -->
+        <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">
+                ← Back to Dashboard
             </a>
-            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                <span class="visually-hidden">Toggle Dropdown</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li>
-                    <a class="dropdown-item" href="{{ url_for('revision.view', project_id=project.id) }}">
-                        📬 Create Revision
-                    </a>
-                </li>
-                <li><a class="dropdown-item" href="#">Duplicate</a></li>
-                <li><a class="dropdown-item" href="#">Export as PDF</a></li>
-            </ul>
+        </div>
+
+        <!-- Title (Center) -->
+        <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
+            <h1 class="milestone-title m-0">{{ project.title }}</h1>
+        </div>
+
+        <!-- Split Dropdown Button (Right) -->
+        <div class="col-12 col-md-4 text-md-end">
+            <div class="btn-group">
+                <a href="{{ url_for('subproject.show_sub_project_form', project_id=project.id) }}"
+                   class="btn btn-primary">
+                    📬 Create Task
+                </a>
+                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    {% if project.type == "paper" %}
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('revision.view', project_id=project.id) }}">
+                            📬 Create Revision
+                        </a>
+                    </li>
+
+
+                    {% if project.selected_venue %}
+                    <li><a class="dropdown-item" href="#">Journal Requirements</a></li>
+                    {% endif %}
+                    {% endif %}
+
+
+                    {% if project.type == "Poster" %}
+                    {% if project.selected_venue %}
+                    <li><a class="dropdown-item" href="#">Poster Requirements</a></li>
+                    {% endif %}
+
+                    {% endif %}
+
+                    <li><a class="dropdown-item" href="#">Export as PDF</a></li>
+
+                </ul>
+            </div>
         </div>
     </div>
-</div>
 
-{% if error %}
-<div class="alert alert-danger text-center mt-3">{{ error }}</div>
-{% endif %}
+    {% if error %}
+    <div class="alert alert-danger text-center mt-3">{{ error }}</div>
+    {% endif %}
 
-<div class="card tracker-card p-4 mb-4">
-    <div class="card-body">
-        <h5 class="card-title">Description</h5>
-        <p class="card-text">{{ project.description }}</p>
-    </div>
-</div>
-
-{% if subprojects %}
-<div class="container">
-    <h2 class="milestone-title mb-4 text-center text-md-start">🧩 Tasks</h2>
     <div class="row">
-        {% for item in subprojects %}
-        {% set sub = item.subproject %}
-        {% set milestones = item.milestones %}
+        <div id="project-view-card" class="p-4 mb-4 position-relative">
+            <div class="card tracker-card p-4 mb-4 position-relative">
+                <div class="card-body">
 
-        <div class="col-12 col-md-6 mb-4">
-            <!-- View Card -->
-            <div id="row-{{ sub.id }}"
-                 class="card tracker-card p-3 d-flex flex-column justify-content-between position-relative">
+                    <!-- Edit button -->
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                        <h3 class="card-title mb-0" style="color: #a18bff;">📌 Project Details</h3>
+                        <div class="d-flex gap-2">
+                            {% if project.type == "paper" and current_user.plan == "student_plus" and not
+                            recommendations %}
+                            <form method="POST"
+                                  action="{{ url_for('project.get_journal_recommendations', project_id=project.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-primary" type="submit"
+                                        onclick="setTimeout(() => { this.innerHTML = 'Generating...'; this.disabled = true; }, 10);">
+                                    📚 Generate Recommendations
+                                </button>
+                            </form>
+                            {% endif %}
+                            <button onclick="enableProjectEdit()" class="btn btn-outline-primary btn-sm">✏️ Edit
+                            </button>
+                        </div>
+                    </div>
 
-                <!-- Calendar icon button -->
-                <a href="{{ url_for('milestone.download_milestone_calendar', project_id=sub.project_id, subproject_id=sub.id) }}"
-                   class="position-absolute top-0 end-0 m-2 px-3 py-2 text-decoration-none text-light"
-                   title="Export milestones to calendar">
-                    <i class="fas fa-calendar-alt fa-lg"></i>
-                </a>
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">📄 Description</div>
+                        <div class="col-md-8">{{ project.description }}</div>
+                    </div>
 
-                <div>
-                    <h5 class="card-title">{{ sub.title }}</h5>
-                    <p class="mb-1 text-muted">{{ sub.description }}</p>
-                    <p class="mb-1"><strong>Created:</strong> {{ sub.created_at | datetimeformat }}</p>
-                    <p class="mb-1"><strong>Deadline:</strong> {{ sub.deadline | dateformat }}</p>
-                    <p class="mb-0"><strong>Milestones:</strong> {{ milestones | length if milestones else 0 }}</p>
-                </div>
+                    {% if project.type %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">🧷 Type</div>
+                        <div class="col-md-8 text-capitalize">{{ project.type }}</div>
+                    </div>
+                    {% endif %}
 
-                <div class="mt-3 d-flex justify-content-between flex-wrap gap-2">
-                    <a href="{{ url_for('subproject.view', project_id=sub.project_id, subproject_id=sub.id) }}"
-                       class="btn btn-outline-primary flex-fill">
-                        <i class="fas fa-eye"></i> View
-                    </a>
-                    <button class="btn btn-outline-secondary flex-fill" onclick="enableEdit({{ sub.id }})">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <form method="POST"
-                          action="{{ url_for('subproject.delete', project_id=sub.project_id, subproject_id=sub.id) }}"
-                          onsubmit="return confirm('Are you sure you want to delete this subproject?');"
-                          class="flex-fill">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-danger w-100">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </form>
+                    {% if project.selected_venue %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">🏛️ Venue</div>
+                        <div class="col-md-8">{{ project.selected_venue }}</div>
+                    </div>
+                    {% endif %}
+
+
+                    {% if project.selected_venue_url %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">🔗 Venue URL</div>
+                        <div class="col-md-8">
+                            <a href="{{ project.selected_venue_url }}" target="_blank"
+                               class="text-decoration-underline text-light">
+                                {{ project.selected_venue_url }}
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if project.created_at %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">📅 Created</div>
+                        <div class="col-md-8">{{ project.created_at | datetimeformat }}</div>
+                    </div>
+                    {% endif %}
+
+
                 </div>
             </div>
-
-            <!-- Edit Card -->
-            <form id="edit-row-{{ sub.id }}" method="POST"
-                  action="{{ url_for('subproject.edit', project_id=project.id, subproject_id=sub.id) }}"
-                  class="card card-body tracker-card mt-4 d-none">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                <div class="mb-3">
-                    <label for="edit-title-{{ sub.id }}" class="form-label">Subproject Title <span
-                            class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="edit-title-{{ sub.id }}" name="title"
-                           value="{{ sub.title }}" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="edit-description-{{ sub.id }}" class="form-label">Description <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="edit-description-{{ sub.id }}" name="description" rows="3"
-                              required>{{ sub.description }}</textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label for="edit-type-{{ sub.id }}" class="form-label">Type <span
-                            class="text-danger">*</span></label>
-                    <select class="form-control" id="edit-type-{{ sub.id }}" name="type" required>
-                        <option value="normal" {% if sub.type=='normal' %}selected{% endif %}>Normal</option>
-                        <option value="revision" {% if sub.type=='revision' %}selected{% endif %}>Revision</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="edit-deadline-{{ sub.id }}" class="form-label">Deadline <span
-                            class="text-danger">*</span></label>
-                    <input type="date" class="form-control" id="edit-deadline-{{ sub.id }}" name="deadline"
-                           value="{{ sub.deadline_dt.strftime('%Y-%m-%d') }}"
-                           min="{{ now.strftime('%Y-%m-%d') }}" required>
-                </div>
-
-                <div class="d-grid gap-2 d-md-flex justify-content-md-between">
-                    <button type="submit" class="btn btn-success">Update Subproject</button>
-                    <button type="button" class="btn btn-secondary" onclick="cancelEdit({{ sub.id }})">Cancel</button>
-                </div>
-            </form>
         </div>
-        {% endfor %}
+
+        <form id="project-edit-form" method="POST" class="d-none"
+              action="{{ url_for('project.edit', project_id=project.id, to_project='true') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="card tracker-card p-4 mb-4">
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="card-title mb-0" style="color: #a18bff;">✏️ Edit Project</h3>
+                        <button type="button" onclick="cancelProjectEdit()" class="btn btn-outline-light btn-sm">❌
+                            Cancel
+                        </button>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">
+                            <label for="title">📄 Title</label>
+                        </div>
+                        <div class="col-md-8">
+                            <textarea id="title" name="title" class="form-control form-control-lg" rows="2" required>{{ project.title }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">
+                            <label for="description">📝 Description</label>
+                        </div>
+                        <div class="col-md-8">
+                            <textarea id="description" name="description" class="form-control form-control-lg" rows="3"
+                                      required>{{ project.description }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">
+                            <label for="type">🧷 Type</label>
+                        </div>
+                        <div class="col-md-8">
+                            <select id="type" name="type" class="form-control form-control-lg">
+                                <option value="" {% if not project.type %}selected{% endif %}>Select type (optional)
+                                </option>
+                                <option value="paper" {% if project.type==
+                                'paper' %}selected{% endif %}>Paper</option>
+                                <option value="poster" {% if project.type==
+                                'poster' %}selected{% endif %}>Poster</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">
+                            <label for="selected_venue">🏛️ Venue</label>
+                        </div>
+                        <div class="col-md-8">
+                            <input type="text" id="selected_venue" name="selected_venue"
+                                   class="form-control form-control-lg"
+                                   value="{{ project.selected_venue or '' }}"
+                                   placeholder="e.g., Nature Communications"/>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">
+                            <label for="selected_venue_url">🔗 Venue URL</label>
+                        </div>
+                        <div class="col-md-8">
+                            <input type="url" id="selected_venue_url" name="selected_venue_url"
+                                   class="form-control form-control-lg"
+                                   value="{{ project.selected_venue_url or '' }}" placeholder="https://example.com"/>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4 font-weight-bold text-muted">
+                            <label for="created_at">📅 Created</label>
+                        </div>
+                        <div class="col-md-8">
+                            <input type="text" id="created_at"
+                                   class="form-control form-control-lg form-control-disabled"
+                                   value="{{ project.created_at | datetimeformat }}" disabled>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                    </div>
+
+
+                </div>
+            </div>
+        </form>
     </div>
-</div>
-{% else %}
-<div class="alert alert-info text-center mt-4">
-    No subprojects found for this project.
-</div>
-{% endif %}
 
 
+    {% if project.type == 'paper' and project.venue_recommendations %}
+    <div class="row">
+        <div class="mb-3 text-end">
+            <button class="btn btn-outline-secondary btn-sm"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#journalRecommendationsCollapse"
+                    aria-expanded="{{ 'true' if not project.selected_venue else 'false' }}"
+                    aria-controls="journalRecommendationsCollapse">
+                <i class="fas fa-filter me-1"></i>
+                {{ 'Hide' if not project.selected_venue else 'Show' }} Journal Recommendations
+            </button>
+        </div>
+    </div>
+
+    <div class="collapse {% if not project.selected_venue %}show{% endif %}" id="journalRecommendationsCollapse">
+        <div class="row">
+            {% for journal in project.venue_recommendations %}
+            <div class="col-md-6 col-lg-4 py-2">
+                <div class="card mb-4 h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-primary fw-semibold">
+                            <i class="fas fa-book-open me-2" aria-hidden="true"></i>{{ journal.name }}
+                        </h5>
+
+                        <ul class="list-unstyled small mb-4">
+                            <li><strong>Scope:</strong> {{ journal.scope }}</li>
+                            <li><strong>Impact Factor:</strong> {{ journal.impact_factor or 'N/A' }}</li>
+                            <li><strong>Open Access:</strong> {{ 'Yes' if journal.open_access else 'No' }}</li>
+                        </ul>
+
+                        <div class="mt-auto d-flex flex-wrap gap-2">
+                            <form method="POST" action="{{ url_for('project.select_journal', project_id=project.id) }}">
+                                <input type="hidden" name="journal_name" value="{{ journal.name }}">
+                                <input type="hidden" name="journal_link" value="{{ journal.link }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-primary btn-sm"
+                                        aria-label="Select {{ journal.name }} as target journal">
+                                    <i class="fas fa-check me-1" aria-hidden="true"></i> Select
+                                </button>
+                            </form>
+
+                            <a href="{{ journal.link }}" class="btn btn-outline-secondary btn-sm" target="_blank"
+                               rel="noopener"
+                               aria-label="Visit the {{ journal.name }} journal website">
+                                <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i> Visit
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if subprojects %}
+    <div class="container">
+        <h2 class="milestone-title mb-4 text-center text-md-start">🧩 Tasks</h2>
+        <div class="row">
+            {% for item in subprojects %}
+            {% set sub = item.subproject %}
+            {% set milestones = item.milestones %}
+
+            <div class="col-12 col-md-6 mb-4">
+                <!-- View Card -->
+                <div id="row-{{ sub.id }}"
+                     class="card tracker-card p-3 d-flex flex-column justify-content-between position-relative">
+
+                    <!-- Calendar icon button -->
+                    <a href="{{ url_for('milestone.download_milestone_calendar', project_id=sub.project_id, subproject_id=sub.id) }}"
+                       class="position-absolute top-0 end-0 m-2 px-3 py-2 text-decoration-none text-light"
+                       title="Export milestones to calendar">
+                        <i class="fas fa-calendar-alt fa-lg"></i>
+                    </a>
+
+                    <div>
+                        <h5 class="card-title">{{ sub.title }}</h5>
+                        <p class="mb-1 text-muted">{{ sub.description }}</p>
+                        <p class="mb-1"><strong>Created:</strong> {{ sub.created_at | datetimeformat }}</p>
+                        <p class="mb-1"><strong>Deadline:</strong> {{ sub.deadline | dateformat }}</p>
+                        <p class="mb-0"><strong>Milestones:</strong> {{ milestones | length if milestones else 0 }}</p>
+                    </div>
+
+                    <div class="mt-3 d-flex justify-content-between flex-wrap gap-2">
+                        <a href="{{ url_for('subproject.view', project_id=sub.project_id, subproject_id=sub.id) }}"
+                           class="btn btn-outline-primary flex-fill">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <button class="btn btn-outline-secondary flex-fill" onclick="enableEdit({{ sub.id }})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <form method="POST"
+                              action="{{ url_for('subproject.delete', project_id=sub.project_id, subproject_id=sub.id) }}"
+                              onsubmit="return confirm('Are you sure you want to delete this subproject?');"
+                              class="flex-fill">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Edit Card -->
+                <form id="edit-row-{{ sub.id }}" method="POST"
+                      action="{{ url_for('subproject.edit', project_id=project.id, subproject_id=sub.id) }}"
+                      class="card card-body tracker-card mt-4 d-none">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="edit-title-{{ sub.id }}" class="form-label">Subproject Title <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit-title-{{ sub.id }}" name="title"
+                               value="{{ sub.title }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit-description-{{ sub.id }}" class="form-label">Description <span
+                                class="text-danger">*</span></label>
+                        <textarea class="form-control" id="edit-description-{{ sub.id }}" name="description" rows="3"
+                                  required>{{ sub.description }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit-type-{{ sub.id }}" class="form-label">Type <span
+                                class="text-danger">*</span></label>
+                        <select class="form-control" id="edit-type-{{ sub.id }}" name="type" required>
+                            <option value="normal" {% if sub.type=='normal' %}selected{% endif %}>Normal</option>
+                            <option value="revision" {% if sub.type=='revision' %}selected{% endif %}>Revision</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit-deadline-{{ sub.id }}" class="form-label">Deadline <span
+                                class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="edit-deadline-{{ sub.id }}" name="deadline"
+                               value="{{ sub.deadline_dt.strftime('%Y-%m-%d') }}"
+                               min="{{ now.strftime('%Y-%m-%d') }}" required>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        <button type="submit" class="btn btn-success">Update Subproject</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelEdit({{ sub.id }})">Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center mt-4">
+        No subprojects found for this project.
+    </div>
+    {% endif %}
+
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.querySelector('[data-bs-target="#journalRecommendationsCollapse"]');
+        const collapseEl = document.getElementById('journalRecommendationsCollapse');
+
+        if (toggleBtn && collapseEl) {
+            collapseEl.addEventListener('shown.bs.collapse', function () {
+                toggleBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Hide Journal Recommendations';
+            });
+
+            collapseEl.addEventListener('hidden.bs.collapse', function () {
+                toggleBtn.innerHTML = '<i class="fas fa-filter me-1"></i> Show Journal Recommendations';
+            });
+        }
+    });
 
     function enableEdit(id) {
         document.getElementById(`row-${id}`).classList.add("d-none");
@@ -162,6 +409,16 @@
     function cancelEdit(id) {
         document.getElementById(`edit-row-${id}`).classList.add("d-none");
         document.getElementById(`row-${id}`).classList.remove("d-none");
+    }
+
+    function enableProjectEdit() {
+        document.getElementById("project-view-card").classList.add("d-none");
+        document.getElementById("project-edit-form").classList.remove("d-none");
+    }
+
+    function cancelProjectEdit() {
+        document.getElementById("project-edit-form").classList.add("d-none");
+        document.getElementById("project-view-card").classList.remove("d-none");
     }
 
 

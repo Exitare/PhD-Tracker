@@ -261,3 +261,21 @@ select.form-select:focus,
     background-color: #2b2640;
     box-shadow: 0 0 0 2px rgba(161, 139, 255, 0.4); /* Focus ring feel */
 }
+
+.form-control-disabled {
+    background-color: #3a3455 !important; /* match .form-control */
+    color: #ccc !important;               /* improve contrast */
+    opacity: 1 !important;                /* override default dimming */
+    cursor: not-allowed;
+}
+
+/* Fix disabled buttons in dark theme */
+button:disabled,
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #3c345e !important; /* subtle contrast against card bg */
+    border-color: #5d4ea3 !important;
+    color: #bbb !important;
+    box-shadow: none;
+}
