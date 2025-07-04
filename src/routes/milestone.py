@@ -9,6 +9,7 @@ import stripe
 from src.openai_client import OpenAIService
 from src.services.calendar_service import CalendarService
 from ics import Calendar
+from src.services.log_service import AILogService
 
 bp = Blueprint('milestone', __name__)
 
@@ -170,6 +171,9 @@ def refine(project_id: int, subproject_id: int):
             "stripe_customer_id": current_user.stripe_customer_id,
         }
     )
+
+    AILogService.log_ai_usage(session=db_session, user_id=current_user.id, event_name="milestone_refine",
+                              used_tokens=token_count)
 
     # Fine milestones based on Milestone ids
     existing_ids = {m.id for m in existing_milestones}
