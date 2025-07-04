@@ -268,3 +268,14 @@ select.form-select:focus,
     opacity: 1 !important;                /* override default dimming */
     cursor: not-allowed;
 }
+
+/* Fix disabled buttons in dark theme */
+button:disabled,
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #3c345e !important; /* subtle contrast against card bg */
+    border-color: #5d4ea3 !important;
+    color: #bbb !important;
+    box-shadow: none;
+}

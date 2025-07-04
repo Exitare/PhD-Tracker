@@ -3,7 +3,9 @@ from flask import Blueprint, request, redirect, render_template, url_for, abort,
 from src.db.models import Project, SubProject, Milestone
 from src import db_session
 from flask_login import current_user, login_required
-
+import stripe
+from typing import List
+from src.models import AIJournalRecommendation
 from src.openai_client import OpenAIService
 
 bp = Blueprint('project', __name__)
@@ -116,15 +118,46 @@ def get_journal_recommendations(project_id: int):
         abort(403)
 
 
-    OpenAIService.generate_reviewer_reply()
+    recommendations: List[AIJournalRecommendation]
+    recommendations, usage = OpenAIService.generate_journal_recommendations(project_description=project.description)
 
-    venue_recommendations = request.form.get("venue_recommendations", "").strip()
-    venue_requirements = request.form.get("venue_requirements", "").strip()
+    if not recommendations:
+        flash("No journal recommendations found for this project.", "info")
+        return redirect(url_for("project.view", project_id=project_id))
 
-    project.venue_recommendations = venue_recommendations or None
-    project.venue_requirements = venue_requirements or None
+    project.venue_recommendations = [r.to_json() for r in recommendations] or None
+
+    token_count = usage.get("total_tokens", 0)
+    print(f"AI token usage: {token_count}")
+    # report usage
+    stripe.billing.MeterEvent.create(
+        event_name="tokenrequests",
+        payload={
+            "value": str(token_count),
+            "stripe_customer_id": current_user.stripe_customer_id,
+        }
+    )
 
     db_session.commit()
     flash("Journal recommendations updated successfully.", "success")
 
     return redirect(url_for("project.view", project_id=project_id))
+
+@bp.route("/dashboard/projects/<int:project_id>/select_journal", methods=["POST"])
+def select_journal(project_id: int):
+    project = db_session.query(Project).filter_by(id=project_id).first()
+    if not project:
+        abort(404)
+
+    if project.user_id != current_user.id:
+        abort(403)
+
+    try:
+        db_session.delete(project)
+        db_session.commit()
+        flash("Project deleted successfully.", "success")
+    except Exception as e:
+        db_session.rollback()
+        flash("Failed to delete project. Please try again.", "danger")
+
+    return redirect(url_for("dashboard.dashboard"))

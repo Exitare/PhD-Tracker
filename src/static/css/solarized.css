@@ -263,3 +263,13 @@ select.form-select:focus,
     cursor: not-allowed;
     border: 1px solid #586e75;
 }
+
+button:disabled,
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #073642 !important; /* match card bg */
+    border-color: #586e75 !important;     /* subtle outline */
+    color: #93a1a1 !important;            /* readable gray-blue */
+    box-shadow: none;
+}

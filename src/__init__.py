@@ -4,7 +4,8 @@ from dotenv import load_dotenv
 from sqlalchemy.sql.functions import user
 from src.db.models import User
 from src.db import init_db, db_session
-from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision, account, webhooks
+from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision, account, \
+    webhooks
 import os
 from datetime import datetime, timezone
 from flask_login import LoginManager

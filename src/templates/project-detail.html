@@ -28,14 +28,16 @@
                     <span class="visually-hidden">Toggle Dropdown</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    {% if project.type == "Paper" %}
+                    {% if project.type == "paper" %}
                     <li>
                         <a class="dropdown-item" href="{{ url_for('revision.view', project_id=project.id) }}">
                             📬 Create Revision
                         </a>
                     </li>
 
-                    <li><a class="dropdown-item" href="#">Recommended Journals</a></li>
+                    <li><a class="dropdown-item"
+                           href="{{ url_for('project.get_journal_recommendations', project_id=project.id) }}">Recommend
+                        Journals</a></li>
                     {% if project.selected_venue %}
                     <li><a class="dropdown-item" href="#">Journal Requirements</a></li>
                     {% endif %}
@@ -50,6 +52,7 @@
                     {% endif %}
 
                     <li><a class="dropdown-item" href="#">Export as PDF</a></li>
+
                 </ul>
             </div>
         </div>
@@ -65,9 +68,23 @@
                 <div class="card-body">
 
                     <!-- Edit button -->
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h3 class="card-title mb-0" style="color: #a18bff;">📌 Project Details</h3>
-                        <button onclick="enableProjectEdit()" class="btn btn-outline-light btn-sm">✏️ Edit</button>
+                        <div class="d-flex gap-2">
+                            {% if project.type == "paper" and current_user.plan == "student_plus" and not
+                            recommendations %}
+                            <form method="POST"
+                                  action="{{ url_for('project.get_journal_recommendations', project_id=project.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-primary" type="submit"
+                                        onclick="setTimeout(() => { this.innerHTML = 'Generating...'; this.disabled = true; }, 10);">
+                                    📚 Generate Recommendations
+                                </button>
+                            </form>
+                            {% endif %}
+                            <button onclick="enableProjectEdit()" class="btn btn-outline-primary btn-sm">✏️ Edit
+                            </button>
+                        </div>
                     </div>
 
                     <div class="row mb-3">
@@ -89,6 +106,7 @@
                     </div>
                     {% endif %}
 
+
                     {% if project.selected_venue_url %}
                     <div class="row mb-3">
                         <div class="col-md-4 font-weight-bold text-muted">🔗 Venue URL</div>
@@ -107,6 +125,7 @@
                         <div class="col-md-8">{{ project.created_at | datetimeformat }}</div>
                     </div>
                     {% endif %}
+
 
                 </div>
             </div>
@@ -205,36 +224,44 @@
         </form>
     </div>
 
-    {% if project.type == "paper" and current_user.plan == "student_plus" %}
-    <div class="row mb-4">
-        <div class="col text-center">
-            {% if not recommendations %}
-            <form method="POST" action="{{ url_for('project.generate_recommendations', project_id=project.id) }}">
-                <button class="btn btn-primary" type="submit">Generate Journal Recommendations</button>
-            </form>
-            {% endif %}
-        </div>
-    </div>
-
-    {% if recommendations %}
+    {% if project.venue_recommendations %}
     <div class="row">
         {% for journal in project.venue_recommendations %}
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">{{ journal.name }}</h5>
-                    <p class="card-text">
-                        <strong>Scope:</strong> {{ journal.scope }}<br>
-                        <strong>Impact Factor:</strong> {{ journal.impact_factor }}<br>
-                        <strong>Open Access:</strong> {{ 'Yes' if journal.open_access else 'No' }}
-                    </p>
-                    <a href="{{ journal.link }}" class="btn btn-success" target="_blank">Visit Journal</a>
+        <div class="col-md-6 col-lg-4">
+            <div class="card mb-4 h-100">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-primary fw-semibold">
+                        <i class="fas fa-book-open me-2" aria-hidden="true"></i>{{ journal.name }}
+                    </h5>
+
+                    <ul class="list-unstyled small mb-4">
+                        <li><strong>Scope:</strong> {{ journal.scope }}</li>
+                        <li><strong>Impact Factor:</strong> {{ journal.impact_factor or 'N/A' }}</li>
+                        <li><strong>Open Access:</strong> {{ 'Yes' if journal.open_access else 'No' }}</li>
+                    </ul>
+
+                    <div class="mt-auto d-flex flex-wrap gap-2">
+                        <form method="POST" action="{{ url_for('project.select_journal', project_id=project.id) }}">
+                            <input type="hidden" name="journal_name" value="{{ journal.name }}">
+                            <input type="hidden" name="journal_link" value="{{ journal.link }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-primary btn-sm"
+                                    aria-label="Select {{ journal.name }} as target journal">
+                                <i class="fas fa-check me-1" aria-hidden="true"></i> Select
+                            </button>
+                        </form>
+
+                        <a href="{{ journal.link }}" class="btn btn-outline-secondary btn-sm" target="_blank"
+                           rel="noopener"
+                           aria-label="Visit the {{ journal.name }} journal website">
+                            <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i> Visit
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-    {% endif %}
     {% endif %}
 
     {% if subprojects %}
