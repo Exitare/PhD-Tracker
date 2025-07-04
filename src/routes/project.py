@@ -7,6 +7,10 @@ import stripe
 from typing import List
 from src.models import AIJournalRecommendation
 from src.openai_client import OpenAIService
+import logging
+
+from src.plans import Plans
+from src.services.log_service import AILogService
 
 bp = Blueprint('project', __name__)
 
@@ -112,11 +116,15 @@ def edit(project_id: int):
 def get_journal_recommendations(project_id: int):
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
-        abort(404)
+        return render_template("dashboard.html", projects=[], error="Project not found.")
 
     if project.user_id != current_user.id:
-        abort(403)
+        return render_template("dashboard.html", projects=[],
+                               error="You do not have permission to access this project.")
 
+    if current_user.plan != Plans.StudentPlus.value:
+        flash("Journal recommendations are only available for Student+ plan users.", "warning")
+        return redirect(url_for("project.view", project_id=project_id))
 
     recommendations: List[AIJournalRecommendation]
     recommendations, usage = OpenAIService.generate_journal_recommendations(project_description=project.description)
@@ -128,7 +136,11 @@ def get_journal_recommendations(project_id: int):
     project.venue_recommendations = [r.to_json() for r in recommendations] or None
 
     token_count = usage.get("total_tokens", 0)
-    print(f"AI token usage: {token_count}")
+    logging.debug(f"AI token usage: {token_count}")
+
+    AILogService.log_ai_usage(session=db_session, user_id=current_user.id, event_name="journal_recommendations",
+                              used_tokens=token_count)
+
     # report usage
     stripe.billing.MeterEvent.create(
         event_name="tokenrequests",
@@ -142,6 +154,7 @@ def get_journal_recommendations(project_id: int):
     flash("Journal recommendations updated successfully.", "success")
 
     return redirect(url_for("project.view", project_id=project_id))
+
 
 @bp.route("/dashboard/projects/<int:project_id>/select_journal", methods=["POST"])
 def select_journal(project_id: int):

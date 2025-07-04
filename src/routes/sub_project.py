@@ -6,6 +6,7 @@ from src.openai_client import OpenAIService
 from flask_login import login_required, current_user
 import stripe
 from src.plans import Plans
+from src.services.log_service import AILogService
 
 bp = Blueprint('subproject', __name__)
 
@@ -134,6 +135,9 @@ def create(project_id: int):
                     "stripe_customer_id": current_user.stripe_customer_id,
                 }
             )
+
+            AILogService.log_ai_usage(session=db_session, user_id=current_user.id, event_name="create_subproject_with_milestones",
+                                      used_tokens=token_count)
 
         print("Subproject created:", title)
         db_session.commit()

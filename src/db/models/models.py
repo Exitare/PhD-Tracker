@@ -1,6 +1,6 @@
 from flask_login import UserMixin
 from sqlalchemy import Column, Integer, String, Text, BigInteger, ForeignKey, Enum, Boolean, JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from src.db import Base
 from datetime import timezone, datetime
 
@@ -9,7 +9,7 @@ class User(Base, UserMixin):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    stripe_customer_id = Column(String, unique=True)
+    stripe_customer_id: Mapped[str] = Column(String, unique=True)
     email = Column(String(150), unique=True, nullable=False)
     email_verified = Column(Boolean, default=False, nullable=False)
     email_verified_at = Column(BigInteger, nullable=True, default=None)
@@ -22,6 +22,7 @@ class User(Base, UserMixin):
     stripe_subscription_expires_at = Column(BigInteger, nullable=True)
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
+    usage_logs = relationship("UsageLog", back_populates="user", cascade="all, delete-orphan")
 
     def __str__(self):
         return (
@@ -99,3 +100,18 @@ class StripeWebhookEvent(Base):
     event_id = Column(String(100), unique=True, nullable=False)  # Stripe's unique ID for the event
     event_type = Column(String(100), nullable=False)  # e.g., 'invoice.payment_succeeded'
     received_at = Column(BigInteger, nullable=False, default=lambda: int(datetime.now(timezone.utc).timestamp() * 1000))
+
+
+class UsageLog(Base):
+    __tablename__ = "usage_logs"
+
+    id = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey('users.id'), nullable=False)
+    event_name = Column(String(100), nullable=False)  # e.g., 'tokenrequests'
+    used_tokens = Column(Integer, nullable=False, default=0)  # Number of credits used for this event
+    created_at = Column(BigInteger, nullable=False, default=lambda: int(datetime.now(timezone.utc).timestamp() * 1000))
+
+    user = relationship("User", back_populates="usage_logs")
+
+    def __str__(self):
+        return f"UsageLog(id={self.id}, user_id={self.user_id}, event_name='{self.event_name}', created_at={self.created_at})"
