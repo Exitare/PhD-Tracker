@@ -95,6 +95,7 @@
                     </div>
                     {% endif %}
 
+                    {% if project.type == 'paper' or project.type == 'poster' %}
                     <div class="row mb-3">
                         {% if project.type == 'paper' %}
                         <div class="col-md-4 font-weight-bold text-muted">🏛️ Journal</div>
@@ -105,7 +106,7 @@
                         <div class="col-md-8 d-flex align-items-center">
                             {% if project.selected_venue %}
                             <span class="small"><strong>{{ project.selected_venue }}</strong></span>
-                            {% else %}
+                            {% elif current_user.plan != 'student' and not project.selected_venue %}
                             <form method="POST"
                                   action="{{ url_for('journal.get_recommendations', project_id=project.id) }}"
                                   class="m-0">
@@ -116,12 +117,18 @@
                                     📚 Generate paper recommendations
                                 </button>
                             </form>
+                            {% else %}
+
+                            <span class="text-muted small">No venue selected.</span>
                             {% endif %}
                         </div>
                     </div>
+                    {% endif %}
 
                     <div class="row mb-3">
                         <div class="col-md-4 font-weight-bold text-muted">📚 Requirements</div>
+
+                        {% if project.type == 'paper' %}
                         <div class="col-md-8 d-flex align-items-center">
                             {% if project.venue_requirements == 'pending' %}
                             <div class="spinner-border spinner-border-sm text-info me-2" role="status">
@@ -138,7 +145,7 @@
                                 <span>View requirements for <strong>{{ project.selected_venue }}</strong></span>
                             </a>
 
-                            {% elif project.selected_venue %}
+                            {% elif project.selected_venue and current_user.plan != 'student' %}
                             <a href="#" class="text-info text-decoration-underline small d-flex align-items-center"
                                data-journal="{{ project.selected_venue }}"
                                id="journal-req-link">
@@ -150,6 +157,19 @@
                             <span class="text-muted small">No venue selected.</span>
                             {% endif %}
                         </div>
+
+                        {% elif type == 'dissertation' %}
+                        <div class="col-md-8 d-flex align-items-center">
+                            Add requirements
+                        </div>
+
+                        {% else %}
+
+                        <div class="col-md-8 d-flex align-items-center">
+                            Add requirements
+                        </div>
+
+                        {% endif %}
                     </div>
 
 
@@ -222,6 +242,8 @@
                                 'paper' %}selected{% endif %}>Paper</option>
                                 <option value="poster" {% if project.type==
                                 'poster' %}selected{% endif %}>Poster</option>
+                                <option value="dissertation" {% if project.type==
+                                'dissertation' %}selected{% endif %}>Dissertation</option>
                             </select>
                         </div>
                     </div>

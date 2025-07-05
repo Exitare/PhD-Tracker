@@ -6,49 +6,88 @@
 <h1 class="mb-4 text-center display-5" style="color: #a18bff;">📁 New Project</h1>
 
 <div class="tracker-card p-4 shadow-sm">
-  <div class="card-body">
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="card-body">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-      <div class="mb-4">
-        <label for="title" class="form-label">Project Title</label>
-        <input type="text" class="form-control form-control-lg" id="title" name="title"
-               placeholder="e.g., Thesis" required/>
-      </div>
+            <div class="mb-4">
+                <label for="title" class="form-label">Project Title</label>
+                <input type="text" class="form-control form-control-lg" id="title" name="title"
+                       placeholder="e.g., Thesis" required/>
+            </div>
 
-      <div class="mb-4">
-        <label for="description" class="form-label">Project Description</label>
-        <textarea class="form-control form-control-lg" id="description" name="description"
-                  placeholder="e.g., This project includes all thesis-related writing and revision work. For best AI results be as detailed as possible."
-                  rows="3" required></textarea>
-      </div>
+            <div class="mb-4">
+                <label for="description" class="form-label">Project Description</label>
+                <textarea class="form-control form-control-lg" id="description" name="description"
+                          placeholder="e.g., This project includes all thesis-related writing and revision work. For best AI results be as detailed as possible."
+                          rows="3" required></textarea>
+            </div>
 
-      <div class="mb-4">
-        <label for="type" class="form-label">Project Type</label>
-        <select class="form-control form-control-lg" id="type" name="type">
-          <option value="paper" selected>Paper</option>
-          <option value="poster">Poster</option>
-        </select>
-      </div>
+            <div class="mb-4">
+                <label for="type" class="form-label">Project Type</label>
+                <select class="form-control form-control-lg" id="type" name="type">
+                    <option value="paper" selected>Paper</option>
+                    <option value="poster">Poster</option>
+                    <option value="dissertation">Dissertation</option>
+                </select>
+            </div>
 
-      <div class="mb-4">
-        <label for="selected_venue" class="form-label">Selected Venue</label>
-        <input type="text" class="form-control form-control-lg" id="selected_venue" name="selected_venue"
-               placeholder="e.g., Nature Communications"/>
-      </div>
+            <div class="mb-4" id="venue-group">
+                <label for="selected_venue" id="venue-label" class="form-label">Selected Venue</label>
+                <input type="text" class="form-control form-control-lg" id="selected_venue" name="selected_venue"
+                       placeholder="e.g., Nature Communications"/>
+            </div>
 
-      <div class="mb-4">
-        <label for="selected_venue_url" class="form-label">Venue URL</label>
-        <input type="url" class="form-control form-control-lg" id="selected_venue_url" name="selected_venue_url"
-               placeholder="e.g., https://www.nature.com/ncomms/"/>
-      </div>
+            <div class="mb-4" id="venue-url-group">
+                <label for="selected_venue_url" class="form-label">Venue URL</label>
+                <input type="url" class="form-control form-control-lg" id="selected_venue_url" name="selected_venue_url"
+                       placeholder="e.g., https://www.nature.com/ncomms/"/>
+            </div>
 
-      <button type="submit" class="btn btn-primary w-100">📌 Save Project</button>
-    </form>
+            <button type="submit" class="btn btn-primary w-100">📌 Save Project</button>
+        </form>
 
-    <div class="text-center back-btn">
-      <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+        <div class="text-center back-btn">
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+        </div>
     </div>
-  </div>
 </div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    function updateVenueLabel() {
+        const type = document.getElementById("type").value;
+        const venueInput = document.getElementById("selected_venue");
+        const label = document.getElementById("venue-label");
+        const venueGroup = document.getElementById("venue-group");
+        const venueUrlGroup = document.getElementById("venue-url-group");
+
+        // Hide venue fields for dissertations
+        if (type === "dissertation") {
+            venueGroup.style.display = "none";
+            venueUrlGroup.style.display = "none";
+        } else {
+            venueGroup.style.display = "block";
+            venueUrlGroup.style.display = "block";
+
+            // Update label based on venue input for papers
+            if (type === "poster") {
+                label.textContent = "Associated Venue";
+            } else if (type === "paper") {
+                const value = venueInput.value.toLowerCase();
+                const conferenceKeywords = ["conference", "symposium", "proceedings", "workshop", "meeting", "colloquium"];
+                const isConference = conferenceKeywords.some(keyword => value.includes(keyword));
+                label.textContent = isConference ? "Conference" : "Journal";
+            }
+        }
+    }
+
+    document.getElementById("type").addEventListener("change", updateVenueLabel);
+    document.getElementById("selected_venue").addEventListener("input", updateVenueLabel);
+    document.addEventListener("DOMContentLoaded", updateVenueLabel);
+
+</script>
+
 {% endblock %}

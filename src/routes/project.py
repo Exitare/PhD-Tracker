@@ -4,7 +4,6 @@ from src.db.models import Project, SubProject, Milestone
 from src import db_session
 from flask_login import current_user, login_required
 
-
 bp = Blueprint('project', __name__)
 
 
@@ -14,12 +13,18 @@ def create_project():
     if request.method == "POST":
         title = request.form["title"]
         description = request.form["description"]
+        project_type = request.form["type"]
+        selected_venue = request.form["selected_venue"]
+        selected_venue_url = request.form["selected_venue_url"]
 
         try:
             new_project: Project = Project(title=title,
+                                           type=project_type,
                                            description=description,
                                            created_at=int(datetime.now(timezone.utc).timestamp() * 1000),
-                                           user_id=current_user.id)
+                                           user_id=current_user.id,
+                                           selected_venue=selected_venue,
+                                           selected_venue_url=selected_venue_url)
             db_session.add(new_project)
             db_session.commit()
             print("Created new project:", title)
@@ -102,5 +107,3 @@ def edit(project_id: int):
         return redirect(url_for("project.view", project_id=project_id))
     else:
         return redirect(url_for("dashboard.dashboard"))
-
-
