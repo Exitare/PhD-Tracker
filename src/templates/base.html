@@ -6,21 +6,23 @@
     <title>{% block title %}PhD{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!--<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"> -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/' ~ (session.get('theme', 'lavender') ~ '.css')) }}">
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/' ~ (session.get('theme', 'lavender') ~ '.css')) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
             crossorigin="anonymous"></script>
+
     {% block head %}{% endblock %}
 </head>
-<body class="custom-dark-bg text-white">
+<body>
 
-<nav class="navbar navbar-expand-lg custom-navbar mb-4">
+<nav class="navbar navbar-expand-lg navbar-light mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold text-white" href="{{ url_for('home.home') }}">📚 PhD </a>
+        <a class="navbar-brand fw-bold navbar-brand-contrast" href="{{ url_for('home.home') }}">📚 PhD</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -29,24 +31,24 @@
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="{{ url_for('about.about') }}">About</a>
+                    <a class="nav-link" href="{{ url_for('about.about') }}">About</a>
                 </li>
                 {% if current_user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+                    <a class="nav-link" href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="{{ url_for('account.panel') }}">Account</a>
+                    <a class="nav-link" href="{{ url_for('account.panel') }}">Account</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="{{ url_for('auth.logout') }}">Logout</a>
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                 </li>
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="{{ url_for('auth.login') }}">Login</a>
+                    <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="{{ url_for('auth.register_step1') }}">Register</a>
+                    <a class="nav-link" href="{{ url_for('auth.register_step1') }}">Register</a>
                 </li>
                 {% endif %}
             </ul>

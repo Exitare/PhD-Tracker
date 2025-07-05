@@ -325,3 +325,17 @@ button:disabled,
     opacity: 0;
     pointer-events: none;
 }
+
+.display-5-strong {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* subtle shadow improves readability */
+    color: #002b36; /* For light theme */
+}
+
+.display-4-strong {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* subtle shadow improves readability */
+    color: #002b36; /* For light theme */
+}
+
+.navbar-brand-contrast {
+    color: #fff !important;
+}
