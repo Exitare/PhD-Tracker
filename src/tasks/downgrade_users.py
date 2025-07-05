@@ -2,16 +2,18 @@ from datetime import datetime, timezone
 from time import sleep
 from src import db_session
 from src.db.models import User
+from src.plans import Plans
+
 
 def downgrade_expired_users():
     now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     expired_users = db_session.query(User).filter(
         User.stripe_subscription_expires_at < now_ms,
-        User.plan != "student"
+        User.plan != Plans.Student.value,
     ).all()
 
     for user in expired_users:
-        user.plan = "student"
+        user.plan = Plans.Student.value
 
     if expired_users:
         db_session.commit()

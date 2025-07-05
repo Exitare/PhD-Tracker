@@ -273,3 +273,41 @@ button:disabled,
     color: #93a1a1 !important;            /* readable gray-blue */
     box-shadow: none;
 }
+
+
+.plan-option {
+    display: block;
+    position: relative;
+    transition: all 0.3s ease-in-out;
+    border-radius: 1rem;
+    overflow: hidden;
+    height: 100%;
+}
+
+.plan-option .tracker-card {
+    height: 100%;
+    margin-bottom: 0;
+}
+
+.plan-option .card-body {
+    padding: 1.25rem;
+}
+
+/* Fix alignment */
+.row.g-4 > div {
+    display: flex;
+}
+
+/* Hover and checked state */
+.plan-option input[type="radio"]:checked + .tracker-card,
+.plan-option:hover .tracker-card {
+    border: 2px solid #268bd2;
+    box-shadow: 0 0 10px rgba(38, 139, 210, 0.4);
+    background-color: #003545;
+}
+
+.btn-check {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}

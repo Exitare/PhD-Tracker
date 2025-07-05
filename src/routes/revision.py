@@ -58,7 +58,7 @@ def create(project_id: int):
         return redirect(url_for("revision.start", project_id=project_id))
 
     milestones = []
-    if current_user.plan == Plans.StudentPlus.value:
+    if current_user.plan != Plans.Student.value:
         # ===Call OpenAI to generate milestones ===
         milestones, usage = OpenAIService.submit_reviewer_feedback_milestone_generation(
             reviewer_text=raw_text,

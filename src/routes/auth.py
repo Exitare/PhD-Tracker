@@ -26,7 +26,6 @@ def register_step1():
             error = "Email and password are required."
             return render_template('auth/register_step1.html', error=error, email=email)
 
-
         # TODO: Add email validation regex
         # TODO: Add password strength validation
         # Check if user already exists
@@ -68,7 +67,7 @@ def register_step1():
 @login_required
 def choose_plan():
     if request.method == 'POST':
-        plan = request.form.get('plan')
+        plan: str = request.form.get('plan')
 
         if plan == Plans.StudentPlus.value:
             if not current_user.stripe_customer_id:
@@ -82,6 +81,36 @@ def choose_plan():
                     line_items=[{
                         'price': os.environ.get("STUDENT_PLUS_PRICE_ID"),
                     }],
+                    mode='subscription',  # change to 'payment' if it's a one-time purchase
+                    success_url=url_for('auth.stripe_success', _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
+                    cancel_url=url_for('auth.choose_plan', _external=True),
+                )
+                return redirect(checkout_session.url)
+            except Exception as e:
+                print(f"Stripe error: {e}")
+                flash("An error occurred while creating the Stripe checkout session. Please try again.", "danger")
+
+                return redirect(url_for('auth.choose_plan'))
+
+        elif plan == Plans.StudentPro.value:
+            print("Student Pro plan selected")
+            if not current_user.stripe_customer_id:
+                flash("Stripe customer not found for this account.", "danger")
+                return redirect(url_for('auth.choose_plan'))
+
+            try:
+                checkout_session = stripe.checkout.Session.create(
+                    customer=current_user.stripe_customer_id,
+                    payment_method_types=['card'],
+                    line_items=[
+                        {
+                            'price': os.environ.get("STUDENT_PRO_OVERCHARGE_PRICE_ID"),
+                        },
+                        {
+                            'price': os.environ.get("STUDENT_PRO_PRICE_ID"),
+                            'quantity': 1
+                        }
+                    ],
                     mode='subscription',  # change to 'payment' if it's a one-time purchase
                     success_url=url_for('auth.stripe_success', _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
                     cancel_url=url_for('auth.choose_plan', _external=True),
@@ -148,11 +177,12 @@ def stripe_success():
             return redirect(url_for('dashboard.dashboard'))
 
         subscription = stripe.Subscription.retrieve(subscription_id)
+        print(subscription)
         try:
             stripe.Subscription.modify(
                 subscription["id"],
                 billing_thresholds={
-                    "amount_gte": 2500  # $50 in cents
+                    "amount_gte": 2500  # $25 in cents
                 }
             )
         except Exception as e:
@@ -162,15 +192,16 @@ def stripe_success():
         # Get the first subscription item (usually one per sub)
         try:
             if subscription["items"]["data"]:
+                # get prices ids from subscription items
+                price_ids = [item["price"]["id"] for item in subscription["items"]["data"]]
                 item_id = subscription["items"]["data"][0]["id"]
                 current_user.stripe_subscription_id = subscription_id
                 current_user.stripe_subscription_item_id = item_id
-                price_id = subscription["items"]["data"][0]["price"]["id"]
-                current_user.plan = Plans.from_stripe_price_id(price_id)
+                current_user.plan = Plans.get_plan_name(price_ids)
                 item = subscription["items"]["data"][0]
                 current_user.stripe_subscription_expires_at = int(item["current_period_end"] * 1000)
                 db_session.commit()
-                flash("Your Student+ subscription is now active!", "success")
+                flash(f"Your {current_user.plan} subscription is now active!", "success")
             else:
                 flash("No subscription items found. Contact support.", "danger")
 
