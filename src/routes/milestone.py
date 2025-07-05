@@ -10,6 +10,7 @@ from src.services.openai_service import OpenAIService
 from src.services.calendar_service import CalendarService
 from ics import Calendar
 from src.services.log_service import AILogService
+from src.plans import StripeMeter
 
 bp = Blueprint('milestone', __name__)
 
@@ -165,7 +166,7 @@ def refine(project_id: int, subproject_id: int):
     print(f"AI token usage: {token_count}")
     # report usage
     stripe.billing.MeterEvent.create(
-        event_name="tokenrequests",
+        event_name=StripeMeter.TokenRequests.value,
         payload={
             "value": str(token_count),
             "stripe_customer_id": current_user.stripe_customer_id,

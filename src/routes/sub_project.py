@@ -5,8 +5,9 @@ from src import db_session
 from src.services.openai_service import OpenAIService
 from flask_login import login_required, current_user
 import stripe
-from src.plans import Plans
+from src.plans import Plans, StripeMeter
 from src.services.log_service import AILogService
+
 
 bp = Blueprint('subproject', __name__)
 
@@ -129,7 +130,7 @@ def create(project_id: int):
             print(f"AI token usage: {token_count}")
             # report usage
             stripe.billing.MeterEvent.create(
-                event_name="tokenrequests",
+                event_name=StripeMeter.TokenRequests.value,
                 payload={
                     "value": str(token_count),
                     "stripe_customer_id": current_user.stripe_customer_id,

@@ -14,3 +14,7 @@ class Plans(Enum):
         }
         plan = stripe_price_map.get(price_id)
         return plan.value if plan else cls.Student.value  # fallback
+
+
+class StripeMeter(Enum):
+    TokenRequests = "tokenrequests"

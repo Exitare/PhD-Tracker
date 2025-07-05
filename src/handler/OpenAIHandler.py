@@ -1,9 +1,10 @@
 import json
-
 from sqlalchemy.orm import Session
+from src.plans import StripeMeter
 from src.services.openai_service import OpenAIService
 from src.db.models import Project, User
 from src.services.log_service import AILogService
+import stripe
 
 
 class OpenAIHandler:
@@ -25,6 +26,14 @@ class OpenAIHandler:
             # log AI usage
             AILogService.log_ai_usage(session=db_session, user_id=user_id, event_name="journal_requirements",
                                       used_tokens=token_count)
+
+            stripe.billing.MeterEvent.create(
+                event_name=StripeMeter.TokenRequests.value,
+                payload={
+                    "value": str(token_count),
+                    "stripe_customer_id": db_session.query(User).filter_by(id=user_id).first().stripe_customer_id,
+                }
+            )
 
             # 🔁 Re-fetch project safely inside this session/thread
             project = db_session.query(Project).filter_by(id=project_id, user_id=user_id).first()

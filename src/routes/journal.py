@@ -10,7 +10,7 @@ from src.handler.OpenAIHandler import OpenAIHandler
 from src.models import AIJournalRecommendation
 from src.services.openai_service import OpenAIService
 import logging
-from src.plans import Plans
+from src.plans import Plans, StripeMeter
 from src.services.log_service import AILogService
 
 bp = Blueprint('journal', __name__)
@@ -52,7 +52,7 @@ def get_recommendations(project_id: int):
 
     # report usage
     stripe.billing.MeterEvent.create(
-        event_name="tokenrequests",
+        event_name=StripeMeter.TokenRequests.value,
         payload={
             "value": str(token_count),
             "stripe_customer_id": current_user.stripe_customer_id,
