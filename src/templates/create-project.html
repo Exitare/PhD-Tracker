@@ -60,6 +60,7 @@
     function updateVenueLabel() {
         const type = document.getElementById("type").value;
         const venueInput = document.getElementById("selected_venue");
+        const venueUrlInput = document.getElementById("selected_venue_url");
         const label = document.getElementById("venue-label");
         const venueGroup = document.getElementById("venue-group");
         const venueUrlGroup = document.getElementById("venue-url-group");
@@ -74,12 +75,16 @@
 
             // Update label based on venue input for papers
             if (type === "poster") {
-                label.textContent = "Associated Venue";
+                label.textContent = "Conference";
+                venueInput.placeholder = "e.g., IEEE International Conference on Poster Presentations";
+                venueUrlInput.placeholder = "e.g., https://www.ieee.org/conferences/posters/";
+                venueInput.required = true;
             } else if (type === "paper") {
                 const value = venueInput.value.toLowerCase();
                 const conferenceKeywords = ["conference", "symposium", "proceedings", "workshop", "meeting", "colloquium"];
                 const isConference = conferenceKeywords.some(keyword => value.includes(keyword));
                 label.textContent = isConference ? "Conference" : "Journal";
+                venueInput.required = false;
             }
         }
     }

@@ -10,3 +10,9 @@ Flask-Mail
 PyJWT
 email-validator
 ics
+langchain
+langchain-community
+google-search-results
+bs4
+tiktoken
+ faiss-cpu

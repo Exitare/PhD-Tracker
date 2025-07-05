@@ -14,8 +14,56 @@ METER_NAME: str = "tokenrequests"
 
 
 class OpenAIService:
+    @staticmethod
+    def get_poster_requirements(conference_name: str) -> Tuple[str, Dict[str, Any]]:
+        prompt = """
+        You are an expert assistant trained to extract poster submission deadlines and session times for this conference:""" + conference_name + """
 
+Your task is to search the official conference website or official call for abstracts page and return ONLY verified, current data for the year """ + datetime.now().strftime("%B %d, %Y") + """.
+Do not include outdated information from last year or any other year.
+Conference Name: """ + conference_name + """
+Return data ONLY IF you find it clearly and explicitly stated on an official source (conference website, program PDF, or call for abstracts). Do not guess or use outdated sources.
 
+Return exactly one JSON object in this format:
+
+{
+  "abstract_submission_due": "e.g. 'Friday, March 7, 2025'",
+  "final_submission_due": "e.g. 'Friday, March 21, 2025'",
+  "poster_networking_hours": "e.g. 'Monday, March 24, 2025, 2:00 PM - 4:00 PM'",
+  "source_url": "Direct URL to the official source where the above data was found"
+}
+
+Do not return anything other than the JSON.
+         """
+        print(prompt)
+        response = client.chat.completions.create(
+            model='gpt-4.1',
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+        )
+
+        content = response.choices[0].message.content.strip()
+
+        print(content)
+
+        try:
+            # Ensure it's proper JSON even if it's wrapped in string accidentally
+            requirements = json.loads(content)
+        except json.JSONDecodeError as e:
+            print(content)
+            raise ValueError(f"Failed to parse JSON response: {e}\nRaw content:\n{content}")
+
+        # Extract token usage
+        usage = (
+            response.usage.model_dump()
+            if hasattr(response.usage, "model_dump")
+            else dict(response.usage)
+            if response.usage else {}
+        )
+
+        return requirements, usage
 
     @staticmethod
     def get_journal_requirements(journal_name: str) -> Tuple[str, Dict[str, Any]]:
@@ -30,7 +78,7 @@ class OpenAIService:
 
         Journal Name: """ + journal_name + """
 
-        Return only raw JSON as a list of objects with the following fields (no Markdown code blocks):
+        Return only raw JSON with the following fields (no Markdown code blocks):
         {
           "article_types": [],
           "initial_submission": {
