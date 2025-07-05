@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Journal Requirements - {{ project.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary mb-3">
+        ← Back to Project
+    </a>
+
+    <h2 class="milestone-title mb-4">
+        📚 Journal Requirements for <strong>{{ project.selected_venue }}</strong>
+    </h2>
+
+    {% if project.venue_requirements %}
+    <div class="card tracker-card p-4 mb-4">
+        <div class="card-body">
+            {% set reqs = project.venue_requirements %}
+
+            <h4 class="card-title mb-3">📝 Initial Submission</h4>
+            <ul class="mb-4">
+                <li><strong>Format:</strong> {{ reqs.initial_submission.format or 'N/A' }}</li>
+                <li><strong>Figures:</strong> {{ reqs.initial_submission.figures or 'N/A' }}</li>
+                <li><strong>Line Numbers:</strong> {{ 'Required' if reqs.initial_submission.line_numbers else 'Not
+                    Required' }}
+                </li>
+                <li><strong>Figure Legends:</strong> {{ reqs.initial_submission.figure_legends or 'N/A' }}</li>
+                <li><strong>Reference Titles Required:</strong> {{ 'Yes' if
+                    reqs.initial_submission.reference_list_with_titles else 'No' }}
+                </li>
+            </ul>
+
+            <h4 class="card-title mb-3">📄 Title & Abstract</h4>
+            <ul class="mb-4">
+                <li><strong>Title Max Length:</strong>
+                    {% if reqs.title_and_abstract.title.max_length_words %}
+                    {{ reqs.title_and_abstract.title.max_length_words }} words
+                    {% elif reqs.title_and_abstract.title.max_length_characters %}
+                    {{ reqs.title_and_abstract.title.max_length_characters }} characters
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </li>
+                <li><strong>Title Notes:</strong> {{ reqs.title_and_abstract.title.requirements or 'None' }}</li>
+                <li><strong>Abstract Length:</strong> {{ reqs.title_and_abstract.abstract.length_words or 'N/A' }} words
+                </li>
+                <li><strong>Abstract Type:</strong> {{ reqs.title_and_abstract.abstract.type or 'N/A' }}</li>
+            </ul>
+
+            <h4 class="card-title mb-3">📑 Main Text</h4>
+            <ul class="mb-4">
+                <li><strong>Flexibility:</strong> {{ reqs.main_text.flexibility or 'N/A' }}</li>
+                <li><strong>Word Limit:</strong> {{ reqs.main_text.length_words.max or 'N/A' }} words</li>
+                <li><strong>Max Figures/Tables:</strong> {{ reqs.main_text.figures_or_tables.max or 'N/A' }}</li>
+                <li><strong>Max References:</strong> {{ reqs.main_text.references.max or 'N/A' }}</li>
+                <li><strong>Methods References Excluded:</strong> {{ 'Yes' if
+                    reqs.main_text.references.methods_references_excluded else 'No' }}
+                </li>
+            </ul>
+
+            <h4 class="card-title mb-3">🧪 Methods Section</h4>
+            <ul class="mb-4">
+                <li><strong>Replicability Required:</strong> {{ 'Yes' if reqs.methods_section.replicability_required
+                    else 'No' }}
+                </li>
+                <li><strong>Suggested Max Length:</strong> {{ reqs.methods_section.length_words.suggested_max or 'N/A'
+                    }}
+                </li>
+                <li><strong>Detailed Protocols:</strong> {{ reqs.methods_section.detailed_protocols or 'N/A' }}</li>
+                <li><strong>References Counted:</strong> {{ 'No' if reqs.methods_section.references_not_counted else
+                    'Yes' }}
+                </li>
+            </ul>
+
+            <h4 class="card-title mb-3">📊 Figures & Tables</h4>
+            <ul class="mb-4">
+                <li><strong>Initial Resolution:</strong> {{ reqs.figures_and_tables.initial_submission.resolution or
+                    'N/A' }}
+                </li>
+                <li><strong>Initial Format:</strong> {{ reqs.figures_and_tables.initial_submission.format or 'N/A' }}
+                </li>
+                <li><strong>Final Resolution:</strong> {{ reqs.figures_and_tables.final_submission.resolution_dpi or
+                    'N/A' }} DPI
+                </li>
+                <li><strong>Color Mode:</strong> {{ reqs.figures_and_tables.final_submission.color_mode or 'N/A' }}</li>
+                <li><strong>Fonts:</strong> {{ reqs.figures_and_tables.final_submission.fonts or 'N/A' }}</li>
+                <li><strong>Final Format:</strong> {{ reqs.figures_and_tables.final_submission.format or 'N/A' }}</li>
+                <li><strong>Table Titles Required:</strong> {{ 'Yes' if reqs.figures_and_tables.tables.title_required
+                    else 'No' }}
+                </li>
+                <li><strong>Footnotes Required:</strong> {{ 'Yes' if reqs.figures_and_tables.tables.footnotes_required
+                    else 'No' }}
+                </li>
+                <li><strong>Page Fit Required:</strong> {{ 'Yes' if reqs.figures_and_tables.tables.page_fit_required
+                    else 'No' }}
+                </li>
+            </ul>
+
+            <h4 class="card-title mb-3">📚 References</h4>
+            <ul class="mb-4">
+                <li><strong>Titles Required:</strong> {{ 'Yes' if reqs.references.titles_required else 'No' }}</li>
+                <li><strong>Numbering:</strong> {{ reqs.references.numbering or 'N/A' }}</li>
+                <li><strong>Main Text Limit:</strong> {{ reqs.references.main_text_limit or 'N/A' }}</li>
+                <li><strong>Methods Exempt:</strong> {{ 'Yes' if reqs.references.methods_exempt else 'No' }}</li>
+            </ul>
+
+            <h4 class="card-title mb-3">📎 End Matter</h4>
+            <ul class="mb-4">
+                <li><strong>Author Contributions:</strong> {{ 'Yes' if reqs.end_matter.author_contributions else 'No' }}
+                </li>
+                <li><strong>Competing Interests:</strong> {{ 'Yes' if reqs.end_matter.competing_interests else 'No' }}
+                </li>
+                <li><strong>Data Availability:</strong> {{ 'Yes' if reqs.end_matter.data_availability_statement else
+                    'No' }}
+                </li>
+                <li><strong>Code Availability:</strong> {{ 'Yes' if reqs.end_matter.code_availability_statement else
+                    'No' }}
+                </li>
+                <li><strong>Acknowledgements:</strong> {{ reqs.end_matter.acknowledgements or 'N/A' }}</li>
+                <li><strong>Correspondence:</strong> {{ reqs.end_matter.materials_correspondence or 'N/A' }}</li>
+            </ul>
+
+            <h4 class="card-title mb-3">📈 Statistics & Reporting</h4>
+            <ul class="mb-4">
+                <li><strong>Tests Described:</strong> {{ 'Yes' if reqs.statistics_and_reporting.tests_described else
+                    'No' }}
+                </li>
+                <li><strong>Error Bars Defined:</strong> {{ 'Yes' if reqs.statistics_and_reporting.error_bars_defined
+                    else 'No' }}
+                </li>
+                <li><strong>n-values Reported:</strong> {{ 'Yes' if reqs.statistics_and_reporting.n_values_reported else
+                    'No' }}
+                </li>
+                <li><strong>p-values/Test Stats:</strong> {{ 'Yes' if
+                    reqs.statistics_and_reporting.p_values_and_test_stats_reported else 'No' }}
+                </li>
+                <li><strong>Reporting Summary (Life Sci):</strong> {{ 'Yes' if
+                    reqs.statistics_and_reporting.reporting_summary_required_for_life_sciences else 'No' }}
+                </li>
+            </ul>
+
+            {% if reqs.source_url %}
+            <p class="mt-4 small text-muted">
+                📎 Source: <a href="{{ reqs.source_url }}" target="_blank" rel="noopener"
+                             class="text-decoration-underline text-info">
+                {{ reqs.source_url }}</a>
+            </p>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No requirements data found for this venue.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

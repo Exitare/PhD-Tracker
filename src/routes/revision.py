@@ -2,13 +2,12 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, redirect, render_template, url_for, abort, flash
 from src.db.models import Project, SubProject, Milestone
 from src import db_session
-from werkzeug.utils import secure_filename
 from flask_login import current_user, login_required
-from pathlib import Path
 from sqlalchemy import select
 import stripe
-from src.openai_client import OpenAIService, METER_NAME
+from src.services.openai_service import OpenAIService, METER_NAME
 from src.plans import Plans
+from src.services.log_service import AILogService
 
 bp = Blueprint('revision', __name__)
 
@@ -63,7 +62,8 @@ def create(project_id: int):
         # ===Call OpenAI to generate milestones ===
         milestones, usage = OpenAIService.submit_reviewer_feedback_milestone_generation(
             reviewer_text=raw_text,
-            deadline=deadline_str
+            deadline=deadline_str,
+            additional_context=additional_context
         )
 
         if len(milestones) != 0:
@@ -78,6 +78,13 @@ def create(project_id: int):
                     "value": str(token_count),
                     "stripe_customer_id": current_user.stripe_customer_id,
                 }
+            )
+            # log AI usage
+            AILogService.log_ai_usage(
+                session=db_session,
+                user_id=current_user.id,
+                event_name="revision_milestone_generation",
+                used_tokens=token_count
             )
 
     # === Step 2: Find next available revision title ===

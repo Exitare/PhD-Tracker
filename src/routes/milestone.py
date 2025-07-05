@@ -6,7 +6,7 @@ from src import db_session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 import stripe
-from src.openai_client import OpenAIService
+from src.services.openai_service import OpenAIService
 from src.services.calendar_service import CalendarService
 from ics import Calendar
 from src.services.log_service import AILogService

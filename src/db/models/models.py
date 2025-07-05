@@ -40,7 +40,7 @@ class Project(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
-    type = Column(Enum("paper", "poster", name="project_type"), nullable=False, default="paper")
+    type = Column(Enum("paper", "poster", "dissertation", name="project_type"), nullable=False, default="paper")
     selected_venue = Column(String(255), nullable=True)
     selected_venue_url = Column(String(255), nullable=True)
     venue_recommendations = Column(JSON, nullable=True)
@@ -48,6 +48,13 @@ class Project(Base):
     created_at = Column(BigInteger, nullable=False, default=datetime.now(timezone.utc).timestamp())
     user = relationship("User", back_populates="projects")
     sub_projects = relationship("SubProject", back_populates="project", cascade="all, delete-orphan")
+
+    def __str__(self):
+        return (
+            f"Project(id={self.id}, user_id={self.user_id}, title='{self.title}', description='{self.description}', "
+            f"type='{self.type}', selected_venue='{self.selected_venue}', selected_venue_url='{self.selected_venue_url}', "
+            f"created_at={self.created_at}, venue_recommendations={self.venue_recommendations})"
+        )
 
 
 class SubProject(Base):

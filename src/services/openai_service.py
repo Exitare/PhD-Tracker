@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
 from openai import OpenAI
 import json, re, os
-from .models import AIMilestone, AIJournalRecommendation
+from sqlalchemy.orm import Session
+
+from src.models import AIMilestone, AIJournalRecommendation
 from src.db.models import Milestone
 from typing import List, Tuple, Dict, Any
 from dotenv import load_dotenv
-from datetime import date
+from src.db.models import User, Project
 
 load_dotenv()
 
@@ -15,6 +17,132 @@ METER_NAME: str = "tokenrequests"
 
 
 class OpenAIService:
+
+
+
+    @staticmethod
+    def get_journal_requirements(journal_name: str) -> Tuple[str, Dict[str, Any]]:
+        prompt = """
+        You are an expert assistant trained to extract manuscript submission requirements for scientific journals. 
+        Given the name of a journal, your task is to:
+        1. Search the web to locate the official “Guide to Authors” or equivalent manuscript submission instructions.
+        2. Extract the submission requirements and return them in the structured JSON format below.
+
+        ⚠️ Only include verified and directly stated requirements from the official guidelines. 
+        If a detail is not found or unclear, set its value to null, false, or an empty string, depending on the field.
+
+        Journal Name: """ + journal_name + """
+
+        Return only raw JSON as a list of objects with the following fields (no Markdown code blocks):
+        {
+          "article_types": [],
+          "initial_submission": {
+            "format": "",
+            "figures": "",
+            "line_numbers": false,
+            "figure_legends": "",
+            "reference_list_with_titles": false
+          },
+          "title_and_abstract": {
+            "title": {
+              "max_length_characters": null,
+              "max_length_words": null,
+              "requirements": ""
+            },
+            "abstract": {
+              "length_words": null,
+              "type": ""
+            }
+          },
+          "main_text": {
+            "flexibility": "",
+            "length_words": {
+              "max": null
+            },
+            "figures_or_tables": {
+              "max": null
+            },
+            "references": {
+              "max": null,
+              "methods_references_excluded": false
+            }
+          },
+          "methods_section": {
+            "replicability_required": false,
+            "length_words": {
+              "suggested_max": null
+            },
+            "detailed_protocols": "",
+            "references_not_counted": false
+          },
+          "figures_and_tables": {
+            "initial_submission": {
+              "resolution": "",
+              "format": ""
+            },
+            "final_submission": {
+              "resolution_dpi": null,
+              "color_mode": "",
+              "fonts": "",
+              "format": ""
+            },
+            "tables": {
+              "title_required": false,
+              "footnotes_required": false,
+              "page_fit_required": false
+            }
+          },
+          "references": {
+            "titles_required": false,
+            "numbering": "",
+            "main_text_limit": null,
+            "methods_exempt": false
+          },
+          "end_matter": {
+            "author_contributions": false,
+            "competing_interests": false,
+            "data_availability_statement": false,
+            "code_availability_statement": false,
+            "acknowledgements": "",
+            "materials_correspondence": ""
+          },
+          "statistics_and_reporting": {
+            "tests_described": false,
+            "error_bars_defined": false,
+            "n_values_reported": false,
+            "p_values_and_test_stats_reported": false,
+            "reporting_summary_required_for_life_sciences": false
+          },
+          "submission_checklist": [],
+          "source_url": ""
+        }
+        """
+
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+        )
+
+        content = response.choices[0].message.content.strip()
+
+        try:
+            # Ensure it's proper JSON even if it's wrapped in string accidentally
+            requirements = json.loads(content)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse JSON response: {e}\nRaw content:\n{content}")
+
+        # Extract token usage
+        usage = (
+            response.usage.model_dump()
+            if hasattr(response.usage, "model_dump")
+            else dict(response.usage)
+            if response.usage else {}
+        )
+
+        return requirements, usage
 
     @staticmethod
     def generate_journal_recommendations(project_description: str) -> Tuple[
