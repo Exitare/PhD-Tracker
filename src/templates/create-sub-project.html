@@ -52,7 +52,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Milestone Generation</label>
-                {% if current_user.plan == "student_plus" %}
+                {% if current_user.plan != "student" %}
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="ai_option" id="ai_no" value="no" checked>
                     <label class="form-check-label" for="ai_no">Create blank task</label>
@@ -63,7 +63,7 @@
                 </div>
                 {% else %}
                 <div class="alert alert-warning mt-2 mb-0">
-                    AI milestone generation is available for Student+ plans only.
+                    AI milestone generation is not available for the free plan.
                 </div>
                 <input type="hidden" name="ai_option" value="no">
                 {% endif %}

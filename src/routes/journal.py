@@ -31,7 +31,7 @@ def get_recommendations(project_id: int):
         return render_template("dashboard.html", projects=[],
                                error="You do not have permission to access this project.")
 
-    if current_user.plan != Plans.StudentPlus.value:
+    if current_user.plan == Plans.Student.value:
         flash("Journal recommendations are only available for Student+ plan users.", "warning")
         return redirect(url_for("project.view", project_id=project_id))
 

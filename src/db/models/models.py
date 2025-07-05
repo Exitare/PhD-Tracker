@@ -18,7 +18,7 @@ class User(Base, UserMixin):
     created_at = Column(BigInteger, nullable=False, default=int(datetime.now(timezone.utc).timestamp() * 1000))
     plan = Column(String(50), default='student')
     stripe_subscription_id = Column(String, nullable=True)
-    stripe_subscription_item_id = Column(String, nullable=True)
+    stripe_subscription_item_ids = Column(String, nullable=True)
     stripe_subscription_expires_at = Column(BigInteger, nullable=True)
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
@@ -29,7 +29,7 @@ class User(Base, UserMixin):
             f"User(id={self.id}, email='{self.email}', created_at={self.created_at}, plan='{self.plan}', stripe_customer_id='{self.stripe_customer_id}',"
             f" email_verified={self.email_verified}, email_verified_at={self.email_verified_at}, pending_email='{self.pending_email}',"
             f" password_hash='{self.password_hash}', stripe_subscription_id='{self.stripe_subscription_id}',"
-            f" stripe_subscription_item_id='{self.stripe_subscription_item_id}',"
+            f" stripe_subscription_item_ids='{self.stripe_subscription_item_ids}',"
             f" stripe_subscription_expires_at={self.stripe_subscription_expires_at})")
 
 

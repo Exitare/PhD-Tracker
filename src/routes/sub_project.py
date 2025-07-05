@@ -114,7 +114,7 @@ def create(project_id: int):
         db_session.flush()  # Needed to get new_subproject.id before commit
 
         # If AI is requested, generate and add milestones
-        if ai_option == "yes" and current_user.plan == Plans.StudentPlus.value:
+        if ai_option == "yes" and current_user.plan != Plans.Student.value:
             print("Generating milestones using AI...")
             ai_milestones, usage = OpenAIService.generate_milestones(title, deadline)
             for ai_m in ai_milestones:

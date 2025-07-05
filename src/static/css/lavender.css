@@ -264,8 +264,8 @@ select.form-select:focus,
 
 .form-control-disabled {
     background-color: #3a3455 !important; /* match .form-control */
-    color: #ccc !important;               /* improve contrast */
-    opacity: 1 !important;                /* override default dimming */
+    color: #ccc !important; /* improve contrast */
+    opacity: 1 !important; /* override default dimming */
     cursor: not-allowed;
 }
 
@@ -278,4 +278,50 @@ button:disabled,
     border-color: #5d4ea3 !important;
     color: #bbb !important;
     box-shadow: none;
+}
+
+/* Pricing Table Specific */
+.pricing-card {
+    background-color: #2b2640;
+    color: #f0f0f5;
+    border: 2px solid transparent;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.pricing-card:hover {
+    border-color: #b8aaff;
+    background-color: #3a3455;
+    box-shadow: 0 0 10px rgba(161, 139, 255, 0.3);
+}
+
+.pricing-card.selected {
+    border-color: #a18bff;
+    background-color: #2b2640;
+    box-shadow: 0 0 0 3px rgba(161, 139, 255, 0.4);
+}
+
+.pricing-card .card-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #a18bff;
+}
+
+.pricing-card ul {
+    padding-left: 0;
+    list-style: none;
+}
+
+.pricing-card ul li {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+/* Hide radios */
+.visually-hidden {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }
