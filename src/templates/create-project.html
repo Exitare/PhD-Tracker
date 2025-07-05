@@ -3,7 +3,24 @@
 {% block title %}Create Project{% endblock %}
 
 {% block content %}
-<h1 class="mb-4 text-center display-5" style="color: #a18bff;">📁 New Project</h1>
+<div class="row align-items-center mb-4 text-center text-md-start">
+    <!-- Back Button (Left) -->
+    <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Title (Center) -->
+    <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
+        <h1 class="milestone-title m-0">📁 New Project</h1>
+    </div>
+
+    <!-- Empty column for spacing (Right) -->
+    <div class="col-12 col-md-4 text-md-end">
+        <!-- Optional space for future buttons -->
+    </div>
+</div>
 
 <div class="tracker-card p-4 shadow-sm">
     <div class="card-body">
@@ -17,7 +34,7 @@
             </div>
 
             <div class="mb-4">
-                <label for="description" class="form-label">Project Description</label>
+                <label for="description" class="form-label">Project Description (AI)</label>
                 <textarea class="form-control form-control-lg" id="description" name="description"
                           placeholder="e.g., This project includes all thesis-related writing and revision work. For best AI results be as detailed as possible."
                           rows="3" required></textarea>
@@ -33,7 +50,7 @@
             </div>
 
             <div class="mb-4" id="venue-group">
-                <label for="selected_venue" id="venue-label" class="form-label">Selected Venue</label>
+                <label for="selected_venue" id="venue-label" class="form-label">Selected Venue (AI)</label>
                 <input type="text" class="form-control form-control-lg" id="selected_venue" name="selected_venue"
                        placeholder="e.g., Nature Communications"/>
             </div>
@@ -42,6 +59,11 @@
                 <label for="selected_venue_url" class="form-label">Venue URL</label>
                 <input type="url" class="form-control form-control-lg" id="selected_venue_url" name="selected_venue_url"
                        placeholder="e.g., https://www.nature.com/ncomms/"/>
+            </div>
+
+            <div class="mb-3 text-muted small fst-italic text-center">
+                <span class="text-info fw-semibold">(AI)</span> fields are used to power AI-assisted search features. Be
+                as precise and detailed as possible for best results.
             </div>
 
             <button type="submit" class="btn btn-primary w-100">📌 Save Project</button>
@@ -75,15 +97,13 @@
 
             // Update label based on venue input for papers
             if (type === "poster") {
-                label.textContent = "Conference";
+                label.textContent = "Conference (AI)";
                 venueInput.placeholder = "e.g., IEEE International Conference on Poster Presentations";
                 venueUrlInput.placeholder = "e.g., https://www.ieee.org/conferences/posters/";
                 venueInput.required = true;
             } else if (type === "paper") {
                 const value = venueInput.value.toLowerCase();
-                const conferenceKeywords = ["conference", "symposium", "proceedings", "workshop", "meeting", "colloquium"];
-                const isConference = conferenceKeywords.some(keyword => value.includes(keyword));
-                label.textContent = isConference ? "Conference" : "Journal";
+                label.textContent = "Journal (AI)";
                 venueInput.required = false;
             }
         }
