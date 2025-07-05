@@ -107,3 +107,27 @@ def edit(project_id: int):
         return redirect(url_for("project.view", project_id=project_id))
     else:
         return redirect(url_for("dashboard.dashboard"))
+
+
+@bp.route("/dashboard/projects/<int:project_id>/delete", methods=["GET"])
+@login_required
+def delete(project_id: int):
+    project = db_session.query(Project).filter_by(id=project_id).first()
+    if not project:
+        flash("Project not found.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
+    if project.user_id != current_user.id:
+        flash("You do not have permission to delete this project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
+    try:
+        db_session.delete(project)
+        db_session.commit()
+        flash("Project deleted successfully.", "success")
+    except Exception as e:
+        db_session.rollback()
+        print("Error deleting project:", e)
+        flash("Failed to delete project. Please try again.", "danger")
+
+    return redirect(url_for("dashboard.dashboard"))
