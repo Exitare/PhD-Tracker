@@ -1,0 +1,162 @@
+from flask import Blueprint, render_template, jsonify, flash, redirect, url_for
+import threading
+from flask_login import current_user, login_required
+from src.db.models import Project
+from src import db_session
+from src.handler.OpenAIHandler import OpenAIHandler
+from flask import request
+import json
+
+bp = Blueprint('venue', __name__)
+
+
+@bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/regenerate")
+@login_required
+def regenerate_requirements(project_id: int, venue_name: str):
+    project: Project = db_session.query(Project).filter_by(id=project_id).first()
+    if not project:
+        return render_template("dashboard.dashboard", projects=[])
+    if project.user_id != current_user.id:
+        return render_template("dashboard.dashboard", projects=[])
+
+    if project.type == 'paper':
+        OpenAIHandler.get_journal_requirements(db_session, project.id, venue_name, current_user.id)
+
+    elif project.type == 'poster':
+        OpenAIHandler.get_poster_requirements(db_session, project.id, venue_name, current_user.id)
+
+    else:
+        flash("Unsupported project type for venue requirements.", "danger")
+        return redirect(url_for("project.view", project_id=project_id))
+
+    # reload project to get updated requirements
+    project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
+    if not project:
+        flash("Project not found or you do not have permission to access it.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
+    if not project.venue_requirements:
+        flash("Venue requirements not available. Please generate them first.", "warning")
+        return redirect(url_for("project.view", project_id=project_id))
+
+
+    print(project.venue_requirements_data)
+    print(project.venue_requirements_data['abstract_submission_due'])
+    if project.type == 'paper':
+        return render_template('journal/requirements.html', project_id=project_id, journal_name=venue_name,
+                               project=project)
+    elif project.type == 'poster':
+        return render_template('poster/requirements.html', project_id=project_id, journal_name=venue_name,
+                               project=project)
+
+    else:
+        flash("Unsupported project type for venue requirements.", "danger")
+        return redirect(url_for("project.view", project_id=project_id))
+
+
+@bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/generate")
+@login_required
+def start_venue_requirements_job(project_id: int, venue_name: str):
+    project: Project = db_session.query(Project).filter_by(id=project_id).first()
+    if not project:
+        return render_template("dashboard.dashboard", projects=[])
+    if project.user_id != current_user.id:
+        return render_template("dashboard.dashboard", projects=[])
+
+    if project.type == 'paper':
+        thread = threading.Thread(target=OpenAIHandler.get_journal_requirements,
+                                  args=(db_session, project.id, venue_name, current_user.id,))
+
+    elif project.type == 'poster':
+        thread = threading.Thread(target=OpenAIHandler.get_poster_requirements,
+                                  args=(db_session, project.id, venue_name, current_user.id,))
+
+    else:
+        flash("Unsupported project type for venue requirements.", "danger")
+        return redirect(url_for("project.view", project_id=project_id))
+
+    thread.start()
+    return jsonify({"status": "Task started", "venue": venue_name})
+
+
+@bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/result")
+@login_required
+def get_venue_requirements_result(project_id: int, venue_name: str):
+    # Load project from DB that belongs to current user
+    project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
+
+    if project and project.venue_requirements:
+        flash("Requirements have been retrieved.", "success")
+        return jsonify({"status": "ready"})
+
+    return jsonify({"status": "Processing or not found"}), 202
+
+
+@bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements")
+@login_required
+def view(project_id: int, venue_name: str):
+    project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
+
+    if not project:
+        flash("Project not found or you do not have permission to access it.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
+    if not project.venue_requirements:
+        flash("Venue requirements not available. Please generate them first.", "warning")
+        return redirect(
+            url_for("project.view", project_id=project_id))
+
+    try:
+        project.venue_requirements = json.loads(project.venue_requirements)
+    except json.JSONDecodeError:
+        flash("Failed to decode venue requirements. Please try generating them again.", "danger")
+        return redirect(
+            url_for("project.view", project_id=project_id))
+
+    if project.type == 'paper':
+        return render_template('journal/requirements.html', project_id=project_id, journal_name=venue_name,
+                               project=project)
+    elif project.type == 'poster':
+        return render_template('poster/requirements.html', project_id=project_id, journal_name=venue_name,
+                               project=project)
+
+    else:
+        flash("Unsupported project type for venue requirements.", "danger")
+        return redirect(url_for("project.view", project_id=project_id))
+
+
+@bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/save", methods=["POST"])
+@login_required
+def save_requirements(project_id: int, venue_name: str):
+    project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
+
+    if not project:
+        flash("Project not found or you do not have permission to access it.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
+    if project.type == 'poster':
+        try:
+            updated_requirements = {
+                "abstract_submission_due": request.form.get("abstract_submission_due", "").strip(),
+                "final_submission_due": request.form.get("final_submission_due", "").strip(),
+                "poster_networking_hours": request.form.get("poster_networking_hours", "").strip(),
+                "source_url": request.form.get("source_url", "").strip(),
+            }
+
+            if not any(updated_requirements.values()):
+                flash("At least one requirement must be provided.", "danger")
+                return redirect(url_for("poster.view", project_id=project_id, journal_name=venue_name))
+
+            print("Updated requirements:", updated_requirements)
+            project.venue_requirements_data = updated_requirements
+            print("Project venue requirements data:", project.venue_requirements_data)
+            db_session.commit()
+            flash("Venue requirements saved successfully.", "success")
+        except Exception as e:
+            db_session.rollback()
+            flash(f"Failed to save venue requirements: {str(e)}", "danger")
+
+    elif project.type == 'paper':
+        pass
+
+    return redirect(url_for("venue.view", project_id=project_id, venue_name=venue_name))

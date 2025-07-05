@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, Text, BigInteger, ForeignKey, En
 from sqlalchemy.orm import relationship, Mapped
 from src.db import Base
 from datetime import timezone, datetime
+import json
 
 
 class User(Base, UserMixin):
@@ -43,17 +44,36 @@ class Project(Base):
     type = Column(Enum("paper", "poster", "dissertation", name="project_type"), nullable=False, default="paper")
     selected_venue = Column(String(255), nullable=True)
     selected_venue_url = Column(String(255), nullable=True)
-    venue_recommendations = Column(JSON, nullable=True)
+    journal_recommendations = Column(JSON, nullable=True)
     venue_requirements = Column(Text, nullable=True)
     created_at = Column(BigInteger, nullable=False, default=datetime.now(timezone.utc).timestamp())
     user = relationship("User", back_populates="projects")
     sub_projects = relationship("SubProject", back_populates="project", cascade="all, delete-orphan")
 
+    @property
+    def venue_requirements_data(self):
+        if not self.venue_requirements:
+            return {}
+        try:
+            if isinstance(self.venue_requirements, str):
+                return json.loads(self.venue_requirements)
+            return self.venue_requirements  # just in case it's already a dict
+        except Exception as e:
+            print(f"Error parsing venue requirements for project {self.id}: {e}")
+            return {}
+
+    @venue_requirements_data.setter
+    def venue_requirements_data(self, value: dict):
+        if isinstance(value, dict):
+            self.venue_requirements = json.dumps(value)
+        else:
+            raise ValueError("venue_requirements_data must be a dictionary")
+
     def __str__(self):
         return (
             f"Project(id={self.id}, user_id={self.user_id}, title='{self.title}', description='{self.description}', "
             f"type='{self.type}', selected_venue='{self.selected_venue}', selected_venue_url='{self.selected_venue_url}', "
-            f"created_at={self.created_at}, venue_recommendations={self.venue_recommendations})"
+            f"created_at={self.created_at}, journal_recommendations={self.journal_recommendations}, venue_requirements='{self.venue_requirements}')"
         )
 
 

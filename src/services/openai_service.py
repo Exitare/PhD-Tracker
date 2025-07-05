@@ -14,8 +14,49 @@ METER_NAME: str = "tokenrequests"
 
 
 class OpenAIService:
+    @staticmethod
+    def get_poster_requirements(conference_name: str) -> Tuple[str, Dict[str, Any]]:
+        prompt = """
+        Can you find the poster session date and poster submission deadline for the conference """ +  conference_name + """".
+        The conference will happen this year""" + datetime.now(timezone.utc).strftime("%Y") + """.
 
+Please return the information in this JSON format, do not provide any notes or explanations. JUST JSON:
+{
+  "abstract_submission_due": "",
+  "final_submission_due": "",
+  "poster_networking_hours": "",
+  "source_url": ""
+}
+         """
+        print(prompt)
+        response = client.chat.completions.create(
+            model='gpt-4.1',
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+        )
 
+        content = response.choices[0].message.content.strip()
+
+        print(content)
+
+        try:
+            # Ensure it's proper JSON even if it's wrapped in string accidentally
+            requirements = json.loads(content)
+        except json.JSONDecodeError as e:
+            print(content)
+            raise ValueError(f"Failed to parse JSON response: {e}\nRaw content:\n{content}")
+
+        # Extract token usage
+        usage = (
+            response.usage.model_dump()
+            if hasattr(response.usage, "model_dump")
+            else dict(response.usage)
+            if response.usage else {}
+        )
+
+        return requirements, usage
 
     @staticmethod
     def get_journal_requirements(journal_name: str) -> Tuple[str, Dict[str, Any]]:
@@ -30,7 +71,7 @@ class OpenAIService:
 
         Journal Name: """ + journal_name + """
 
-        Return only raw JSON as a list of objects with the following fields (no Markdown code blocks):
+        Return only raw JSON with the following fields (no Markdown code blocks):
         {
           "article_types": [],
           "initial_submission": {

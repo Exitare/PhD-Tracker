@@ -73,7 +73,7 @@
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button class="btn btn-sm btn-outline-primary" type="submit"
                                         onclick="setTimeout(() => { this.innerHTML = 'Generating...'; this.disabled = true; }, 10);">
-                                    {% if project.venue_recommendations %}
+                                    {% if project.journal_recommendations %}
                                     📚 Regenerate Recommendations
                                     {% else %}
                                     📚 Generate Recommendations
@@ -99,13 +99,9 @@
                     </div>
                     {% endif %}
 
-                    {% if project.type == 'paper' or project.type == 'poster' %}
+                    {% if project.type == 'paper' %}
                     <div class="row mb-3">
-                        {% if project.type == 'paper' %}
                         <div class="col-md-4 font-weight-bold text-muted">🏛️ Journal</div>
-                        {% elif project.type == 'poster' %}
-                        <div class="col-md-4 font-weight-bold text-muted">🏛️ Poster</div>
-                        {% endif %}
 
                         <div class="col-md-8 d-flex align-items-center">
                             {% if project.selected_venue %}
@@ -127,12 +123,23 @@
                             {% endif %}
                         </div>
                     </div>
+
+                    {% elif project.type == 'poster' %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">🏛️ Conference</div>
+
+                        <div class="col-md-8 d-flex align-items-center">
+                            <span class="small"><strong>{{ project.selected_venue }}</strong></span>
+                        </div>
+                    </div>
+
+
                     {% endif %}
 
                     <div class="row mb-3">
                         <div class="col-md-4 font-weight-bold text-muted">📚 Requirements</div>
 
-                        {% if project.type == 'paper' %}
+                        {% if project.type == 'paper' or project.type == 'poster' %}
                         <div class="col-md-8 d-flex align-items-center">
                             {% if project.venue_requirements == 'pending' %}
                             <div class="spinner-border spinner-border-sm text-info me-2" role="status">
@@ -140,18 +147,20 @@
                             </div>
                             <span class="small">Fetching requirements for <strong>{{ project.selected_venue }}</strong>...</span>
 
-                            {% elif project.venue_requirements %}
-                            <a href="{{ url_for('journal.view', project_id=project.id, journal_name=project.selected_venue) }}"
+                            {% elif project.venue_requirements and project.venue_requirements|length > 2 %}
+
+                            <a href="{{ url_for('venue.view', project_id=project.id, venue_name=project.selected_venue) }}"
                                class="text-info text-decoration-underline small ms-1 d-flex align-items-center"
                                data-journal="{{ project.selected_venue }}"
-                               id="view-reqs-btn">
+                               id="view-paper-reqs-btn">
                                 <i class="fas fa-eye me-1 small" aria-hidden="true"></i>
                                 <span>View requirements for <strong>{{ project.selected_venue }}</strong></span>
                             </a>
 
+
                             {% elif project.selected_venue and current_user.plan != 'student' %}
                             <a href="#" class="text-info text-decoration-underline small d-flex align-items-center"
-                               data-journal="{{ project.selected_venue }}"
+                               data-venue="{{ project.selected_venue }}"
                                id="journal-req-link">
                                 <i class="fas fa-magic me-1 small" aria-hidden="true"></i>
                                 <span>Generate requirements for <strong>{{ project.selected_venue }}</strong> (Experimental)</span>
@@ -239,7 +248,7 @@
                             <label for="type">🧷 Type</label>
                         </div>
                         <div class="col-md-8">
-                            <select id="type" name="type" class="form-control form-control-lg">
+                            <select id="type" name="type" class="form-control form-control-lg" style="cursor: pointer">
                                 <option value="" {% if not project.type %}selected{% endif %}>Select type (optional)
                                 </option>
                                 <option value="paper" {% if project.type==
@@ -254,7 +263,13 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4 font-weight-bold text-muted">
-                            <label for="selected_venue">🏛️ Venue</label>
+                            {%  if project.type == 'paper' %}
+                            <label for="selected_venue">🏛️ Journal</label>
+                            {% elif project.type == 'poster' %}
+                            <label for="selected_venue">🏛️ Conference</label>
+                            {% else %}
+                            <label for="selected_venue">🏛️ Venue (optional)</label>
+                            {% endif %}
                         </div>
                         <div class="col-md-8">
                             <input type="text" id="selected_venue" name="selected_venue"
@@ -266,7 +281,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4 font-weight-bold text-muted">
-                            <label for="selected_venue_url">🔗 Venue URL</label>
+                            <label for="selected_venue_url">🔗 URL</label>
                         </div>
                         <div class="col-md-8">
                             <input type="url" id="selected_venue_url" name="selected_venue_url"
@@ -297,7 +312,7 @@
     </div>
 
 
-    {% if project.type == 'paper' and project.venue_recommendations %}
+    {% if project.type == 'paper' and project.journal_recommendations %}
     <div class="row">
         <div class="mb-3 text-end">
             <button class="btn btn-outline-secondary btn-sm"
@@ -314,7 +329,7 @@
 
     <div class="collapse {% if not project.selected_venue %}show{% endif %}" id="journalRecommendationsCollapse">
         <div class="row">
-            {% for journal in project.venue_recommendations %}
+            {% for journal in project.journal_recommendations %}
             <div class="col-md-6 col-lg-4 py-2">
                 <div class="card h-100 d-flex flex-column">
                     <div class="card-body d-flex flex-column">
@@ -485,10 +500,9 @@
             generateLink.addEventListener("click", function (e) {
                 e.preventDefault();
 
-                const journal = this.dataset.journal;
+                const venue = this.dataset.venue;
                 const link = this;
 
-                console.log("🔄 Starting LLM request for journal:", journal);
 
                 // Disable the link visually and functionally
                 link.classList.add("disabled");
@@ -497,14 +511,14 @@
                 <div class="spinner-border spinner-border-sm text-info me-2" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <span class="small">Fetching requirements for <strong>${journal}</strong>...</span>
+                <span class="small">Fetching requirements for <strong>${venue}</strong>...</span>
             `;
 
                 // Step 1: Start background job
-                fetch(`/dashboard/projects/{{ project.id }}/journal/${encodeURIComponent(journal)}/requirements/generate`)
+                fetch(`/dashboard/projects/{{ project.id }}/venue/${encodeURIComponent(venue)}/requirements/generate`)
                     .then(res => res.json())
                     .then(() => {
-                        pollForResult(journal);
+                        pollForResult(venue);
                     })
                     .catch(err => {
                         console.error("❌ Failed to start LLM request:", err);
@@ -514,13 +528,13 @@
                         link.style.pointerEvents = "auto";
                         link.innerHTML = `
                         <i class="fas fa-magic me-1 small" aria-hidden="true"></i>
-                        <span>Generate requirements for <strong>${journal}</strong></span>
+                        <span>Generate requirements for <strong>${venue}</strong></span>
                     `;
                     });
 
                 // Step 2: Poll every 5s until result is ready
-                function pollForResult(journalName) {
-                    fetch(`/dashboard/projects/{{ project.id }}/journal/${encodeURIComponent(journalName)}/requirements/result`)
+                function pollForResult(venueName) {
+                    fetch(`/dashboard/projects/{{ project.id }}/venue/${encodeURIComponent(venueName)}/requirements/result`)
                         .then(response => {
                             if (response.status === 200) {
                                 return response.json();
@@ -533,7 +547,7 @@
                         })
                         .catch(() => {
                             // Still processing, try again in 5 seconds
-                            setTimeout(() => pollForResult(journalName), 5000);
+                            setTimeout(() => pollForResult(venueName), 5000);
                         });
                 }
             });
