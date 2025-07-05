@@ -1,3 +1,5 @@
+import os
+from src.handler.RAG import RAGHandler
 from flask import Blueprint, render_template, jsonify, flash, redirect, url_for
 import threading
 from flask_login import current_user, login_required
@@ -6,52 +8,59 @@ from src import db_session
 from src.handler.OpenAIHandler import OpenAIHandler
 from flask import request
 import json
+from src.plans import Plans
 
 bp = Blueprint('venue', __name__)
+use_rag: bool = bool(int(os.environ.get('USE_RAG')))
 
 
 @bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/regenerate")
 @login_required
 def regenerate_requirements(project_id: int, venue_name: str):
     project: Project = db_session.query(Project).filter_by(id=project_id).first()
-    if not project:
-        return render_template("dashboard.dashboard", projects=[])
-    if project.user_id != current_user.id:
-        return render_template("dashboard.dashboard", projects=[])
 
-    if project.type == 'paper':
-        OpenAIHandler.get_journal_requirements(db_session, project.id, venue_name, current_user.id)
-
-    elif project.type == 'poster':
-        OpenAIHandler.get_poster_requirements(db_session, project.id, venue_name, current_user.id)
-
-    else:
-        flash("Unsupported project type for venue requirements.", "danger")
-        return redirect(url_for("project.view", project_id=project_id))
-
-    # reload project to get updated requirements
-    project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
-    if not project:
-        flash("Project not found or you do not have permission to access it.", "danger")
+    if not project or project.user_id != current_user.id:
+        flash("Project not found or access denied.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
-    if not project.venue_requirements:
-        flash("Venue requirements not available. Please generate them first.", "warning")
-        return redirect(url_for("project.view", project_id=project_id))
+    if current_user.plan == Plans.Student.value:
+        flash("You need a paid plan to regenerate venue requirements.", "warning")
+        return redirect(url_for("venue.view", project_id=project_id, venue_name=venue_name))
 
-
-    print(project.venue_requirements_data)
-    print(project.venue_requirements_data['abstract_submission_due'])
-    if project.type == 'paper':
-        return render_template('journal/requirements.html', project_id=project_id, journal_name=venue_name,
-                               project=project)
-    elif project.type == 'poster':
-        return render_template('poster/requirements.html', project_id=project_id, journal_name=venue_name,
-                               project=project)
-
-    else:
+    if project.type != 'paper' and project.type != 'poster':
         flash("Unsupported project type for venue requirements.", "danger")
         return redirect(url_for("project.view", project_id=project_id))
+    success: bool = False
+    if use_rag:
+        print("🔄 Regenerating venue requirements using RAG...")
+        success = RAGHandler.extract_venue_requirements(project, venue_name)
+    else:
+        print("🔄 Regenerating venue requirements using OpenAI...")
+        if project.type == 'paper':
+            success = OpenAIHandler.get_journal_requirements(db_session, project.id, venue_name, current_user.id)
+
+        elif project.type == 'poster':
+            success = OpenAIHandler.get_poster_requirements(db_session, project.id, venue_name, current_user.id)
+
+        # reload project to get updated requirements
+        project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
+        if not project:
+            flash("Project not found or you do not have permission to access it.", "danger")
+            return redirect(url_for("dashboard.dashboard"))
+
+        if not project.venue_requirements:
+            flash("Venue requirements not available. Please generate them first.", "warning")
+            return redirect(url_for("project.view", project_id=project_id))
+
+    print(success)
+    if success:
+        flash("Venue requirements regenerated successfully.", "success")
+    return render_template(
+        f"{project.type}/requirements.html",
+        project_id=project_id,
+        journal_name=venue_name,
+        project=project
+    )
 
 
 @bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/generate")
@@ -63,17 +72,24 @@ def start_venue_requirements_job(project_id: int, venue_name: str):
     if project.user_id != current_user.id:
         return render_template("dashboard.dashboard", projects=[])
 
-    if project.type == 'paper':
-        thread = threading.Thread(target=OpenAIHandler.get_journal_requirements,
-                                  args=(db_session, project.id, venue_name, current_user.id,))
-
-    elif project.type == 'poster':
-        thread = threading.Thread(target=OpenAIHandler.get_poster_requirements,
-                                  args=(db_session, project.id, venue_name, current_user.id,))
-
-    else:
+    if project.type != 'paper' and project.type != 'poster':
         flash("Unsupported project type for venue requirements.", "danger")
         return redirect(url_for("project.view", project_id=project_id))
+
+    if use_rag:
+        print("Using RAG to extract venue requirements...")
+        thread = threading.Thread(target=RAGHandler.extract_venue_requirements,
+                                  args=(project_id, current_user.id, venue_name,))
+
+    else:
+        print("Using OpenAI to get venue requirements...")
+        if project.type == 'paper':
+            thread = threading.Thread(target=OpenAIHandler.get_journal_requirements,
+                                      args=(db_session, project.id, venue_name, current_user.id,))
+
+        else:
+            thread = threading.Thread(target=OpenAIHandler.get_poster_requirements,
+                                      args=(db_session, project.id, venue_name, current_user.id,))
 
     thread.start()
     return jsonify({"status": "Task started", "venue": venue_name})
@@ -84,8 +100,9 @@ def start_venue_requirements_job(project_id: int, venue_name: str):
 def get_venue_requirements_result(project_id: int, venue_name: str):
     # Load project from DB that belongs to current user
     project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
-
+    print(project)
     if project and project.venue_requirements:
+        print(project.venue_requirements)
         flash("Requirements have been retrieved.", "success")
         return jsonify({"status": "ready"})
 

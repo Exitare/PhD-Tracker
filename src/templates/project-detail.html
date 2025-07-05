@@ -248,7 +248,7 @@
                             <label for="type">🧷 Type</label>
                         </div>
                         <div class="col-md-8">
-                            <select id="type" name="type" class="form-control form-control-lg" style="cursor: pointer">
+                            <select id="type" name="type" class="form-control form-control-lg">
                                 <option value="" {% if not project.type %}selected{% endif %}>Select type (optional)
                                 </option>
                                 <option value="paper" {% if project.type==
@@ -263,7 +263,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4 font-weight-bold text-muted">
-                            {%  if project.type == 'paper' %}
+                            {% if project.type == 'paper' %}
                             <label for="selected_venue">🏛️ Journal</label>
                             {% elif project.type == 'poster' %}
                             <label for="selected_venue">🏛️ Conference</label>
@@ -533,7 +533,18 @@
                     });
 
                 // Step 2: Poll every 5s until result is ready
-                function pollForResult(venueName) {
+                function pollForResult(venueName, retriesLeft = 24) {
+                    if (retriesLeft === 0) {
+                        alert("❌ Timed out while waiting for venue requirements. Please try again later.");
+                        link.classList.remove("disabled");
+                        link.style.pointerEvents = "auto";
+                        link.innerHTML = `
+                        <i class="fas fa-magic me-1 small" aria-hidden="true"></i>
+                            <span>Generate requirements for <strong>${venueName}</strong></span>
+                        `;
+                        return;
+                    }
+
                     fetch(`/dashboard/projects/{{ project.id }}/venue/${encodeURIComponent(venueName)}/requirements/result`)
                         .then(response => {
                             if (response.status === 200) {
@@ -547,7 +558,7 @@
                         })
                         .catch(() => {
                             // Still processing, try again in 5 seconds
-                            setTimeout(() => pollForResult(venueName), 5000);
+                            setTimeout(() => pollForResult(venueName, retriesLeft - 1), 5000);
                         });
                 }
             });

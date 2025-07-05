@@ -10,7 +10,7 @@ import stripe
 class OpenAIHandler:
 
     @staticmethod
-    def get_poster_requirements(db_session: Session, project_id: int, conference_name: str, user_id: int):
+    def get_poster_requirements(db_session: Session, project_id: int, conference_name: str, user_id: int)-> bool:
         """
         Handler function to be called from the route to get poster requirements in a background thread
         :param db_session:
@@ -42,15 +42,17 @@ class OpenAIHandler:
                 project.venue_requirements_data = json_response
                 db_session.commit()
                 print("✅ Venue requirements updated successfully.")
+                return True
             else:
                 print("❌ Project not found or doesn't belong to user.")
+                return False
         except Exception as e:
             db_session.rollback()
             print(f"❌ Error while calling LLM: {e}")
-            raise e
+            return False
 
     @staticmethod
-    def get_journal_requirements(db_session: Session, project_id: int, journal_name: str, user_id: int):
+    def get_journal_requirements(db_session: Session, project_id: int, journal_name: str, user_id: int) -> bool:
         """
         Handler function to be called from the route to get journal requirements in a background thread
         :param db_session:
@@ -82,9 +84,11 @@ class OpenAIHandler:
                 project.venue_requirements = json.dumps(json_response)
                 db_session.commit()
                 print("✅ Venue requirements updated successfully.")
+                return True
             else:
                 print("❌ Project not found or doesn't belong to user.")
+            return False
         except Exception as e:
             db_session.rollback()
             print(f"❌ Error while calling LLM: {e}")
-            raise e
+            return False

@@ -17,16 +17,23 @@ class OpenAIService:
     @staticmethod
     def get_poster_requirements(conference_name: str) -> Tuple[str, Dict[str, Any]]:
         prompt = """
-        Can you find the poster session date and poster submission deadline for the conference """ +  conference_name + """".
-        The conference will happen this year""" + datetime.now(timezone.utc).strftime("%Y") + """.
+        You are an expert assistant trained to extract poster submission deadlines and session times for this conference:""" + conference_name + """
 
-Please return the information in this JSON format, do not provide any notes or explanations. JUST JSON:
+Your task is to search the official conference website or official call for abstracts page and return ONLY verified, current data for the year """ + datetime.now().strftime("%B %d, %Y") + """.
+Do not include outdated information from last year or any other year.
+Conference Name: """ + conference_name + """
+Return data ONLY IF you find it clearly and explicitly stated on an official source (conference website, program PDF, or call for abstracts). Do not guess or use outdated sources.
+
+Return exactly one JSON object in this format:
+
 {
-  "abstract_submission_due": "",
-  "final_submission_due": "",
-  "poster_networking_hours": "",
-  "source_url": ""
+  "abstract_submission_due": "e.g. 'Friday, March 7, 2025'",
+  "final_submission_due": "e.g. 'Friday, March 21, 2025'",
+  "poster_networking_hours": "e.g. 'Monday, March 24, 2025, 2:00 PM - 4:00 PM'",
+  "source_url": "Direct URL to the official source where the above data was found"
 }
+
+Do not return anything other than the JSON.
          """
         print(prompt)
         response = client.chat.completions.create(

@@ -58,6 +58,8 @@
                                 ✏️ Edit Requirements
                             </button>
                         </div>
+
+                        {% if current_user.plan != 'student' %}
                         <div class="col-auto">
                             <a href="{{ url_for('venue.regenerate_requirements', project_id=project.id, venue_name=project.selected_venue) }}"
                                class="btn btn-primary"
@@ -65,6 +67,7 @@
                                 🔁 Recreate with AI
                             </a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
