@@ -23,7 +23,7 @@ class PasswordForm(FlaskForm):
 
 class ThemeForm(FlaskForm):
     theme = SelectField("Design Theme", choices=[
-        ("lavender", "Default (Lavender)"),
+        ("lavender", "Lavender"),
         ("dark", "Dark"),
         ("light", "Light"),
         ("solarized", "Solarized")
