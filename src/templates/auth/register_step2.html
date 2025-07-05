@@ -3,95 +3,92 @@
 
 {% block content %}
 <div class="container py-5">
-  <div class="text-center mb-5">
-    <h3 class="card-title">Step 2: Choose Your Plan</h3>
-    <p class="text-muted">Select the plan that fits your workflow best.</p>
-  </div>
-
-  <form method="POST" action="{{ url_for('auth.choose_plan') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="email" value="{{ email }}">
-    <input type="hidden" name="password" value="{{ password }}">
-
-    <div class="row g-4 justify-content-center" id="plan-cards">
-      <!-- Student -->
-      <div class="col-md-4">
-        <div class="card pricing-card h-100" data-plan="student">
-          <div class="card-body text-center">
-            <h5 class="card-title">🎓 Student</h5>
-            <h6 class="text-muted mb-3">Free</h6>
-            <ul class="list-unstyled mb-4">
-              <li>✔ Track unlimited projects</li>
-              <li>✔ Manual milestone creation</li>
-              <li>✔ Offline access</li>
-              <li>✔ Email reminders</li>
-            </ul>
-          </div>
-        </div>
-        <label for="student" class="visually-hidden">Select Student Plan</label>
-        <input type="radio" class="visually-hidden" name="plan" id="student" value="student" required>
-      </div>
-
-      <!-- Student+ -->
-      <div class="col-md-4">
-        <div class="card pricing-card h-100" data-plan="student_plus">
-          <div class="card-body text-center">
-            <h5 class="card-title">🚀 Student+</h5>
-            <h6 class="text-muted mb-3">Pay-as-you-go</h6>
-            <ul class="list-unstyled mb-4">
-              <li>✔ Everything in Student</li>
-              <li>✔ AI-powered milestone generation</li>
-              <li>✔ On-demand feature billing</li>
-              <li>✔ Priority email support</li>
-            </ul>
-          </div>
-        </div>
-        <label for="student_plus" class="visually-hidden">Select Student+ Plan</label>
-        <input type="radio" class="visually-hidden" name="plan" id="student_plus" value="student_plus" required>
-      </div>
-
-      <!-- Student Pro -->
-      <div class="col-md-4">
-        <div class="card pricing-card h-100" data-plan="student_pro">
-          <div class="card-body text-center">
-            <h5 class="card-title">💼 Student Pro</h5>
-            <h6 class="text-muted mb-3">$20/month</h6>
-            <ul class="list-unstyled mb-4">
-              <li>✔ Everything in Student+</li>
-              <li>✔ Full AI milestone suite</li>
-              <li>✔ Unlimited feature use</li>
-              <li>✔ Premium support</li>
-            </ul>
-          </div>
-        </div>
-        <label for="student_pro" class="visually-hidden">Select Student Pro Plan</label>
-        <input type="radio" class="visually-hidden" name="plan" id="student_pro" value="student_pro" required>
-      </div>
+    <div class="text-center mb-5">
+        <h3 class="card-title">Step 2: Choose Your Plan</h3>
+        <p class="text-muted">Select the plan that fits your workflow best.</p>
     </div>
 
-    {% if error %}
-    <div class="alert alert-danger mt-4" role="alert">{{ error }}</div>
-    {% endif %}
+    <form method="POST" action="{{ url_for('auth.choose_plan') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="email" value="{{ email }}">
+        <input type="hidden" name="password" value="{{ password }}">
 
-    <div class="d-grid mt-4 text-center">
-      <button type="submit" class="btn btn-success btn-lg px-5">Complete Registration</button>
-    </div>
-  </form>
+        <div class="row g-4 justify-content-center" id="plan-cards">
+            <!-- Student -->
+            <div class="col-md-4">
+                <div class="card pricing-card h-100" data-plan="student">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🎓 Student</h5>
+                        <h6 class="text-muted mb-3">Free</h6>
+                        <ul class="list-unstyled mb-4">
+                            <li>✔ Track unlimited projects</li>
+                            <li>✔ Manual milestone creation</li>
+                            <li>✔ Manual project requirement creation</li>
+                        </ul>
+                    </div>
+                </div>
+                <label for="student" class="visually-hidden">Select Student Plan</label>
+                <input type="radio" class="visually-hidden" name="plan" id="student" value="student" required>
+            </div>
+
+            <!-- Student+ -->
+            <div class="col-md-4">
+                <div class="card pricing-card h-100" data-plan="student_plus">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">🚀 Student+</h5>
+                        <h6 class="text-muted mb-3">Pay-as-you-go</h6>
+                        <ul class="list-unstyled mb-4">
+                            <li>✔ Everything in Student</li>
+                            <li>✔ AI-powered milestone generation</li>
+                            <li>✔ AI-powered requirement search (Base model)</li>
+                        </ul>
+                    </div>
+                </div>
+                <label for="student_plus" class="visually-hidden">Select Student+ Plan</label>
+                <input type="radio" class="visually-hidden" name="plan" id="student_plus" value="student_plus" required>
+            </div>
+
+            <!-- Student Pro -->
+            <div class="col-md-4">
+                <div class="card pricing-card h-100" data-plan="student_pro">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">💼 Student Pro</h5>
+                        <h6 class="text-muted mb-3">$20/month</h6>
+                        <ul class="list-unstyled mb-4">
+                            <li>✔ Everything in Student+</li>
+                            <li>✔ Improved AI models</li>
+                            <li>✔ Premium support</li>
+                        </ul>
+                    </div>
+                </div>
+                <label for="student_pro" class="visually-hidden">Select Student Pro Plan</label>
+                <input type="radio" class="visually-hidden" name="plan" id="student_pro" value="student_pro" required>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger mt-4" role="alert">{{ error }}</div>
+        {% endif %}
+
+        <div class="d-grid mt-4 text-center">
+            <button type="submit" class="btn btn-success btn-lg px-5">Complete Registration</button>
+        </div>
+    </form>
 </div>
 
 <script>
-  // Highlight selected card visually
-  const cards = document.querySelectorAll('.pricing-card');
-  cards.forEach(card => {
-    card.addEventListener('click', () => {
-      // Clear existing selections
-      cards.forEach(c => c.classList.remove('selected'));
-      // Add to selected card
-      card.classList.add('selected');
-      // Select radio
-      const plan = card.getAttribute('data-plan');
-      document.getElementById(plan).checked = true;
+    // Highlight selected card visually
+    const cards = document.querySelectorAll('.pricing-card');
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            // Clear existing selections
+            cards.forEach(c => c.classList.remove('selected'));
+            // Add to selected card
+            card.classList.add('selected');
+            // Select radio
+            const plan = card.getAttribute('data-plan');
+            document.getElementById(plan).checked = true;
+        });
     });
-  });
 </script>
 {% endblock %}
