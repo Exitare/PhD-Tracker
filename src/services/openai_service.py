@@ -1,13 +1,10 @@
 from datetime import datetime, timezone
 from openai import OpenAI
 import json, re, os
-from sqlalchemy.orm import Session
-
 from src.models import AIMilestone, AIJournalRecommendation
 from src.db.models import Milestone
 from typing import List, Tuple, Dict, Any
 from dotenv import load_dotenv
-from src.db.models import User, Project
 
 load_dotenv()
 

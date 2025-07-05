@@ -23,9 +23,11 @@ llm_data = []
 def get_recommendations(project_id: int):
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
+        print("Project not found")
         return render_template("dashboard.html", projects=[], error="Project not found.")
 
     if project.user_id != current_user.id:
+        print("User does not have permission to access this project")
         return render_template("dashboard.html", projects=[],
                                error="You do not have permission to access this project.")
 
