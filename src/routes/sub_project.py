@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, abort,
 from datetime import datetime, timezone
 from src.db.models import SubProject, Milestone, Project
 from src import db_session
-from src.openai_client import OpenAIService
+from src.services.openai_service import OpenAIService
 from flask_login import login_required, current_user
 import stripe
 from src.plans import Plans

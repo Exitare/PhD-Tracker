@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
 from openai import OpenAI
 import json, re, os
-from .models import AIMilestone, AIJournalRecommendation
+from sqlalchemy.orm import Session
+
+from src.models import AIMilestone, AIJournalRecommendation
 from src.db.models import Milestone
 from typing import List, Tuple, Dict, Any
 from dotenv import load_dotenv
-from datetime import date
+from src.db.models import User, Project
 
 load_dotenv()
 
@@ -16,8 +18,10 @@ METER_NAME: str = "tokenrequests"
 
 class OpenAIService:
 
+
+
     @staticmethod
-    def get_journal_requirements(journal: str) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    def get_journal_requirements(journal_name: str) -> Tuple[str, Dict[str, Any]]:
         prompt = """
         You are an expert assistant trained to extract manuscript submission requirements for scientific journals. 
         Given the name of a journal, your task is to:
@@ -27,7 +31,7 @@ class OpenAIService:
         ⚠️ Only include verified and directly stated requirements from the official guidelines. 
         If a detail is not found or unclear, set its value to null, false, or an empty string, depending on the field.
 
-        Journal Name: """ + journal + """
+        Journal Name: """ + journal_name + """
 
         Return only raw JSON as a list of objects with the following fields (no Markdown code blocks):
         {
@@ -126,7 +130,7 @@ class OpenAIService:
 
         try:
             # Ensure it's proper JSON even if it's wrapped in string accidentally
-            recommendations = json.loads(content)
+            requirements = json.loads(content)
         except json.JSONDecodeError as e:
             raise ValueError(f"Failed to parse JSON response: {e}\nRaw content:\n{content}")
 
@@ -138,7 +142,7 @@ class OpenAIService:
             if response.usage else {}
         )
 
-        return recommendations, usage
+        return requirements, usage
 
     @staticmethod
     def generate_journal_recommendations(project_description: str) -> Tuple[

@@ -1,15 +1,14 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import current_user, login_required
-from openai import project
-
 from src.db.models import Project, User
 from src import db_session
 import threading
-import time
+import json
 import stripe
 from typing import List
+from src.handler.OpenAIHandler import OpenAIHandler
 from src.models import AIJournalRecommendation
-from src.openai_client import OpenAIService
+from src.services.openai_service import OpenAIService
 import logging
 from src.plans import Plans
 from src.services.log_service import AILogService
@@ -91,45 +90,52 @@ def select(project_id: int):
     return redirect(url_for("project.view", project_id=project_id))
 
 
-@bp.route("/dashboard/projects/<int:project_id>/journal/<string:journal_name>/requirements")
-def start_requirements_job(project_id: int, journal_name: str):
+@bp.route("/dashboard/projects/<int:project_id>/journal/<string:journal_name>/requirements/generate")
+def start_venue_requirements_job(project_id: int, journal_name: str):
     project: Project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         return render_template("dashboard.dashboard", projects=[])
     if project.user_id != current_user.id:
         return render_template("dashboard.dashboard", projects=[])
 
-    thread = threading.Thread(target=call_llm_and_store, args=(journal_name, project, current_user.id,))
+    thread = threading.Thread(target=OpenAIHandler.get_journal_requirements,
+                              args=(db_session, project.id, journal_name, current_user.id,))
     thread.start()
     return jsonify({"status": "Task started", "journal": journal_name})
 
 
 @bp.route("/dashboard/projects/<int:project_id>/journal/<string:journal_name>/requirements/result")
-def get_requirements_result(project_id: int, journal_name: str):
-    global llm_data
-    result = llm_data
-    if result:
-        flash("LLM requirements fetched successfully.", "success")
-        return jsonify(result)
+def get_venue_requirements_result(project_id: int, journal_name: str):
+    # Load project from DB that belongs to current user
+    project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
+
+    if project and project.venue_requirements:
+        flash("Requirements have been retrieved.", "success")
+        return jsonify({"status": "ready"})
+
     return jsonify({"status": "Processing or not found"}), 202
 
 
-def call_llm_and_store(journal_name: str, project: Project, user_id: int):
-    print(f"Calling LLM for: {journal_name}")
-    time.sleep(5)
-    print(f"Completed LLM for: {journal_name}")
+@bp.route("/dashboard/projects/<int:project_id>/journal/<string:journal_name>/requirements")
+def view(project_id: int, journal_name: str):
+    project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
 
-    result = {"journal": journal_name, "guidelines": "... extracted json ..."}
-    global llm_data
-    llm_data = result
-    print(f"LLM data stored: {result}")
+    if not project:
+        flash("Project not found or you do not have permission to access it.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
 
-    # Re-fetch user in this thread
-    user = db_session.get(User, user_id)
-    if user:
-        project.venue_requirements = "This is my requirement"
-        db_session.add(project)
-        db_session.commit()
-        print("✅ Result committed to user record.")
-    else:
-        print("❌ User not found.")
+    if not project.venue_requirements:
+        flash("Venue requirements not available. Please generate them first.", "warning")
+        return redirect(
+            url_for("journal.start_venue_requirements_job", project_id=project_id, journal_name=journal_name))
+
+    try:
+        project.venue_requirements = json.loads(project.venue_requirements)
+        project.venue_requirements = project.venue_requirements[0]
+    except json.JSONDecodeError:
+        flash("Failed to decode venue requirements. Please try generating them again.", "danger")
+        return redirect(
+            url_for("project.view", project_id=project_id, journal_name=journal_name))
+
+    return render_template('journal/requirements.html', project_id=project_id, journal_name=journal_name,
+                           project=project)

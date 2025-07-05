@@ -35,23 +35,6 @@
                     </li>
 
 
-                    {% if project.selected_venue %}
-                    <li>
-                        {% if project.venue_requirements is none %}
-                        <a class="dropdown-item" href="#" id="journal-req-link"
-                           data-journal="{{ project.selected_venue }}">
-                            Get Journal Requirements
-                        </a>
-                        {% else %}
-                        <a class="dropdown-item" href="#"
-                           data-journal="{{ project.selected_venue }}">
-                            Journal Requirements
-                        </a>
-                        {% endif %}
-                    </li>
-                    {% endif %}
-
-
                     {% endif %}
 
 
@@ -66,6 +49,7 @@
 
                 </ul>
             </div>
+
         </div>
     </div>
 
@@ -117,6 +101,38 @@
                         <div class="col-md-8">{{ project.selected_venue }}</div>
                     </div>
                     {% endif %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold text-muted">📚 Requirements</div>
+                        <div class="col-md-8 d-flex align-items-center">
+                            {% if project.venue_requirements == 'pending' %}
+                            <div class="spinner-border spinner-border-sm text-info me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span class="small">Fetching requirements for <strong>{{ project.selected_venue }}</strong>...</span>
+
+                            {% elif project.venue_requirements %}
+                            <a href="{{ url_for('journal.view', project_id=project.id, journal_name=project.selected_venue) }}"
+                               class="text-info text-decoration-underline small ms-1 d-flex align-items-center"
+                               data-journal="{{ project.selected_venue }}"
+                               id="view-reqs-btn">
+                                <i class="fas fa-eye me-1 small" aria-hidden="true"></i>
+                                <span>View requirements for <strong>{{ project.selected_venue }}</strong></span>
+                            </a>
+
+                            {% elif project.selected_venue %}
+                            <a href="#" class="text-info text-decoration-underline small d-flex align-items-center"
+                               data-journal="{{ project.selected_venue }}"
+                               id="journal-req-link">
+                                <i class="fas fa-magic me-1 small" aria-hidden="true"></i>
+                                <span>Generate requirements for <strong>{{ project.selected_venue }}</strong></span>
+                            </a>
+
+                            {% else %}
+                            <span class="text-muted small">No venue selected.</span>
+                            {% endif %}
+                        </div>
+                    </div>
 
 
                     {% if project.selected_venue_url %}
@@ -414,48 +430,65 @@
             });
         }
 
-        document.getElementById("journal-req-link")?.addEventListener("click", function (e) {
-            e.preventDefault();
+        const generateLink = document.getElementById("journal-req-link");
 
-            console.log("Starting LLM request for journal:", this.dataset.journal);
+        if (generateLink) {
+            generateLink.addEventListener("click", function (e) {
+                e.preventDefault();
 
-            const journal = this.dataset.journal;
-            const link = this;
+                const journal = this.dataset.journal;
+                const link = this;
 
-            // Disable the link
-            link.classList.add("disabled");
+                console.log("🔄 Starting LLM request for journal:", journal);
 
-            // Step 1: Start background job
-            fetch(`/dashboard/projects/{{project.id}}/journal/${encodeURIComponent(journal)}/requirements`)
-                .then(res => res.json())
-                .then(() => {
-                    pollForResult(journal);
-                })
-                .catch(err => {
-                    console.error(err);
-                    link.classList.remove("disabled");
-                    alert("❌ Failed to start LLM request.");
-                });
+                // Disable the link visually and functionally
+                link.classList.add("disabled");
+                link.style.pointerEvents = "none";
+                link.innerHTML = `
+                <div class="spinner-border spinner-border-sm text-info me-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span class="small">Fetching requirements for <strong>${journal}</strong>...</span>
+            `;
 
-            // Step 2: Poll every 30s until result is ready
-            function pollForResult(journalName) {
-                fetch(`/dashboard/projects/{{project.id}}/journal/${encodeURIComponent(journal)}/requirements/result`)
-                    .then(response => {
-                        if (response.status === 200) {
-                            return response.json();
-                        } else {
-                            throw new Error("Still processing");
-                        }
-                    })
+                // Step 1: Start background job
+                fetch(`/dashboard/projects/{{ project.id }}/journal/${encodeURIComponent(journal)}/requirements/generate`)
+                    .then(res => res.json())
                     .then(() => {
-                        location.reload(); // trigger flash message display
+                        pollForResult(journal);
                     })
-                    .catch(() => {
-                        // Still processing, try again in 30 seconds
-                        setTimeout(() => pollForResult(journalName), 5000);
+                    .catch(err => {
+                        console.error("❌ Failed to start LLM request:", err);
+                        alert("❌ Failed to start LLM request.");
+                        // Re-enable on failure
+                        link.classList.remove("disabled");
+                        link.style.pointerEvents = "auto";
+                        link.innerHTML = `
+                        <i class="fas fa-magic me-1 small" aria-hidden="true"></i>
+                        <span>Generate requirements for <strong>${journal}</strong></span>
+                    `;
                     });
-            }
-        });
+
+                // Step 2: Poll every 5s until result is ready
+                function pollForResult(journalName) {
+                    fetch(`/dashboard/projects/{{ project.id }}/journal/${encodeURIComponent(journalName)}/requirements/result`)
+                        .then(response => {
+                            if (response.status === 200) {
+                                return response.json();
+                            } else {
+                                throw new Error("Still processing");
+                            }
+                        })
+                        .then(() => {
+                            location.reload(); // Success: reload to update UI
+                        })
+                        .catch(() => {
+                            // Still processing, try again in 5 seconds
+                            setTimeout(() => pollForResult(journalName), 5000);
+                        });
+                }
+            });
+        }
     });
 
     function enableEdit(id) {
