@@ -73,7 +73,11 @@
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button class="btn btn-sm btn-outline-primary" type="submit"
                                         onclick="setTimeout(() => { this.innerHTML = 'Generating...'; this.disabled = true; }, 10);">
+                                    {% if project.venue_recommendations %}
+                                    📚 Regenerate Recommendations
+                                    {% else %}
                                     📚 Generate Recommendations
+                                    {% endif %}
                                 </button>
                             </form>
                             {% endif %}
@@ -312,9 +316,9 @@
         <div class="row">
             {% for journal in project.venue_recommendations %}
             <div class="col-md-6 col-lg-4 py-2">
-                <div class="card mb-4 h-100">
+                <div class="card h-100 d-flex flex-column">
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title text-primary fw-semibold">
+                        <h5 class="card-title">
                             <i class="fas fa-book-open me-2" aria-hidden="true"></i>{{ journal.name }}
                         </h5>
 
@@ -329,15 +333,13 @@
                                 <input type="hidden" name="journal_name" value="{{ journal.name }}">
                                 <input type="hidden" name="journal_link" value="{{ journal.link }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-primary btn-sm"
-                                        aria-label="Select {{ journal.name }} as target journal">
+                                <button type="submit" class="btn btn-primary btn-sm">
                                     <i class="fas fa-check me-1" aria-hidden="true"></i> Select
                                 </button>
                             </form>
 
                             <a href="{{ journal.link }}" class="btn btn-outline-secondary btn-sm" target="_blank"
-                               rel="noopener"
-                               aria-label="Visit the {{ journal.name }} journal website">
+                               rel="noopener">
                                 <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i> Visit
                             </a>
                         </div>
