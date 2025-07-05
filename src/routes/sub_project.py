@@ -187,6 +187,7 @@ def edit(project_id: int, subproject_id: int):
 
     title = request.form.get("title", "").strip()
     description = request.form.get("description", "").strip()
+    sub_project_type = request.form.get("type", "normal").strip()
 
     if not title or not description:
         flash("Title and description are required.", "danger")
@@ -209,6 +210,7 @@ def edit(project_id: int, subproject_id: int):
 
     sub.title = title
     sub.description = description
+    sub.type = sub_project_type
 
     try:
         db_session.commit()

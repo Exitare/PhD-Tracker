@@ -177,7 +177,7 @@
     </div>
     {% endif %}
 
-    {% if current_user.plan == "student_plus" %}
+    {% if current_user.plan != "student" %}
     <div class="row py-5">
         {% if milestones|length > 0 %}
         <div class="text-center mb-4">
@@ -196,10 +196,18 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="mb-3">
+
+                    {% if subproject.type != 'normal' %}
+                    <label for="revisionUserContext" class="form-label">Provide Additional Context</label>
+                    <textarea id="revisionUserContext" name="context" class="form-control" rows="4"
+                              placeholder="e.g. Reviewer 2 requested timeline details; we're behind on the introduction; need more time for lit review."
+                              required></textarea>
+                    {% else %}
                     <label for="userContext" class="form-label">Provide Additional Context</label>
                     <textarea id="userContext" name="context" class="form-control" rows="4"
-                              placeholder="e.g. Reviewer 2 wants more detail on timeline. We're behind on the introduction."
+                              placeholder="e.g. Need to add more details about the methodology; the deadline is approaching; consider adding a literature review section."
                               required></textarea>
+                    {% endif %}
                 </div>
                 <div class="d-grid">
                     <button id="refineBtn" type="submit" class="btn btn-primary">Refine Milestones</button>
@@ -210,7 +218,7 @@
     </div>
     {% else %}
     <div class="alert alert-warning text-center mt-4">
-        AI milestone refinement is available for Student+ plans only.
+        AI milestone refinement is not available for free plans.
     </div>
     {% endif %}
 
