@@ -126,7 +126,7 @@ def choose_plan():
             current_user.plan = Plans.Student.value
             db_session.commit()
             flash("You've successfully selected the Student plan!", "success")
-            return redirect(url_for('dashboard.dashboard'))
+            return redirect(url_for('auth.introduction'))
 
         else:
             flash("Please select a valid plan option.", "warning")
@@ -167,17 +167,16 @@ def stripe_success():
         session_id = request.args.get("session_id")
         if not session_id:
             flash("Missing session ID in Stripe redirect.", "danger")
-            return redirect(url_for('dashboard.dashboard'))
+            return redirect(url_for('auth.introduction'))
 
         session = stripe.checkout.Session.retrieve(session_id)
 
         subscription_id = session.get("subscription")
         if not subscription_id:
             flash("No subscription found in the session.", "danger")
-            return redirect(url_for('dashboard.dashboard'))
+            return redirect(url_for('auth.introduction'))
 
         subscription = stripe.Subscription.retrieve(subscription_id)
-        print(subscription)
         try:
             stripe.Subscription.modify(
                 subscription["id"],
@@ -215,4 +214,18 @@ def stripe_success():
         print("Stripe post-checkout error:", e)
         flash("There was an issue activating your plan. Please contact support.", "danger")
 
-    return redirect(url_for('dashboard.dashboard'))
+    return redirect(url_for('auth.introduction'))
+
+
+@bp.route('/introduction')
+@login_required
+def introduction():
+    if not current_user.is_authenticated:
+        flash("You need to log in first.", "warning")
+        return redirect(url_for('auth.login'))
+
+    if not current_user.plan:
+        flash("Please select a plan before proceeding.", "warning")
+        return redirect(url_for('auth.choose_plan'))
+
+    return render_template('auth/register_step3.html', user=current_user)

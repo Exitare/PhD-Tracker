@@ -88,7 +88,7 @@
                     </div>
 
                     <div class="row mb-3">
-                        <div class="col-md-4 font-weight-bold text-muted">📄 Description</div>
+                        <div class="col-md-4 font-weight-bold text-muted">📄 Description (AI)</div>
                         <div class="col-md-8">{{ project.description }}</div>
                     </div>
 
@@ -101,7 +101,7 @@
 
                     {% if project.type == 'paper' %}
                     <div class="row mb-3">
-                        <div class="col-md-4 font-weight-bold text-muted">🏛️ Journal</div>
+                        <div class="col-md-4 font-weight-bold text-muted">🏛️ Journal (AI)</div>
 
                         <div class="col-md-8 d-flex align-items-center">
                             {% if project.selected_venue %}
@@ -126,7 +126,7 @@
 
                     {% elif project.type == 'poster' %}
                     <div class="row mb-3">
-                        <div class="col-md-4 font-weight-bold text-muted">🏛️ Conference</div>
+                        <div class="col-md-4 font-weight-bold text-muted">🏛️ Conference (AI)</div>
 
                         <div class="col-md-8 d-flex align-items-center">
                             <span class="small"><strong>{{ project.selected_venue }}</strong></span>
@@ -235,7 +235,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4 font-weight-bold text-muted">
-                            <label for="description">📝 Description</label>
+                            <label for="description">📝 Description (AI)</label>
                         </div>
                         <div class="col-md-8">
                             <textarea id="description" name="description" class="form-control form-control-lg" rows="3"
@@ -264,9 +264,9 @@
                     <div class="row mb-3">
                         <div class="col-md-4 font-weight-bold text-muted">
                             {% if project.type == 'paper' %}
-                            <label for="selected_venue">🏛️ Journal</label>
+                            <label for="selected_venue">🏛️ Journal (AI)</label>
                             {% elif project.type == 'poster' %}
-                            <label for="selected_venue">🏛️ Conference</label>
+                            <label for="selected_venue">🏛️ Conference (AI)</label>
                             {% else %}
                             <label for="selected_venue">🏛️ Venue (optional)</label>
                             {% endif %}

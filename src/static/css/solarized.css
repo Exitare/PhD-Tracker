@@ -1,7 +1,7 @@
 /* Base solarized dark theme */
 body {
     background-color: #002b36;
-    color: #839496;
+    color: #ccd6d9;;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -31,7 +31,7 @@ a:hover {
     border: none;
     border-radius: 1rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    color: #839496;
+    color: #ccd6d9;
 }
 
 .card-title,
@@ -43,7 +43,7 @@ a:hover {
 
 .form-label {
     font-weight: 500;
-    color: #93a1a1;
+    color: #ccd6d9;
 }
 
 .form-control {

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Register - Step 3{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="card-title" id="how-it-works-heading">Step 3: How the App Works</h1>
+        <p class="text-muted" aria-describedby="how-it-works-heading">Here’s a quick overview to get you started.</p>
+    </div>
+
+    <div class="row justify-content-center" role="region" aria-labelledby="how-it-works-heading">
+        <div class="col-md-10">
+            <section class="card p-4" aria-label="App overview card">
+                <div class="card-body">
+                    <h2 class="card-title" id="dashboard-overview">📊 Your Dashboard</h2>
+                    <p>
+                        After this step, you’ll land on your <strong>Dashboard</strong> — the central place where all
+                        your work is organized:
+                    </p>
+                    <ul>
+                        <li>View all your projects in one place</li>
+                        <li>Track deadlines, goals, and progress visually</li>
+                        <li>Access each project directly to keep working</li>
+                    </ul>
+
+                    <h2 class="card-title mt-4" id="projects-section">📁 Projects</h2>
+                    <p>
+                        Projects are the top-level structure. Each project can be:
+                    </p>
+                    <ul>
+                        <li><strong>Paper</strong> – for manuscript writing and submissions</li>
+                        <li><strong>Poster</strong> – for conferences or presentations</li>
+                        <li><strong>Dissertation</strong> – for thesis or major academic works</li>
+                    </ul>
+
+                    <h2 class="card-title mt-4" id="goals-section">🎯 Goals</h2>
+                    <p>
+                        Projects contain <strong>Goals</strong>, which define what you're aiming to accomplish. For
+                        example, a paper project might have a goal for the initial draft and another for revisions based
+                        on reviewer feedback.
+                    </p>
+
+                    <h2 class="card-title mt-4" id="milestones-section">🏁 Milestones</h2>
+                    <p>
+                        Each goal is broken into <strong>Milestones</strong>: smaller, trackable steps. These can be
+                        created manually or generated using AI, depending on your plan.
+                    </p>
+
+                    <h2 class="card-title mt-4" id="ai-support-section">🤖 AI Support</h2>
+                    <p>
+                        The app includes smart AI tools that can help generate milestones and interpret your workflow.
+                        The more specific your input, the better the AI can assist you.
+                    </p>
+                    <ul>
+                        <li>Fields that influence AI decisions are marked with an <strong>(AI)</strong> label</li>
+                        <li>Try to be descriptive when naming goals or providing context</li>
+                        <li>You’re always in control — AI suggestions are editable and optional</li>
+                    </ul>
+
+                    <h2 class="card-title mt-4" id="ready-section">✅ Ready to Begin?</h2>
+                    <p>
+                        You’re all set! Head to your dashboard to create your first project and start making progress.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="text-center mt-5" role="navigation" aria-label="Continue to dashboard">
+        <a href="{{ url_for('dashboard.dashboard') }}"
+           class="btn btn-success btn-lg px-5"
+           role="button"
+           aria-label="Go to your dashboard and begin working with your projects">
+            Go to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

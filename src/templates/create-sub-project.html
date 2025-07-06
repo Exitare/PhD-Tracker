@@ -5,23 +5,23 @@
 {% block content %}
 <div class="container">
     <div class="row align-items-center mb-4 text-center text-md-start">
-    <!-- Back Button -->
-    <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
-        <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary">
-            ← Back to Project
-        </a>
-    </div>
+        <!-- Back Button -->
+        <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
+            <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary">
+                ← Back to Project
+            </a>
+        </div>
 
-    <!-- Centered Title -->
-    <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
-        <h1 class="milestone-title m-0">New Goal</h1>
-    </div>
+        <!-- Centered Title -->
+        <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
+            <h1 class="milestone-title m-0">New Goal</h1>
+        </div>
 
-    <!-- Dropdown or Actions -->
-    <div class="col-12 col-md-4 text-md-end">
+        <!-- Dropdown or Actions -->
+        <div class="col-12 col-md-4 text-md-end">
 
+        </div>
     </div>
-</div>
 
     <!-- Subproject Form -->
     <div class="collapse show" id="addSubprojectForm">
@@ -36,14 +36,24 @@
             </div>
 
             <div class="mb-3">
-                <label for="subproject-description" class="form-label">Description <span
+                <label for="subproject-description" class="form-label">Description (AI) <span
                         class="text-danger">*</span></label>
                 <textarea class="form-control" id="subproject-description" name="description" rows="3"
                           required></textarea>
             </div>
 
             <div class="mb-3">
-                <label for="subproject-type" class="form-label">Type <span class="text-danger">*</span></label>
+                <label for="subproject-type" class="form-label">
+                    Type <span class="text-danger">*</span>
+                    <i
+                            class="fas fa-question-circle ms-2"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="right"
+                            title="Select 'Normal' for a new goal, or 'Revision' if this is based on prior feedback or iteration."
+                            tabindex="0"
+                            aria-label="Help: explanation of type options">
+                    </i>
+                </label>
                 <select class="form-control" id="subproject-type" name="type" required>
                     <option value="normal" selected>Normal</option>
                     <option value="revision">Revision</option>
@@ -83,6 +93,14 @@
 
 {% block scripts %}
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+
+
     document.getElementById("subprojectForm").addEventListener("submit", function (e) {
         const title = document.getElementById("subproject-title").value.trim();
         const description = document.getElementById("subproject-description").value.trim();
