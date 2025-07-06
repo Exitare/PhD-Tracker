@@ -14,7 +14,7 @@
 
     <!-- Centered Title -->
     <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
-        <h1 class="milestone-title m-0">New Task</h1>
+        <h1 class="milestone-title m-0">New Goal</h1>
     </div>
 
     <!-- Dropdown or Actions -->
@@ -55,7 +55,7 @@
                 {% if current_user.plan != "student" %}
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="ai_option" id="ai_no" value="no" checked>
-                    <label class="form-check-label" for="ai_no">Create blank task</label>
+                    <label class="form-check-label" for="ai_no">Create blank goal</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="ai_option" id="ai_yes" value="yes">
@@ -75,7 +75,7 @@
                        min="{{ now.strftime('%Y-%m-%d') }}">
             </div>
 
-            <button type="submit" class="btn btn-success" id="saveSubprojectBtn">Save Task</button>
+            <button type="submit" class="btn btn-success" id="saveSubprojectBtn">Save Goal</button>
         </form>
     </div>
 </div>

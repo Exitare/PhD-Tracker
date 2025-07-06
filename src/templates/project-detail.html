@@ -20,7 +20,7 @@
             <div class="btn-group">
                 <a href="{{ url_for('subproject.show_sub_project_form', project_id=project.id) }}"
                    class="btn btn-primary">
-                    📬 Create Task
+                    📬 Create Goal
                 </a>
                 <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -368,7 +368,7 @@
 
     {% if subprojects %}
     <div class="container">
-        <h2 class="milestone-title mb-4 text-center text-md-start">🧩 Tasks</h2>
+        <h2 class="milestone-title mb-4 text-center text-md-start">🧩 Goal</h2>
         <div class="row">
             {% for item in subprojects %}
             {% set sub = item.subproject %}
@@ -470,7 +470,7 @@
     </div>
     {% else %}
     <div class="alert alert-info text-center mt-4">
-        No subprojects found for this project.
+        No goals found for this project.
     </div>
     {% endif %}
 
