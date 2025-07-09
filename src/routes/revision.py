@@ -6,8 +6,8 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 import stripe
 from src.services.openai_service import OpenAIService, METER_NAME
-from src.plans import Plans
 from src.services.log_service import AILogService
+from src.services import UserService
 
 bp = Blueprint('revision', __name__)
 
@@ -15,6 +15,10 @@ bp = Blueprint('revision', __name__)
 @bp.route("/dashboard/projects/<int:project_id>/revision", methods=["GET"])
 @login_required
 def view(project_id):
+    if not UserService.can_access_page(current_user):
+        flash("You do not have permission to create a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     try:
         stmt = select(Project).where(
             Project.id == project_id,
@@ -35,6 +39,10 @@ def view(project_id):
 @bp.route("/dashboard/projects/<int:project_id>/revision>", methods=["POST"])
 @login_required
 def create(project_id: int):
+    if not UserService.can_access_page(current_user):
+        flash("You do not have permission to create a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     raw_text = request.form.get("raw_text", "").strip()
     additional_context = request.form.get("additional_context", "").strip()
     deadline_str = request.form.get("deadline")
@@ -58,7 +66,7 @@ def create(project_id: int):
         return redirect(url_for("revision.start", project_id=project_id))
 
     milestones = []
-    if current_user.plan != Plans.Student.value:
+    if UserService.can_use_ai(current_user):
         # ===Call OpenAI to generate milestones ===
         milestones, usage = OpenAIService.submit_reviewer_feedback_milestone_generation(
             reviewer_text=raw_text,
@@ -72,13 +80,7 @@ def create(project_id: int):
             token_count = usage.get("total_tokens", 0)
             print(f"AI token usage: {token_count}")
             # report usage
-            stripe.billing.MeterEvent.create(
-                event_name=METER_NAME,
-                payload={
-                    "value": str(token_count),
-                    "stripe_customer_id": current_user.stripe_customer_id,
-                }
-            )
+            UserService.report_usage(user=current_user, token_count=token_count)
             # log AI usage
             AILogService.log_ai_usage(
                 session=db_session,

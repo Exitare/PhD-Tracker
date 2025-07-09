@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
+from openai import organization
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.db.models import User
 from src.db import db_session
@@ -21,11 +22,33 @@ def register_step1():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
+        access_code = request.form.get('access_code')
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
 
         # Input validation
         if not email or not password:
             error = "Email and password are required."
             return render_template('auth/register_step1.html', error=error, email=email)
+
+        managing_user = None
+        if access_code:
+            if not first_name or not last_name:
+                error = "First name and last name are required when using an access code."
+                return render_template('auth/register_step1.html', error=error, email=email)
+
+            # select the user with the access code
+            managing_user = db_session.query(User).filter_by(access_code=access_code).first()
+            if not managing_user:
+                error = "Invalid access code. Please check and try again."
+                return render_template('auth/register_step1.html', error=error, email=email)
+
+            # extract the email domain from the manager's email
+            manager_email_domain = managing_user.email.split('@')[-1]
+            # check if the email domain matches the manager's email domain
+            if email.split('@')[-1] != manager_email_domain:
+                error = f"Email domain must match the organizations domain: {manager_email_domain}"
+                return render_template('auth/register_step1.html', error=error, email=email)
 
         # TODO: Add email validation regex
         # TODO: Add password strength validation
@@ -40,12 +63,26 @@ def register_step1():
             stripe_customer = stripe.Customer.create(email=email)
 
             # Then create user and assign stripe_customer_id
-            user = User(
-                email=email,
-                password_hash=generate_password_hash(password),
-                stripe_customer_id=stripe_customer.id,
-                created_at=int(datetime.now(timezone.utc).timestamp() * 1000)
-            )
+            if access_code and managing_user:
+                user = User(
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    password_hash=generate_password_hash(password),
+                    stripe_customer_id=stripe_customer.id,
+                    created_at=int(datetime.now(timezone.utc).timestamp() * 1000),
+                    organization_name=managing_user.organization_name,
+                    managed_by=managing_user.id,
+                    managed_by_stripe_id=managing_user.stripe_id,
+                )
+
+            else:
+                user = User(
+                    email=email,
+                    password_hash=generate_password_hash(password),
+                    stripe_customer_id=stripe_customer.id,
+                    created_at=int(datetime.now(timezone.utc).timestamp() * 1000)
+                )
             db_session.add(user)
             db_session.commit()
 
@@ -53,7 +90,10 @@ def register_step1():
             MailService.send_verification_email(user)
 
             login_user(user)
-            return redirect(url_for('auth.choose_plan'))
+            if not access_code:
+                return redirect(url_for('auth.choose_plan'))
+            else:
+                return redirect(url_for('auth.introduction'))
 
         except Exception as e:
             db_session.rollback()
@@ -68,6 +108,10 @@ def register_step1():
 @login_required
 def choose_plan():
     if request.method == 'POST':
+        if current_user.plan != Plans.Student.value:
+            flash("You have already selected a plan. Please contact support if you need to change it.", "warning")
+            return redirect(url_for('auth.introduction'))
+
         plan: str = request.form.get('plan')
 
         if plan == Plans.StudentPlus.value:
@@ -138,6 +182,13 @@ def choose_plan():
 # Login
 @bp.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        flash("You are already logged in.", "info")
+        if current_user.role == Role.User.value:
+            return redirect(url_for("dashboard.dashboard"))
+        elif current_user.role == Role.Manager.value:
+            return redirect(url_for("academia.panel"))
+
     if request.method == "POST":
         email = request.form["email"].strip().lower()
         password = request.form["password"]
@@ -149,6 +200,8 @@ def login():
                 return redirect(url_for("dashboard.dashboard"))
             elif user.role == Role.Manager.value:
                 return redirect(url_for("academia.panel"))
+            else:
+                return redirect(url_for("admin.dashboard"))
         else:
             return render_template("auth/login.html", error="Invalid email or password.")
 
@@ -224,12 +277,4 @@ def stripe_success():
 @bp.route('/introduction')
 @login_required
 def introduction():
-    if not current_user.is_authenticated:
-        flash("You need to log in first.", "warning")
-        return redirect(url_for('auth.login'))
-
-    if not current_user.plan:
-        flash("Please select a plan before proceeding.", "warning")
-        return redirect(url_for('auth.choose_plan'))
-
     return render_template('auth/register_step3.html', user=current_user)

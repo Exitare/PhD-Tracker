@@ -2,6 +2,7 @@ import os
 from enum import Enum
 from typing import List
 
+
 class Plans(Enum):
     Student = "student"
     StudentPlus = "student_plus"
@@ -25,18 +26,11 @@ class Plans(Enum):
             os.environ.get("STUDENT_PRO_PRICE_ID"): cls.StudentPro,
         }
 
-        print(price_ids)
-        print(stripe_price_map)
-
-        print(price_ids)
         # Map each price ID to a Plan Enum, default to Student if not found
         plans = [stripe_price_map.get(pid, cls.Student) for pid in price_ids]
 
         # Choose the "highest" plan based on their enum order
         highest_plan = max(plans, key=lambda plan: list(cls).index(plan))
-
-        print(highest_plan)
-
 
         return highest_plan.value
 

@@ -4,12 +4,18 @@ from src.db.models import Project, SubProject, Milestone
 from src import db_session
 from flask_login import current_user, login_required
 
+from src.services import UserService
+
 bp = Blueprint('project', __name__)
 
 
 @bp.route("/create-project", methods=["GET", "POST"])
 @login_required
 def create_project():
+    if not UserService.can_access_page(current_user):
+        flash("You do not have permission to create a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     if request.method == "POST":
         title = request.form["title"]
         description = request.form["description"]

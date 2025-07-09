@@ -4,11 +4,10 @@ from dotenv import load_dotenv
 from src.db.models import User
 from src.db import init_db, db_session
 from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision, account, \
-    webhooks, journal, venue, academia
+    webhooks, journal, venue, academia, admin
 import os
 from datetime import datetime, timezone
 from flask_login import LoginManager
-from datetime import datetime
 import stripe
 from multiprocessing import Process, Event
 from src.tasks.downgrade_users import run_downgrade_loop
@@ -52,6 +51,7 @@ def create_app():
     app.register_blueprint(journal.bp)
     app.register_blueprint(venue.bp)
     app.register_blueprint(academia.bp)
+    app.register_blueprint(admin.bp)
 
     app.config.update(
         MAIL_SERVER='mail.smtp2go.com',

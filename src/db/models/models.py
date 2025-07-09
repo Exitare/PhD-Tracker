@@ -11,21 +11,24 @@ class User(Base, UserMixin):
 
     id = Column(Integer, primary_key=True)
     stripe_customer_id: Mapped[str] = Column(String, unique=True)
-    email = Column(String(150), unique=True, nullable=False)
+    email: Mapped[str] = Column(String(150), unique=True, nullable=False)
     email_verified = Column(Boolean, default=False, nullable=False)
     email_verified_at = Column(BigInteger, nullable=True, default=None)
-    first_name = Column(String(150), nullable=True)
-    last_name = Column(String(150), nullable=True)
-    organization_name = Column(String(150), nullable=True)
+    first_name: Mapped[str] = Column(String(150), nullable=True)
+    last_name: Mapped[str] = Column(String(150), nullable=True)
+    organization_name: Mapped[str] = Column(String(150), nullable=True)
     managed_by = Column(Integer, ForeignKey('users.id'), nullable=True)  # For user management hierarchy
-    pending_email = Column(String(150), nullable=True)
-    password_hash = Column(String(200), nullable=False)
+    managed_by_stripe_id: Mapped[str] = Column(String(100), nullable=True)  # Stripe ID of the manager if applicable
+    pending_email: Mapped[str] = Column(String(150), nullable=True)
+    password_hash: Mapped[str] = Column(String(200), nullable=False)
     created_at = Column(BigInteger, nullable=False, default=int(datetime.now(timezone.utc).timestamp() * 1000))
-    plan = Column(String(50), default='student')
+    active = Column(Boolean, default=True, nullable=False)  # Whether the user is active or not
+    deactivated_at = Column(BigInteger, nullable=True, default=None)
+    plan: Mapped[str] = Column(String(50), default='student')
     stripe_subscription_id = Column(String, nullable=True)
     stripe_subscription_item_ids = Column(String, nullable=True)
     stripe_subscription_expires_at = Column(BigInteger, nullable=True)
-    role = Column(Enum("user", "manager", name="user_role"), default="user", nullable=False)
+    role = Column(Enum("user", "manager", "admin", name="user_role"), default="user", nullable=False)
     access_code = Column(String(100), nullable=True)  # For manager accounts to let users join their team
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
@@ -39,7 +42,7 @@ class User(Base, UserMixin):
             f" stripe_subscription_item_ids='{self.stripe_subscription_item_ids}',"
             f" stripe_subscription_expires_at={self.stripe_subscription_expires_at},"
             f" role='{self.role}', first_name='{self.first_name}', last_name='{self.last_name}', organization='{self.organization_name},"
-            f" managed_by={self.managed_by}, access_code='{self.access_code}')")
+            f" managed_by={self.managed_by}, managed_by_stripe_id={self.managed_by_stripe_id}, access_code='{self.access_code}')")
 
 
 class Project(Base):

@@ -5,9 +5,8 @@ from src import db_session
 from src.services.openai_service import OpenAIService
 from flask_login import login_required, current_user
 import stripe
-from src.plans import Plans, StripeMeter
-from src.services.log_service import AILogService
-
+from src.plans import StripeMeter
+from src.services import AILogService, UserService
 
 bp = Blueprint('subproject', __name__)
 
@@ -15,6 +14,10 @@ bp = Blueprint('subproject', __name__)
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/create", methods=["GET"])
 @login_required
 def show_sub_project_form(project_id: int):
+    if not UserService.can_access_page(current_user):
+        flash("You do not have permission to create a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     try:
         project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
         if not project:
@@ -25,9 +28,14 @@ def show_sub_project_form(project_id: int):
         print("Error loading project for subproject creation:", e)
         return render_template("dashboard.html", projects=[], error="Failed to load project. Please try again.")
 
+
 @bp.route("/dashboard/projects/<int:project_id>/subprojects", methods=["POST"])
 @login_required
 def create(project_id: int):
+    if not UserService.can_access_page(current_user):
+        flash("You do not have permission to create a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     try:
         project = db_session.query(Project).filter_by(id=project_id).first()
         # Ensure the project exists and belongs to the current user
@@ -46,7 +54,7 @@ def create(project_id: int):
             return render_template("project-detail.html", project_id=project_id, project=project,
                                    error="All fields are required", now=datetime.now(timezone.utc))
 
-        if ai_option == "yes" and current_user.plan == Plans.Student.value:
+        if ai_option == "yes" and not UserService.can_use_ai(current_user):
             return render_template("project-detail.html", project_id=project_id, project=project,
                                    error="AI-generated milestones are only available for Student+ accounts.",
                                    now=datetime.now(timezone.utc))
@@ -114,7 +122,7 @@ def create(project_id: int):
         db_session.flush()  # Needed to get new_subproject.id before commit
 
         # If AI is requested, generate and add milestones
-        if ai_option == "yes" and current_user.plan != Plans.Student.value:
+        if ai_option == "yes" and UserService.can_use_ai(current_user):
             print("Generating milestones using AI...")
             ai_milestones, usage = OpenAIService.generate_milestones(title, deadline)
             for ai_m in ai_milestones:
@@ -137,7 +145,8 @@ def create(project_id: int):
                 }
             )
 
-            AILogService.log_ai_usage(session=db_session, user_id=current_user.id, event_name="create_subproject_with_milestones",
+            AILogService.log_ai_usage(session=db_session, user_id=current_user.id,
+                                      event_name="create_subproject_with_milestones",
                                       used_tokens=token_count)
 
         print("Subproject created:", title)
@@ -154,6 +163,10 @@ def create(project_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["GET"])
 @login_required
 def view(project_id: int, subproject_id: int):
+    if not UserService.can_access_page(current_user):
+        flash("You do not have permission to create a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
         abort(404, description="Subproject not found")
@@ -181,6 +194,10 @@ def view(project_id: int, subproject_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["POST"])
 @login_required
 def edit(project_id: int, subproject_id: int):
+    if not UserService.can_access_page(current_user):
+        flash("You do not have permission to create a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
         abort(404)
@@ -226,6 +243,10 @@ def edit(project_id: int, subproject_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/delete", methods=["POST"])
 @login_required
 def delete(project_id: int, subproject_id: int):
+    if not UserService.can_access_page(current_user):
+        flash("You do not have permission to create a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     sub = db_session.query(SubProject).filter_by(id=subproject_id).first()
     if not sub:
         abort(404, description="Subproject not found")

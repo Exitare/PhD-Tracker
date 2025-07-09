@@ -9,22 +9,61 @@
                 <h3 class="card-title text-center mb-4">Step 1: Create Account</h3>
                 <form method="POST" action="{{ url_for('auth.register_step1') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                     <div class="mb-3">
                         <label for="email" class="form-label">Email address</label>
                         <input type="email" class="form-control" id="email" name="email"
                                value="{{ email or '' }}" required>
                     </div>
+
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
+
+                    <!-- University Plan Toggle -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="univCheck" data-bs-toggle="collapse"
+                               data-bs-target="#universityFields" aria-expanded="false"
+                               aria-controls="universityFields">
+                        <label class="form-check-label" for="univCheck">
+                            I have a University Plan
+                        </label>
+                    </div>
+
+                    <!-- Collapsible University Fields -->
+                    <div class="collapse" id="universityFields">
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name"
+                                   placeholder="Jane">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Doe">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="access_code" class="form-label">Access Code <span
+                                    class="text-muted">(optional)</span></label>
+                            <input type="text" class="form-control" id="access_code" name="access_code"
+                                   placeholder="Enter code from your institution">
+                            <div class="form-text text-muted">If your institution provided you with an access code,
+                                enter it here.
+                            </div>
+                        </div>
+                    </div>
+
                     {% if error %}
                     <div class="alert alert-danger mt-3">{{ error }}</div>
                     {% endif %}
+
                     <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-primary">Continue</button>
                     </div>
                 </form>
+
                 <div class="mt-4 text-center">
                     <small class="text-muted">Already have an account?
                         <a href="{{ url_for('auth.login') }}" class="text-decoration-none">Login</a>

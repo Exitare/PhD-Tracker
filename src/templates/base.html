@@ -43,14 +43,28 @@
 
                 {% elif current_user.is_authenticated and current_user.role == 'manager' %}
 
-                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('academia.panel') }}">Admin</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('academia.panel') }}">Manage</a>
                 </li>
-                 <li class="nav-item">
+
+                <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                 </li>
 
+
+                {% elif current_user.is_authenticated and current_user.role == 'admin' %}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                </li>
+
+
                 {% else %}
+
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
                 </li>
@@ -58,6 +72,8 @@
                     <a class="nav-link" href="{{ url_for('auth.register_step1') }}">Register</a>
                 </li>
                 {% endif %}
+
+
             </ul>
         </div>
     </div>

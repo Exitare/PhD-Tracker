@@ -5,9 +5,10 @@ from src import db_session
 import stripe
 from typing import List
 from src.models import AIJournalRecommendation
+from src.services import UserService
 from src.services.openai_service import OpenAIService
 import logging
-from src.plans import Plans, StripeMeter
+from src.plans import StripeMeter
 from src.services.log_service import AILogService
 
 bp = Blueprint('journal', __name__)
@@ -26,8 +27,8 @@ def get_recommendations(project_id: int):
         return render_template("dashboard.html", projects=[],
                                error="You do not have permission to access this project.")
 
-    if current_user.plan == Plans.Student.value:
-        flash("Journal recommendations are only available for Student+ plan users.", "warning")
+    if not UserService.can_use_ai(current_user):
+        flash("Journal recommendations are only available for Plans that support AI.", "warning")
         return redirect(url_for("project.view", project_id=project_id))
 
     recommendations: List[AIJournalRecommendation]
@@ -86,4 +87,3 @@ def select(project_id: int):
         flash("Failed to delete project. Please try again.", "danger")
 
     return redirect(url_for("project.view", project_id=project_id))
-

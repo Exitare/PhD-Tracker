@@ -43,7 +43,11 @@
         <div class="col-md-6 mb-3">
             <div>
                 <div class="text-muted small">Subscription Plan</div>
+                 {% if user.managed_by %}
+                 <div class="fw-semibold">{{ current_user.organization_name }}</div>
+                {% else %}
                 <div class="fw-semibold">{{ (user.plan | planFormat) or "None" }}</div>
+                {% endif %}
             </div>
         </div>
 
@@ -51,7 +55,9 @@
             <div>
                 <div class="text-muted small">Status</div>
                 <div class="fw-semibold">
-                    {% if user.plan == 'student' %}
+                    {% if user.managed_by %}
+                    <span class="text-success">Managed Plan ({{current_user.organization_name}})</span>
+                    {% elif user.plan == 'student' %}
                     <span class="text-success">Active (Student)</span>
                     {% elif user.stripe_subscription_expires_at %}
                     {% if user.stripe_subscription_expires_at > now %}
@@ -81,6 +87,7 @@
         </div>
     </form>
 
+    {% if not current_user.managed_by %}
     <!-- Stripe Controls -->
     <div class="mt-4">
         <a href="{{ url_for('account.manage_subscriptions') }}"
@@ -89,6 +96,7 @@
             Manage via Stripe
         </a>
     </div>
+    {% endif %}
 </div>
 
 <!-- Email Update (Collapsible) -->

@@ -15,11 +15,13 @@
     </div>
 
     <!-- Right column (Add Project Button) -->
+    {% if (current_user.managed_by and current_user.email_verified) or not current_user.managed_by %}
     <div class="col-12 col-md-4 text-md-end">
         <a href="{{ url_for('project.create_project') }}" class="btn btn-outline-secondary">
             ➕ Add New Project
         </a>
     </div>
+    {% endif %}
 </div>
 
 {% if error %}
@@ -86,9 +88,16 @@
     </div>
 </div>
 {% else %}
+{% if current_user.managed_by %}
+<div class="alert alert-info text-center">
+    You are currently managed by an organization. <br>
+    Please verify your organization email to create new projects.
+</div>
+{% else %}
 <div class="alert alert-info text-center">
     No projects yet. <a href="{{ url_for('project.create_project') }}">Click here to add one.</a>
 </div>
+{% endif %}
 {% endif %}
 
 {% endblock %}
