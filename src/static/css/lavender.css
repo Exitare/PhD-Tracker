@@ -319,6 +319,12 @@ button:disabled,
     font-size: 0.95rem;
 }
 
+.btn-check {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
 /* Hide radios */
 .visually-hidden {
     position: absolute;

@@ -275,38 +275,54 @@ button:disabled,
 }
 
 
-.plan-option {
-    display: block;
-    position: relative;
-    transition: all 0.3s ease-in-out;
+/* Pricing Table for Solarized Dark Theme */
+.pricing-card {
+    background-color: #073642;
+    color: #ccd6d9;
+    border: 2px solid transparent;
     border-radius: 1rem;
-    overflow: hidden;
-    height: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
-.plan-option .tracker-card {
-    height: 100%;
-    margin-bottom: 0;
+.pricing-card:hover {
+    border-color: #2aa198;
+    background-color: #003845;
+    box-shadow: 0 0 10px rgba(38, 139, 210, 0.3);
 }
 
-.plan-option .card-body {
-    padding: 1.25rem;
+.pricing-card.selected {
+    border-color: #268bd2;
+    background-color: #002b36;
+    box-shadow: 0 0 0 3px rgba(38, 139, 210, 0.4);
 }
 
-/* Fix alignment */
-.row.g-4 > div {
-    display: flex;
+.pricing-card .card-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #268bd2;
 }
 
-/* Hover and checked state */
-.plan-option input[type="radio"]:checked + .tracker-card,
-.plan-option:hover .tracker-card {
-    border: 2px solid #268bd2;
-    box-shadow: 0 0 10px rgba(38, 139, 210, 0.4);
-    background-color: #003545;
+.pricing-card ul {
+    padding-left: 0;
+    list-style: none;
+}
+
+.pricing-card ul li {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    color: #ccd6d9;
 }
 
 .btn-check {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Hide radios */
+.visually-hidden {
     position: absolute;
     opacity: 0;
     pointer-events: none;
