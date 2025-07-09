@@ -4,10 +4,40 @@ from src.db.models import User
 import stripe
 from src.role import Role
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from datetime import datetime, timezone
 
 from src import db_session
 
 bp = Blueprint("admin", __name__)
+
+
+
+
+@bp.route("/admin/users", methods=["GET"])
+@login_required
+def manage_users():
+    user: User = db_session.query(User).filter_by(email=current_user.email).first()
+
+    if not user or user.role != Role.Admin.value:
+        flash("You do not have permission to access this page.", "danger")
+        logout_user()
+        return redirect(url_for("auth.login"))
+
+    all_users = db_session.query(User).all()
+    display_users = []
+    for tmp_user in all_users:
+        display_users.append({
+            "id": tmp_user.id,
+            "email": tmp_user.email,
+            "role": tmp_user.role,
+            "created_at": tmp_user.created_at,
+            "active": tmp_user.active,
+            "stripe_customer_id": tmp_user.stripe_customer_id
+        })
+
+    print(display_users)
+
+    return render_template('admin/user_management.html', users=display_users)
 
 
 @bp.route("/admin", methods=["GET"])
@@ -20,21 +50,20 @@ def dashboard():
         logout_user()
         return redirect(url_for("auth.login"))
 
-    prices = stripe.Price.list()
-    pr = []
-    for price in prices.data:
-        if price.nickname and "SG" in price.nickname:
-            continue
-        pr.append({
-            "id": price.id,
-            "active": price.active,
-            "unit_amount": price.unit_amount,
-            "currency": price.currency,
-            "nickname": price.nickname,
-            "recurring": price.recurring
+
+    all_users = db_session.query(User).all()
+    display_users = []
+    for tmp_user in all_users:
+        display_users.append({
+            "id": tmp_user.id,
+            "email": tmp_user.email,
+            "role": tmp_user.role,
+            "created_at": tmp_user.created_at,
+            "active": tmp_user.active,
+            "stripe_customer_id": tmp_user.stripe_customer_id
         })
 
-    return render_template('admin/panel.html', prices=pr)
+    return render_template('admin/admin_base.html')
 
 
 @bp.route("/admin/price", methods=["GET", "POST"])
@@ -92,9 +121,24 @@ def manage_prices():
                 flash("Invalid input in tier values. Please double-check your numbers.", "danger")
 
         flash("Price created successfully!", "success")
-        return redirect(url_for("admin.dashboard"))
+        return redirect(url_for("admin.manage_prices"))
 
     prices = stripe.Price.list()
+    pr = []
+    for price in prices.data:
+        if price.nickname and "SG" in price.nickname:
+            continue
+        pr.append({
+            "id": price.id,
+            "active": price.active,
+            "unit_amount": price.unit_amount,
+            "currency": price.currency,
+            "nickname": price.nickname,
+            "recurring": price.recurring
+        })
+
+    return render_template('admin/price_management.html', prices=pr)
+
 
 @bp.route("/admin/archive-price/<price_id>", methods=["POST"])
 @login_required  # If you use login
@@ -107,6 +151,34 @@ def archive_price(price_id):
     return redirect(url_for("admin.manage_prices"))
 
 
+@bp.route("/admin/users/manage", methods=["POST"])
+@login_required
+def toggle_user_status():
+    user: User = db_session.query(User).filter_by(email=current_user.email).first()
+
+    if not user or user.role != Role.Admin.value:
+        flash("You do not have permission to access this page.", "danger")
+        logout_user()
+        return redirect(url_for("auth.login"))
+
+    user_id = request.form.get("user_id")
+
+    # change active to false
+    target_user = db_session.query(User).filter_by(id=user_id).first()
+    if not target_user:
+        flash("User not found.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    if target_user.active:
+        target_user.active = False
+        target_user.deactivated_at = int(datetime.now(timezone.utc).timestamp() * 1000)
+        flash(f"User {target_user.email} has been deactivated.", "success")
+    else:
+        target_user.active = True
+        target_user.deactivated_at = None
+        flash(f"User {target_user.email} has been reactivated.", "success")
+
+
 def parse_dollar_amount(value_str):
     """Converts string dollar input to integer cents."""
     clean = value_str.replace(",", "").strip()
@@ -115,4 +187,3 @@ def parse_dollar_amount(value_str):
 
 def dollars_to_cents_str(d):
     return str((Decimal(d) * 100).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP))
-
