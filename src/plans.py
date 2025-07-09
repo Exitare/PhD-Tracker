@@ -7,29 +7,23 @@ class Plans(Enum):
     Student = "student"
     StudentPlus = "student_plus"
     StudentPro = "student_pro"
-
-    @classmethod
-    def from_stripe_price_id(cls, price_id: str) -> str:
-        stripe_price_map = {
-            "": cls.Student,
-            os.environ.get("STUDENT_PLUS_PRICE_ID"): cls.StudentPlus,
-
-        }
-        plan = stripe_price_map.get(price_id)
-        return plan.value if plan else cls.Student.value  # fallback
+    CustomPlan = "custom_plan"
 
     @classmethod
     def get_plan_name(cls, price_ids: List[str]) -> str:
+        # Known Stripe price ID to Plan mapping
         stripe_price_map = {
-            "": cls.Student,
             os.environ.get("STUDENT_PLUS_PRICE_ID"): cls.StudentPlus,
             os.environ.get("STUDENT_PRO_PRICE_ID"): cls.StudentPro,
         }
 
-        # Map each price ID to a Plan Enum, default to Student if not found
-        plans = [stripe_price_map.get(pid, cls.Student) for pid in price_ids]
+        if not price_ids:
+            return cls.Student.value  # No subscription → free plan
 
-        # Choose the "highest" plan based on their enum order
+        # Resolve each price_id to a Plan, or CustomPlan if unknown
+        plans = [stripe_price_map.get(pid, cls.CustomPlan) for pid in price_ids]
+
+        # Choose the highest ranked plan (based on enum order)
         highest_plan = max(plans, key=lambda plan: list(cls).index(plan))
 
         return highest_plan.value

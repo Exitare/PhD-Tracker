@@ -31,6 +31,14 @@ def register_step1():
             error = "Email and password are required."
             return render_template('auth/register_step1.html', error=error, email=email)
 
+        # TODO: Add email validation regex
+        # TODO: Add password strength validation
+        # Check if user already exists
+        existing_user = db_session.query(User).filter_by(email=email).first()
+        if existing_user:
+            error = "If the email is valid and available, you'll receive a verification link shortly."
+            return render_template('auth/register_step1.html', error=error, email=email)
+
         managing_user = None
         if access_code:
             if not first_name or not last_name:
@@ -39,7 +47,7 @@ def register_step1():
 
             # select the user with the access code
             managing_user = db_session.query(User).filter_by(access_code=access_code).first()
-            if not managing_user:
+            if not managing_user or managing_user.plan == Plans.Student.value:
                 error = "Invalid access code. Please check and try again."
                 return render_template('auth/register_step1.html', error=error, email=email)
 
@@ -49,14 +57,6 @@ def register_step1():
             if email.split('@')[-1] != manager_email_domain:
                 error = f"Email domain must match the organizations domain: {manager_email_domain}"
                 return render_template('auth/register_step1.html', error=error, email=email)
-
-        # TODO: Add email validation regex
-        # TODO: Add password strength validation
-        # Check if user already exists
-        existing_user = db_session.query(User).filter_by(email=email).first()
-        if existing_user:
-            error = "If the email is valid and available, you'll receive a verification link shortly."
-            return render_template('auth/register_step1.html', error=error, email=email)
 
         try:
             # Create Stripe customer first

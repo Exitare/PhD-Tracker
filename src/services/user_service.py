@@ -35,6 +35,8 @@ class UserService:
             return True
         elif user.role == Plans.StudentPro.value:
             return True
+        elif user.role == Plans.CustomPlan.value:
+            return True
 
         if user.managed_by is not None and user.email_verified and user.active:
             return True
