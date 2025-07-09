@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Add Payment Method{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card p-4 mb-4">
+        <h1 class="card-title mb-4">Add Payment Method</h1>
+        Key
+        {{STRIPE_PUBLISHABLE_KEY}}
+        {{ client_secret }}
+        <p class="mb-4">
+            Please add a valid institutional payment method below to complete setup. You will not be charged now.
+        </p>
+
+        <form id="setup-form">
+            <div class="mb-4">
+                <label class="form-label">Card Details</label>
+                <div id="card-element" class="form-control p-3"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Save Payment Method</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    const stripe = Stripe("{{ STRIPE_PUBLISHABLE_KEY }}");
+    const elements = stripe.elements();
+    const card = elements.create("card", {
+        style: {
+            base: {
+                color: "#f0f0f5",
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+                fontSize: "16px",
+                '::placeholder': {
+                    color: '#ccc'
+                }
+            },
+            invalid: {
+                color: "#ffb0b0"
+            }
+        }
+    });
+    card.mount("#card-element");
+
+    const form = document.getElementById("setup-form");
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const {setupIntent, error} = await stripe.confirmCardSetup(
+            "{{ client_secret }}",
+            {
+                payment_method: {
+                    card: card
+                }
+            }
+        );
+
+        if (error) {
+            alert(error.message);
+        } else {
+            window.location.href = "{{ url_for('academia.panel') }}?payment_setup=success";
+        }
+    });
+</script>
+{% endblock %}

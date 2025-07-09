@@ -6,8 +6,9 @@ from datetime import datetime, timezone
 import stripe
 from src.services import MailService, UserService
 from src.role import Role
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash
 from src.forms import EmailForm, PasswordForm, ThemeForm
+import os
 
 bp = Blueprint('academia', __name__)
 
@@ -29,7 +30,8 @@ def register():
         # Input validation
         if not first_name or not last_name or not org_name or not email or not password:
             error = "All fields are required."
-            return render_template("academia/register.html", error=error)
+            flash("All fields are required.", "danger")
+            return render_template("academia/signup.html", error=error)
 
         # TODO: Add email format validation regex if needed
 
@@ -37,7 +39,8 @@ def register():
         existing_user = db_session.query(User).filter_by(email=email).first()
         if existing_user:
             error = "If the email is valid and available, you'll receive a confirmation shortly."
-            return render_template("academia/register.html", error=error)
+            flash("If the email is valid and available, you'll receive a confirmation shortly.", "warning")
+            return render_template("academia/signup.html", error=error)
 
         try:
             # Create Stripe customer first
@@ -66,15 +69,31 @@ def register():
             # login the user
 
             login_user(user)
-            return redirect(url_for("academia.panel"))
+            return redirect(url_for("academia.setup_payment"))
 
         except Exception as e:
             db_session.rollback()
             print(f"Academia registration error: {e}")
             error = "An error occurred during submission. Please try again later."
+            flash("An error occurred during submission. Please try again later.", "danger")
             return render_template("academia/signup.html", error=error)
 
     return render_template('academia/signup.html')
+
+
+@bp.route("/academia/setup-payment", methods=["GET"])
+@login_required
+def setup_payment():
+    try:
+        intent = stripe.SetupIntent.create(
+            customer=current_user.stripe_customer_id,
+        )
+        return render_template("academia/setup_payment.html",
+                               client_secret=intent.client_secret,
+                               STRIPE_PUBLISHABLE_KEY=os.environ.get("STRIPE_PUBLISHABLE_KEY"))
+    except Exception as e:
+        print(f"SetupIntent error: {e}")
+        return render_template("academia/setup_payment_error.html")
 
 
 @bp.route("/academia/panel")
@@ -83,6 +102,9 @@ def panel():
     if not UserService.can_access_page(current_user, allowed_roles=[Role.Manager.value]):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
+
+    if request.args.get("payment_setup") == "success":
+        flash("Your payment method was saved successfully!", "success")
 
     email_form = EmailForm()
     password_form = PasswordForm()
