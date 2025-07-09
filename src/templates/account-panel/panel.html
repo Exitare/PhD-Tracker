@@ -43,8 +43,8 @@
         <div class="col-md-6 mb-3">
             <div>
                 <div class="text-muted small">Subscription Plan</div>
-                 {% if user.managed_by %}
-                 <div class="fw-semibold">{{ current_user.organization_name }}</div>
+                {% if user.managed_by %}
+                <div class="fw-semibold">{{ current_user.organization_name }}</div>
                 {% else %}
                 <div class="fw-semibold">{{ (user.plan | planFormat) or "None" }}</div>
                 {% endif %}
@@ -87,16 +87,24 @@
         </div>
     </form>
 
-    {% if not current_user.managed_by %}
-    <!-- Stripe Controls -->
-    <div class="mt-4">
+
+    <div class="mt-4 d-flex gap-3 flex-wrap">
+        {% if not current_user.managed_by %}
         <a href="{{ url_for('account.manage_subscriptions') }}"
            class="btn btn-success"
            onclick="this.classList.add('disabled'); this.innerText='Loading data...';">
             Manage via Stripe
         </a>
+        {% endif %}
+
+        {% if not current_user.email_verified %}
+        <a href="{{ url_for('account.resend_activation_email') }}"
+           class="btn btn-success"
+           onclick="this.classList.add('disabled'); this.innerText='Sending email...';">
+            Resend Activation Email
+        </a>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 
 <!-- Email Update (Collapsible) -->

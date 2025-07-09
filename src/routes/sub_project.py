@@ -7,6 +7,7 @@ from flask_login import login_required, current_user
 import stripe
 from src.plans import StripeMeter
 from src.services import AILogService, UserService
+from src.role import Role
 
 bp = Blueprint('subproject', __name__)
 
@@ -14,8 +15,8 @@ bp = Blueprint('subproject', __name__)
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/create", methods=["GET"])
 @login_required
 def show_sub_project_form(project_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     try:
@@ -32,8 +33,8 @@ def show_sub_project_form(project_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects", methods=["POST"])
 @login_required
 def create(project_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     try:
@@ -163,8 +164,8 @@ def create(project_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["GET"])
 @login_required
 def view(project_id: int, subproject_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
@@ -194,8 +195,8 @@ def view(project_id: int, subproject_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["POST"])
 @login_required
 def edit(project_id: int, subproject_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
@@ -243,8 +244,8 @@ def edit(project_id: int, subproject_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/delete", methods=["POST"])
 @login_required
 def delete(project_id: int, subproject_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     sub = db_session.query(SubProject).filter_by(id=subproject_id).first()

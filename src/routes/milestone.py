@@ -8,14 +8,15 @@ from typing import List
 import stripe
 from ics import Calendar
 from src.services import AILogService, UserService, OpenAIService, CalendarService
-from src.plans import StripeMeter, Plans
+from src.plans import StripeMeter
+from src.role import Role
 
 bp = Blueprint('milestone', __name__)
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/calendar.ics")
 def download_milestone_calendar(project_id: int, subproject_id: int):
-    if not UserService.can_access_page(current_user):
+    if not UserService.can_access_page(current_user, [Role.User.value]):
         flash("You do not have permission to create a project.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
@@ -38,8 +39,8 @@ def download_milestone_calendar(project_id: int, subproject_id: int):
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones", methods=["GET"])
 def view(project_id: int, subproject_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to view a project.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     # Get the subproject and check if it exists
@@ -56,8 +57,8 @@ def view(project_id: int, subproject_id: int):
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones", methods=["POST"])
 def create(project_id: int, subproject_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to create milestones.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     form = request.form
@@ -98,8 +99,8 @@ def create(project_id: int, subproject_id: int):
           methods=["POST"])
 def update(project_id: int, subproject_id: int, milestone_id: int):
 
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to update milestones.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     form = request.form
@@ -122,8 +123,8 @@ def update(project_id: int, subproject_id: int, milestone_id: int):
           methods=["POST"])
 def update_status(project_id: int, subproject_id: int, milestone_id: int):
 
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to update milestones.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     status = request.form["status"]
@@ -143,8 +144,8 @@ def update_status(project_id: int, subproject_id: int, milestone_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>",
           methods=["DELETE"])
 def delete_milestone(project_id: int, subproject_id: int, milestone_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to delete a milestone.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     print(f"Deleting milestone {milestone_id} for project {project_id}")
@@ -166,8 +167,8 @@ def delete_milestone(project_id: int, subproject_id: int, milestone_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/refine", methods=["POST"])
 @login_required
 def refine(project_id: int, subproject_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to refine milestone.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     if not UserService.can_use_ai(current_user):

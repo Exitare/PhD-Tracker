@@ -10,6 +10,7 @@ from flask import request
 import json
 from src.plans import Plans
 from src.services import UserService
+from src.role import Role
 
 bp = Blueprint('venue', __name__)
 use_rag: bool = bool(int(os.environ.get('USE_RAG')))
@@ -18,8 +19,8 @@ use_rag: bool = bool(int(os.environ.get('USE_RAG')))
 @bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/regenerate")
 @login_required
 def regenerate_requirements(project_id: int, venue_name: str):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     project: Project = db_session.query(Project).filter_by(id=project_id).first()
@@ -70,8 +71,8 @@ def regenerate_requirements(project_id: int, venue_name: str):
 @bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/generate")
 @login_required
 def start_venue_requirements_job(project_id: int, venue_name: str):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     project: Project = db_session.query(Project).filter_by(id=project_id).first()
@@ -106,8 +107,8 @@ def start_venue_requirements_job(project_id: int, venue_name: str):
 @bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/result")
 @login_required
 def get_venue_requirements_result(project_id: int, venue_name: str):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     # Load project from DB that belongs to current user
@@ -124,8 +125,8 @@ def get_venue_requirements_result(project_id: int, venue_name: str):
 @bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements")
 @login_required
 def view(project_id: int, venue_name: str):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
@@ -161,8 +162,8 @@ def view(project_id: int, venue_name: str):
 @bp.route("/dashboard/projects/<int:project_id>/venue/<string:venue_name>/requirements/save", methods=["POST"])
 @login_required
 def save_requirements(project_id: int, venue_name: str):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()

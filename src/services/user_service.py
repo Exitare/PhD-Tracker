@@ -2,6 +2,7 @@ from src.db.models import User
 from src.plans import Plans, StripeMeter
 from src.role import Role
 import stripe
+from typing import List
 
 
 class UserService:
@@ -14,14 +15,17 @@ class UserService:
         return ''.join(random.choices(string.ascii_letters + string.digits, k=10))
 
     @staticmethod
-    def can_access_page(user: User) -> bool:
+    def can_access_page(user: User, allowed_roles: List) -> bool:
+        if not user:
+            return False
+
         if user.managed_by is not None and not user.email_verified and not user.access_code:
             return False
 
-        if user.role == Role.Manager.value:
-            return False
+        if user.role in allowed_roles:
+            return True
 
-        return True
+        return False
 
     @staticmethod
     def can_use_ai(user: User) -> bool:

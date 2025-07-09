@@ -50,17 +50,17 @@
                     {% if user.plan == 'student' %}
                     <span class="text-success">Active (Student)</span>
                     {% elif user.stripe_subscription_expires_at %}
-                        {% if user.stripe_subscription_expires_at > now %}
-                            <span class="text-success">
+                    {% if user.stripe_subscription_expires_at > now %}
+                    <span class="text-success">
                                 Active until {{ user.stripe_subscription_expires_at | datetimeformat }}
                             </span>
-                        {% else %}
-                            <span class="text-warning">
+                    {% else %}
+                    <span class="text-warning">
                                 Expired on {{ user.stripe_subscription_expires_at | datetimeformat }}
                             </span>
-                        {% endif %}
+                    {% endif %}
                     {% else %}
-                        <span class="text-warning">Inactive</span>
+                    <span class="text-warning">Inactive</span>
                     {% endif %}
                 </div>
             </div>
@@ -71,7 +71,8 @@
     <div class="mt-4">
         <label class="form-label">Access Code</label>
         <div class="d-flex align-items-center gap-3">
-            <input type="text" class="form-control form-control-disabled" value="{{ current_user.access_code }}" readonly>
+            <input type="text" class="form-control form-control-disabled" value="{{ current_user.access_code }}"
+                   readonly>
             <form method="POST" action="{{ url_for('account.refresh_access_code') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-outline-secondary">🔄 Refresh</button>
@@ -89,13 +90,20 @@
         </div>
     </form>
 
-    <!-- Stripe Controls -->
-    <div class="mt-4">
+    <div class="mt-4 d-flex gap-3 flex-wrap">
         <a href="{{ url_for('account.manage_subscriptions') }}"
            class="btn btn-success"
            onclick="this.classList.add('disabled'); this.innerText='Loading data...';">
             Manage via Stripe
         </a>
+
+        {% if not current_user.email_verified %}
+        <a href="{{ url_for('account.resend_activation_email') }}"
+           class="btn btn-success"
+           onclick="this.classList.add('disabled'); this.innerText='Sending email...';">
+            Resend Activation Email
+        </a>
+        {% endif %}
     </div>
 </div>
 
@@ -106,28 +114,28 @@
     <div class="table-responsive">
         <table class="table table-dark table-hover table-sm">
             <thead>
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Last Sign In</th>
-                    <th scope="col">Usage</th>
-                </tr>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Last Sign In</th>
+                <th scope="col">Usage</th>
+            </tr>
             </thead>
             <tbody>
-                {% for u in managed_users %}
-                <tr>
-                    <td>{{ u.full_name or (u.first_name ~ ' ' ~ u.last_name) }}</td>
-                    <td>{{ u.email }}</td>
-                    <td>
-                        {% if u.last_login %}
-                        {{ u.last_login | datetimeformat }}
-                        {% else %}
-                        <span class="text-muted">Never</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ u.usage_summary or '—' }}</td>
-                </tr>
-                {% endfor %}
+            {% for u in managed_users %}
+            <tr>
+                <td>{{ u.full_name or (u.first_name ~ ' ' ~ u.last_name) }}</td>
+                <td>{{ u.email }}</td>
+                <td>
+                    {% if u.last_login %}
+                    {{ u.last_login | datetimeformat }}
+                    {% else %}
+                    <span class="text-muted">Never</span>
+                    {% endif %}
+                </td>
+                <td>{{ u.usage_summary or '—' }}</td>
+            </tr>
+            {% endfor %}
             </tbody>
         </table>
     </div>

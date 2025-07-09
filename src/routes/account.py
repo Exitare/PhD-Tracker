@@ -16,9 +16,13 @@ ALLOWED_THEMES = {"lavender", "dark", "light", "solarized"}
 EMAIL_REGEX = r"[^@]+@[^@]+\.[^@]+"
 
 
-@bp.route("/account", methods=["GET"])
+@bp.route("/account/panel", methods=["GET"])
 @login_required
 def panel():
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to access this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     try:
         user = db_session.query(User).filter_by(id=current_user.id).first()
         if not user:
@@ -190,8 +194,7 @@ def verify_email(token):
         return redirect(url_for('auth.login'))
 
 
-
-@bp.route("/account/logout", methods=["POST"])
+@bp.route("/account/code-refresh", methods=["POST"])
 @login_required
 def refresh_access_code():
     if not current_user or current_user.role != Role.Manager.value:
@@ -211,3 +214,19 @@ def refresh_access_code():
         print(f"Error refreshing access code: {e}")
         flash("An error occurred while refreshing the access code. Please try again.", "danger")
         return redirect(url_for('academia.panel'))
+
+
+@bp.route("/account/resend_activation_email", methods=["GET"])
+@login_required
+def resend_activation_email():
+    if not current_user.email_verified:
+        try:
+            MailService.send_verification_email(current_user)
+            flash("Activation email resent successfully. Please check your inbox.", "success")
+        except Exception as e:
+            print(f"Error sending activation email: {e}")
+            flash("An error occurred while resending the activation email. Please try again.", "danger")
+    else:
+        flash("Your email is already verified.", "info")
+
+    return redirect(url_for('academia.panel'))

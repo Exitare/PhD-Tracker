@@ -1,8 +1,6 @@
-# routes/auth.py
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
-from openai import organization
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.db.models import User
 from src.db import db_session

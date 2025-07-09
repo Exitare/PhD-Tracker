@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import current_user, login_required
+from src.role import Role
+
 from src.db.models import Project, User
 from src import db_session
 import stripe
@@ -17,6 +19,10 @@ bp = Blueprint('journal', __name__)
 @bp.route("/dashboard/projects/<int:project_id>/journal/recommendations", methods=["POST"])
 @login_required
 def get_recommendations(project_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to access this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         print("Project not found")
@@ -63,6 +69,10 @@ def get_recommendations(project_id: int):
 
 @bp.route("/dashboard/projects/<int:project_id>/journal", methods=["POST"])
 def select(project_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to access this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         abort(404)

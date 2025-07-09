@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from flask_login import login_required, current_user, login_user
 from src import db_session
 from src.db.models import User
@@ -80,8 +80,9 @@ def register():
 @bp.route("/academia/panel")
 @login_required
 def panel():
-    if current_user.role != Role.Manager.value:
-        return redirect(url_for("academia.view"))
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.Manager.value]):
+        flash("You do not have permission to view this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
 
     email_form = EmailForm()
     password_form = PasswordForm()

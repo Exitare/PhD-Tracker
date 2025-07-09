@@ -8,6 +8,7 @@ import stripe
 from src.services.openai_service import OpenAIService, METER_NAME
 from src.services.log_service import AILogService
 from src.services import UserService
+from src.role import Role
 
 bp = Blueprint('revision', __name__)
 
@@ -15,8 +16,8 @@ bp = Blueprint('revision', __name__)
 @bp.route("/dashboard/projects/<int:project_id>/revision", methods=["GET"])
 @login_required
 def view(project_id):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view a revision.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     try:
@@ -39,8 +40,8 @@ def view(project_id):
 @bp.route("/dashboard/projects/<int:project_id>/revision>", methods=["POST"])
 @login_required
 def create(project_id: int):
-    if not UserService.can_access_page(current_user):
-        flash("You do not have permission to create a project.", "danger")
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to create a revision.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     raw_text = request.form.get("raw_text", "").strip()

@@ -3,6 +3,7 @@ from flask import Blueprint, request, redirect, render_template, url_for, abort,
 from src.db.models import Project, SubProject, Milestone
 from src import db_session
 from flask_login import current_user, login_required
+from src.role import Role
 
 from src.services import UserService
 
@@ -12,7 +13,7 @@ bp = Blueprint('project', __name__)
 @bp.route("/create-project", methods=["GET", "POST"])
 @login_required
 def create_project():
-    if not UserService.can_access_page(current_user):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
         flash("You do not have permission to create a project.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
@@ -46,6 +47,11 @@ def create_project():
 @bp.route("/dashboard/projects/<int:project_id>")
 @login_required
 def view(project_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
+
     try:
         # Load the project
         project = db_session.query(Project).filter_by(id=project_id).first()
@@ -81,6 +87,10 @@ def view(project_id: int):
 @bp.route("/dashboard/projects/<int:project_id>", methods=["POST"])
 @login_required
 def edit(project_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to edit this project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         abort(404)
@@ -118,6 +128,10 @@ def edit(project_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/delete", methods=["GET"])
 @login_required
 def delete(project_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to delete this project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         flash("Project not found.", "danger")
