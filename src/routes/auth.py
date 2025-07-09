@@ -186,13 +186,15 @@ def login():
             return redirect(url_for("dashboard.dashboard"))
         elif current_user.role == Role.Manager.value:
             return redirect(url_for("academia.panel"))
+        else:
+            return redirect(url_for("admin.dashboard"))
 
     if request.method == "POST":
         email = request.form["email"].strip().lower()
         password = request.form["password"]
 
         user = db_session.query(User).filter_by(email=email).first()
-        if user and check_password_hash(user.password_hash, password):
+        if user and check_password_hash(user.password_hash, password) and user.active:
             login_user(user)
             if user.role == Role.User.value:
                 return redirect(url_for("dashboard.dashboard"))

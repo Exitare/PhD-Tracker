@@ -7,6 +7,8 @@ import os
 from src.plans import Plans
 from typing import List
 
+from src.services import MailService
+
 bp = Blueprint("stripe_webhooks", __name__)
 
 # Set your Stripe secret and webhook secret
@@ -45,10 +47,10 @@ def stripe_webhook():
 
     if event_type == "customer.subscription.created":
         user.stripe_subscription_id = data.get("id")
-        user.subscription_expires_at = int(data["current_period_end"]) * 1000
-
         # Extract all price IDs from the subscription items
         price_ids: List[str] = [item["price"]["id"] for item in data["items"]["data"]]
+        user.subscription_expires_at = int(data["current_period_end"]) * 1000
+        user.stripe_subscription_item_ids = ",".join(price_ids)
         # Determine the highest plan based on price IDs
         user.plan = Plans.get_plan_name(price_ids)
         db_session.add(user)
@@ -59,25 +61,37 @@ def stripe_webhook():
         price_ids: List[str] = [item["price"]["id"] for item in data["items"]["data"]]
         # Determine the highest plan based on price IDs
         user.plan = Plans.get_plan_name(price_ids)
+        user.stripe_subscription_id = data.get("id")
+        user.stripe_subscription_item_ids = ",".join(price_ids)
 
         db_session.add(user)
 
     elif event_type == "customer.subscription.deleted":
         user.subscription_expires_at = int(datetime.now(timezone.utc).timestamp() * 1000)
-        user.plan = "student"  # or your default/free plan
+        user.plan = Plans.Student.value
         user.stripe_subscription_id = None
+        user.stripe_subscription_item_ids = None
         db_session.add(user)
 
     elif event_type == "invoice.payment_succeeded":
         subscription_id = data.get("subscription")
         if subscription_id and user and user.stripe_subscription_id == subscription_id:
+            price_ids: List[str] = [item["price"]["id"] for item in data["items"]["data"]]
+            # Determine the highest plan based on price IDs
+            user.plan = Plans.get_plan_name(price_ids)
+            user.stripe_subscription_id = subscription_id
+            user.stripe_subscription_item_ids = ",".join(price_ids)
             user.subscription_expires_at = int(data["lines"]["data"][0]["period"]["end"]) * 1000
 
         db_session.add(user)
 
     elif event_type == "invoice.payment_failed":
-        # You can mark the user's subscription as at risk or notify them
-        pass
+        user.subscription_expires_at = int(datetime.now(timezone.utc).timestamp() * 1000)
+        user.plan = Plans.Student.value
+        user.stripe_subscription_id = None
+        user.stripe_subscription_item_ids = None
+        db_session.add(user)
+        MailService.send_payment_failed_email(user)
 
     # Save webhook event log
     log = StripeWebhookEvent(
