@@ -10,6 +10,7 @@ import stripe
 import os
 from src.plans import Plans
 from src.services.mail_service import MailService
+from src.role import Role
 
 bp = Blueprint("auth", __name__)
 
@@ -144,7 +145,10 @@ def login():
         user = db_session.query(User).filter_by(email=email).first()
         if user and check_password_hash(user.password_hash, password):
             login_user(user)
-            return redirect(url_for("dashboard.dashboard"))
+            if user.role == Role.User.value:
+                return redirect(url_for("dashboard.dashboard"))
+            elif user.role == Role.Manager.value:
+                return redirect(url_for("academia.panel"))
         else:
             return render_template("auth/login.html", error="Invalid email or password.")
 

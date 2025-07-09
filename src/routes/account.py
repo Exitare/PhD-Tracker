@@ -6,9 +6,9 @@ from flask_login import login_required, current_user, logout_user
 from src.forms import EmailForm, PasswordForm, ThemeForm
 from werkzeug.security import check_password_hash, generate_password_hash
 import stripe
-from src.services.jwt_service import JWTService
-from src.services.mail_service import MailService
+from src.services import JWTService, MailService, UserService
 from sqlalchemy.exc import IntegrityError
+from src.role import Role
 
 bp = Blueprint("account", __name__)
 
@@ -188,3 +188,26 @@ def verify_email(token):
         print(f"Error verifying email: {e}")
         flash("An error occurred while verifying your email. Please try again.", "error")
         return redirect(url_for('auth.login'))
+
+
+
+@bp.route("/account/logout", methods=["POST"])
+@login_required
+def refresh_access_code():
+    if not current_user or current_user.role != Role.Manager.value:
+        flash("You do not have permission to perform this action.", "danger")
+        return redirect(url_for('account.panel'))
+
+    try:
+
+        # Generate a new access code
+        current_user.access_code = UserService.create_access_token()
+        db_session.commit()
+
+        flash("Access code refreshed successfully.", "success")
+        return redirect(url_for('academia.panel'))
+
+    except Exception as e:
+        print(f"Error refreshing access code: {e}")
+        flash("An error occurred while refreshing the access code. Please try again.", "danger")
+        return redirect(url_for('academia.panel'))

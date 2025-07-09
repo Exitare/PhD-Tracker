@@ -14,6 +14,10 @@ class User(Base, UserMixin):
     email = Column(String(150), unique=True, nullable=False)
     email_verified = Column(Boolean, default=False, nullable=False)
     email_verified_at = Column(BigInteger, nullable=True, default=None)
+    first_name = Column(String(150), nullable=True)
+    last_name = Column(String(150), nullable=True)
+    organization_name = Column(String(150), nullable=True)
+    managed_by = Column(Integer, ForeignKey('users.id'), nullable=True)  # For user management hierarchy
     pending_email = Column(String(150), nullable=True)
     password_hash = Column(String(200), nullable=False)
     created_at = Column(BigInteger, nullable=False, default=int(datetime.now(timezone.utc).timestamp() * 1000))
@@ -21,6 +25,8 @@ class User(Base, UserMixin):
     stripe_subscription_id = Column(String, nullable=True)
     stripe_subscription_item_ids = Column(String, nullable=True)
     stripe_subscription_expires_at = Column(BigInteger, nullable=True)
+    role = Column(Enum("user", "manager", name="user_role"), default="user", nullable=False)
+    access_code = Column(String(100), nullable=True)  # For manager accounts to let users join their team
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
     usage_logs = relationship("UsageLog", back_populates="user", cascade="all, delete-orphan")
@@ -31,7 +37,9 @@ class User(Base, UserMixin):
             f" email_verified={self.email_verified}, email_verified_at={self.email_verified_at}, pending_email='{self.pending_email}',"
             f" password_hash='{self.password_hash}', stripe_subscription_id='{self.stripe_subscription_id}',"
             f" stripe_subscription_item_ids='{self.stripe_subscription_item_ids}',"
-            f" stripe_subscription_expires_at={self.stripe_subscription_expires_at})")
+            f" stripe_subscription_expires_at={self.stripe_subscription_expires_at},"
+            f" role='{self.role}', first_name='{self.first_name}', last_name='{self.last_name}', organization='{self.organization_name},"
+            f" managed_by={self.managed_by}, access_code='{self.access_code}')")
 
 
 class Project(Base):
