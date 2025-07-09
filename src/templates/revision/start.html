@@ -29,9 +29,9 @@
     {% if success %}
     <div class="alert alert-success text-center">{{ success }}</div>
     {% endif %}
-    {% if current_user.plan != "student_plus" %}
+    {% if current_user.plan == "student" %}
     <div class="alert alert-warning text-center mb-4">
-        ⚠️ AI-generated replies and milestone planning are only available on the <strong>Student+</strong> plan.
+        ⚠️ AI-generated replies and milestone planning are not available for a <strong>Student</strong> plan.
     </div>
     {% endif %}
     <form method="POST" action="{{ url_for('revision.create', project_id=project.id) }}"

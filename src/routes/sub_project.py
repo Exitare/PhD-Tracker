@@ -46,7 +46,7 @@ def create(project_id: int):
             return render_template("project-detail.html", project_id=project_id, project=project,
                                    error="All fields are required", now=datetime.now(timezone.utc))
 
-        if ai_option == "yes" and current_user.plan != Plans.StudentPlus.value:
+        if ai_option == "yes" and current_user.plan == Plans.Student.value:
             return render_template("project-detail.html", project_id=project_id, project=project,
                                    error="AI-generated milestones are only available for Student+ accounts.",
                                    now=datetime.now(timezone.utc))
