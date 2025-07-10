@@ -182,7 +182,7 @@ def verify_email(token):
             user.pending_email = None
 
         user.email_verified = True
-        user.email_verified_at = datetime.now(timezone.utc).timestamp() * 1000
+        user.email_verified_at = int(datetime.now(timezone.utc).timestamp() * 1000)
         db_session.commit()
 
         flash("Email successfully verified! You can now log in.", "success")
