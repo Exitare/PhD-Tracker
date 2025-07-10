@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_wtf import CSRFProtect
+from .extensions import csrf
 from dotenv import load_dotenv
 from src.db.models import User
 from src.db import init_db, db_session
@@ -15,8 +15,6 @@ from .extensions import mail
 
 _shutdown_event = Event()
 _downgrade_process = None
-
-csrf = CSRFProtect()
 
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 

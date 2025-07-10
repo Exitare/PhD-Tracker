@@ -43,8 +43,12 @@ def register():
             return render_template("academia/signup.html", error=error)
 
         try:
+            # get the domain of the email
+            email_domain = email.split('@')[-1]
+
             # Create Stripe customer first
-            stripe_customer = stripe.Customer.create(email=email)
+            stripe_customer = stripe.Customer.create(email=email, name=f"{first_name} {last_name}",
+                                                     invoice_prefix=email_domain)
 
             # create a unique access code
             access_code = UserService.create_access_token()

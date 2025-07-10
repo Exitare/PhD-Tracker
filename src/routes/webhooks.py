@@ -6,6 +6,7 @@ import stripe
 import os
 from src.plans import Plans
 from typing import List
+from src.extensions import csrf
 
 from src.services import MailService
 
@@ -16,15 +17,18 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 
-@bp.route("/webhook/stripe", methods=["POST"])
+@bp.route("/webhooks", methods=["POST"])
+@csrf.exempt
 def stripe_webhook():
     payload = request.data
     sig_header = request.headers.get("stripe-signature")
 
     # Verify Stripe signature
     try:
+        print("Verifying Stripe webhook signature...")
         event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
     except (ValueError, stripe.error.SignatureVerificationError):
+        print("Invalid payload or signature verification failed.")
         abort(400)
 
     event_id: str = event["id"]
@@ -41,6 +45,7 @@ def stripe_webhook():
     customer_id = data.get("customer")
     user: User = db_session.query(User).filter_by(stripe_customer_id=customer_id).first()
     if not user:
+        print(f"No user found for customer ID: {customer_id}, when handling event: {event_type}")
         # If no user found, we can either create a new user or ignore this event
         # For now, we will ignore it
         return "User not found", 200
