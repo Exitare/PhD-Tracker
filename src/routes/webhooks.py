@@ -7,6 +7,8 @@ import os
 from src.plans import Plans
 from typing import List
 from src.extensions import csrf
+from src.role import Role
+import logging
 
 from src.services import MailService
 
@@ -58,7 +60,14 @@ def stripe_webhook():
         user.stripe_subscription_item_ids = ",".join(price_ids)
         # Determine the highest plan based on price IDs
         user.plan = Plans.get_plan_name(price_ids)
-        db_session.add(user)
+
+        if user.role == Role.Manager.value:
+            logging.debug(f"Updating managed users for manager: {user.email} due to subscription deletion.")
+            # If the user is a manager, we need to deactivate all managed users
+            managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
+            for managed_user in managed_users:
+                managed_user.managed_by_license_active = True
+                managed_user.plan = user.plan
 
     elif event_type == "customer.subscription.updated":
         user.subscription_expires_at = int(data["current_period_end"]) * 1000
@@ -69,14 +78,29 @@ def stripe_webhook():
         user.stripe_subscription_id = data.get("id")
         user.stripe_subscription_item_ids = ",".join(price_ids)
 
-        db_session.add(user)
+        if user.role == Role.Manager.value:
+            logging.debug(f"Updating managed users for manager: {user.email} due to subscription deletion.")
+            # If the user is a manager, we need to deactivate all managed users
+            managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
+            for managed_user in managed_users:
+                managed_user.managed_by_license_active = True
+                managed_user.plan = user.plan
+
 
     elif event_type == "customer.subscription.deleted":
         user.subscription_expires_at = int(datetime.now(timezone.utc).timestamp() * 1000)
         user.plan = Plans.Student.value
         user.stripe_subscription_id = None
         user.stripe_subscription_item_ids = None
-        db_session.add(user)
+
+        if user.role == Role.Manager.value:
+            logging.debug(f"Updating managed users for manager: {user.email} due to subscription deletion.")
+            # If the user is a manager, we need to deactivate all managed users
+            managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
+            for managed_user in managed_users:
+                managed_user.managed_by_license_active = False
+                managed_user.plan = Plans.Student.value
+
 
     elif event_type == "invoice.payment_succeeded":
         subscription_id = data.get("subscription")
@@ -88,7 +112,14 @@ def stripe_webhook():
             user.stripe_subscription_item_ids = ",".join(price_ids)
             user.subscription_expires_at = int(data["lines"]["data"][0]["period"]["end"]) * 1000
 
-        db_session.add(user)
+            if user.role == Role.Manager.value:
+                logging.debug(f"Updating managed users for manager: {user.email} due to subscription deletion.")
+                # If the user is a manager, we need to deactivate all managed users
+                managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
+                for managed_user in managed_users:
+                    managed_user.managed_by_license_active = True
+                    managed_user.plan = user.plan
+
 
     elif event_type == "invoice.payment_failed":
         user.subscription_expires_at = int(datetime.now(timezone.utc).timestamp() * 1000)
@@ -97,6 +128,14 @@ def stripe_webhook():
         user.stripe_subscription_item_ids = None
         db_session.add(user)
         MailService.send_payment_failed_email(user)
+
+        if user.role == Role.Manager.value:
+            logging.debug(f"Updating managed users for manager: {user.email} due to subscription deletion.")
+            # If the user is a manager, we need to deactivate all managed users
+            managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
+            for managed_user in managed_users:
+                managed_user.managed_by_license_active = False
+                managed_user.plan = Plans.Student.value
 
     # Save webhook event log
     log = StripeWebhookEvent(

@@ -2,6 +2,7 @@ from src.db.models import User
 from src.plans import Plans, StripeMeter
 from src.role import Role
 import stripe
+import logging
 from typing import List
 
 
@@ -16,10 +17,12 @@ class UserService:
 
     @staticmethod
     def can_access_page(user: User, allowed_roles: List) -> bool:
+        print(user, allowed_roles)
         if not user:
             return False
 
         if user.managed_by is not None and not user.email_verified and not user.access_code:
+            logging.debug(f"User {user.email} is managed by another user and has not verified their email or provided an access code.")
             return False
 
         if user.role in allowed_roles:
@@ -35,16 +38,8 @@ class UserService:
         :return:
         """
 
-        if user.role == Plans.StudentPlus.value:
+        if user.role == Plans.StudentPlus.value or user.role == Plans.StudentPro.value or user.role == Plans.CustomPlan.value:
             return True
-        elif user.role == Plans.StudentPro.value:
-            return True
-        elif user.role == Plans.CustomPlan.value:
-            return True
-
-        if user.managed_by is not None and user.email_verified and user.active:
-            return True
-
         else:
             return False
 

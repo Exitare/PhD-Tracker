@@ -229,4 +229,4 @@ def resend_activation_email():
     else:
         flash("Your email is already verified.", "info")
 
-    return redirect(url_for('academia.panel'))
+    return redirect(request.referrer or url_for('dashboard.dashboard'))
