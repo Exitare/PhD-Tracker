@@ -9,10 +9,17 @@ import stripe
 from src.services import JWTService, MailService, UserService
 from sqlalchemy.exc import IntegrityError
 from src.role import Role
+from typing import Dict
 
 bp = Blueprint("account", __name__)
 
-ALLOWED_THEMES = {"lavender", "dark", "light", "solarized"}
+ALLOWED_THEMES: Dict[str, str] = {
+    "lavender-dark": "Lavender (Dark)",
+    "lavender-light": "Lavender (Light)",
+    "solarized-light": "Solarized (Light)",
+    "solarized-dark": "Solarized (Dark)",
+}
+
 EMAIL_REGEX = r"[^@]+@[^@]+\.[^@]+"
 
 
@@ -125,13 +132,13 @@ def update_password():
 def update_theme():
     selected_theme = request.form.get('theme')
 
-    if selected_theme not in ALLOWED_THEMES:
+    if selected_theme not in ALLOWED_THEMES.keys():
         flash("Invalid theme selected.", "danger")
         return redirect(url_for('account.panel'))
 
     # Save theme to session (and optionally to DB for persistence)
     session['theme'] = selected_theme
-    flash(f"Theme changed to '{selected_theme}'.", "success")
+    flash(f"Theme changed to '{ALLOWED_THEMES[selected_theme]}'.", "success")
 
     if current_user.role == Role.User.value:
         return redirect(url_for('account.panel'))
@@ -147,7 +154,6 @@ def manage_subscriptions():
     if current_user.managed_by:
         flash("You cannot manage subscriptions for a managed account.", "warning")
         return redirect(url_for('account.panel'))
-
 
     try:
         # open stripe customer portal

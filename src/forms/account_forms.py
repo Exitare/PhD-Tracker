@@ -7,6 +7,7 @@ class EmailForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Current Password", validators=[DataRequired()])
 
+
 class PasswordForm(FlaskForm):
     current_password = PasswordField("Current Password", validators=[
         DataRequired(message="Please enter your current password.")
@@ -23,8 +24,8 @@ class PasswordForm(FlaskForm):
 
 class ThemeForm(FlaskForm):
     theme = SelectField("Design Theme", choices=[
-        ("lavender", "Lavender"),
-        ("dark", "Dark"),
-        ("light", "Light"),
-        ("solarized", "Solarized")
+        ("lavender-dark", "Lavender (Dark)"),
+        ("lavender-light", "Lavender (Light)"),
+        ("solarized-dark", "Solarized (Dark)"),
+        ("solarized-light", "Solarized (Light)")
     ])
