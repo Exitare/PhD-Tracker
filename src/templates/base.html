@@ -30,7 +30,7 @@
 
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul class="navbar-nav">
-                {% if current_user.is_authenticated %}
+                {% if current_user.is_authenticated and current_user.role == 'user' %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
                 </li>
@@ -40,7 +40,31 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                 </li>
+
+                {% elif current_user.is_authenticated and current_user.role == 'manager' %}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('academia.panel') }}">Manage</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                </li>
+
+
+                {% elif current_user.is_authenticated and current_user.role == 'admin' %}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                </li>
+
+
                 {% else %}
+
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
                 </li>
@@ -48,6 +72,8 @@
                     <a class="nav-link" href="{{ url_for('auth.register_step1') }}">Register</a>
                 </li>
                 {% endif %}
+
+
             </ul>
         </div>
     </div>
@@ -87,6 +113,7 @@
         <div class="d-flex gap-3">
             <a href="{{ url_for('about.about') }}" class="footer-link">About</a>
             <a href="mailto:contact@anobrain.ai" class="footer-link">Contact</a>
+            <a href="{{url_for('academia.view')}}" class="footer-link">Academia Access</a>
             <a href="#" class="footer-link">Privacy</a>
             <a href="#" class="footer-link">Terms</a>
         </div>

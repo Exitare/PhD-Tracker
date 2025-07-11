@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}University License Sign Up{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card p-4 mb-4">
+        <h1 class="card-title mb-4">University License Sign Up</h1>
+        <form method="POST" action="{{ url_for('academia.register') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="first_name">First Name</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Jane" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="last_name">Last Name</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Doe" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="org_name">Organization Name</label>
+                <input type="text" class="form-control" id="org_name" name="org_name" placeholder="University of Example" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label" for="email">Institutional Email</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="jane.doe@example.edu" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

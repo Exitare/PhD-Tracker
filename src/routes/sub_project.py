@@ -1,13 +1,12 @@
-from flask import Blueprint, render_template, redirect, url_for, request, abort, flash
+from flask import Blueprint, render_template, redirect, url_for, request, abort, flash, jsonify
 from datetime import datetime, timezone
 from src.db.models import SubProject, Milestone, Project
 from src import db_session
 from src.services.openai_service import OpenAIService
 from flask_login import login_required, current_user
-import stripe
-from src.plans import Plans, StripeMeter
-from src.services.log_service import AILogService
-
+from src.services import AILogService, UserService
+from src.role import Role
+from sqlalchemy import func
 
 bp = Blueprint('subproject', __name__)
 
@@ -15,6 +14,10 @@ bp = Blueprint('subproject', __name__)
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/create", methods=["GET"])
 @login_required
 def show_sub_project_form(project_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     try:
         project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
         if not project:
@@ -25,14 +28,25 @@ def show_sub_project_form(project_id: int):
         print("Error loading project for subproject creation:", e)
         return render_template("dashboard.html", projects=[], error="Failed to load project. Please try again.")
 
+
 @bp.route("/dashboard/projects/<int:project_id>/subprojects", methods=["POST"])
 @login_required
 def create(project_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     try:
         project = db_session.query(Project).filter_by(id=project_id).first()
         # Ensure the project exists and belongs to the current user
         if not project or project.user_id != current_user.id:
             return render_template("dashboard.html", projects=[], error="Project not found.")
+
+    except Exception as e:
+        print("Error loading project for subproject creation:", e)
+        return redirect(url_for("dashboard.dashboard"))
+
+    try:
 
         title = request.form.get("title", "").strip()
         description = request.form.get("description", "").strip()
@@ -46,9 +60,9 @@ def create(project_id: int):
             return render_template("project-detail.html", project_id=project_id, project=project,
                                    error="All fields are required", now=datetime.now(timezone.utc))
 
-        if ai_option == "yes" and current_user.plan == Plans.Student.value:
+        if ai_option == "yes" and not UserService.can_use_ai(current_user):
             return render_template("project-detail.html", project_id=project_id, project=project,
-                                   error="AI-generated milestones are only available for Student+ accounts.",
+                                   error="AI-generated milestones are not only available for Student accounts.",
                                    now=datetime.now(timezone.utc))
 
         deadline_str = request.form.get("deadline", "").strip()
@@ -58,8 +72,8 @@ def create(project_id: int):
                 return render_template("project-detail.html", project_id=project_id, project=project,
                                        error="Deadline cannot be earlier than today.")
         except ValueError:
-            return render_template("project-detail.html", project_id=project_id, project=project,
-                                   error="Invalid date format for deadline.")
+            flash("Invalid date format for deadline.", "danger")
+            return redirect(url_for('subproject.show_sub_project_form', project_id=project.id))
 
         # check if the title already exists for the same user but different subproject
         duplicate = (
@@ -74,33 +88,8 @@ def create(project_id: int):
         )
 
         if duplicate:
-            flash("A subproject with this title already exists.", "danger")
-
-            project = db_session.query(Project).filter_by(id=project_id).first()
-            if not project or project.user_id != current_user.id:
-                return render_template("dashboard.html", projects=[], error="Project not found.")
-
-            subprojects = (
-                db_session.query(SubProject)
-                .filter_by(project_id=project_id)
-                .all()
-            )
-
-            # For milestone counts
-            subprojects_with_milestones = []
-            for sub in subprojects:
-                milestones = db_session.query(Milestone).filter_by(sub_project_id=sub.id).all()
-                subprojects_with_milestones.append({
-                    "subproject": sub,
-                    "milestones": milestones
-                })
-
-            return render_template(
-                "project-detail.html",
-                project=project,
-                subprojects=subprojects_with_milestones,
-                now=datetime.now(timezone.utc)
-            )
+            flash("A goal with this title already exists.", "danger")
+            return redirect(url_for('subproject.show_sub_project_form', project_id=project.id))
 
         new_subproject = SubProject(
             title=title,
@@ -114,7 +103,7 @@ def create(project_id: int):
         db_session.flush()  # Needed to get new_subproject.id before commit
 
         # If AI is requested, generate and add milestones
-        if ai_option == "yes" and current_user.plan != Plans.Student.value:
+        if ai_option == "yes" and UserService.can_use_ai(current_user):
             print("Generating milestones using AI...")
             ai_milestones, usage = OpenAIService.generate_milestones(title, deadline)
             for ai_m in ai_milestones:
@@ -129,15 +118,10 @@ def create(project_id: int):
             token_count = usage.get("total_tokens", 0)
             print(f"AI token usage: {token_count}")
             # report usage
-            stripe.billing.MeterEvent.create(
-                event_name=StripeMeter.TokenRequests.value,
-                payload={
-                    "value": str(token_count),
-                    "stripe_customer_id": current_user.stripe_customer_id,
-                }
-            )
+            UserService.report_usage(user=current_user, token_count=token_count)
 
-            AILogService.log_ai_usage(session=db_session, user_id=current_user.id, event_name="create_subproject_with_milestones",
+            AILogService.log_ai_usage(session=db_session, user_id=current_user.id,
+                                      event_name="create_subproject_with_milestones",
                                       used_tokens=token_count)
 
         print("Subproject created:", title)
@@ -147,13 +131,17 @@ def create(project_id: int):
     except Exception as e:
         db_session.rollback()
         print("Database error:", e)
-        return render_template("project-detail.html", project_id=project_id,
+        return render_template("project-detail.html", project_id=project_id, project=project,
                                error="Failed to add subproject. Please try again.", now=datetime.now(timezone.utc))
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["GET"])
 @login_required
 def view(project_id: int, subproject_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
         abort(404, description="Subproject not found")
@@ -181,6 +169,10 @@ def view(project_id: int, subproject_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["POST"])
 @login_required
 def edit(project_id: int, subproject_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
         abort(404)
@@ -226,6 +218,10 @@ def edit(project_id: int, subproject_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/delete", methods=["POST"])
 @login_required
 def delete(project_id: int, subproject_id: int):
+    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        flash("You do not have permission to view this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     sub = db_session.query(SubProject).filter_by(id=subproject_id).first()
     if not sub:
         abort(404, description="Subproject not found")
@@ -234,3 +230,17 @@ def delete(project_id: int, subproject_id: int):
     db_session.delete(sub)
     db_session.commit()
     return redirect(url_for("project.view", project_id=project_id))
+
+
+@bp.route('/dashboard/projects/<int:project_id>/subprojects/check_title/', methods=['POST'])
+@login_required
+def check_subproject_title(project_id: int):
+    data = request.get_json()
+    title = data.get("title", "").strip().lower()
+
+    exists = db_session.query(SubProject).filter(
+        SubProject.project_id == project_id,
+        func.lower(SubProject.title) == title
+    ).first() is not None
+
+    return jsonify({"exists": exists})

@@ -6,17 +6,20 @@ from src import db_session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 import stripe
-from src.services.openai_service import OpenAIService
-from src.services.calendar_service import CalendarService
 from ics import Calendar
-from src.services.log_service import AILogService
+from src.services import AILogService, UserService, OpenAIService, CalendarService
 from src.plans import StripeMeter
+from src.role import Role
 
 bp = Blueprint('milestone', __name__)
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/calendar.ics")
 def download_milestone_calendar(project_id: int, subproject_id: int):
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to create a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     # check that current user has access to the subproject
     subproject = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not subproject or subproject.project.user_id != current_user.id:
@@ -36,6 +39,10 @@ def download_milestone_calendar(project_id: int, subproject_id: int):
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones", methods=["GET"])
 def view(project_id: int, subproject_id: int):
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to view a project.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     # Get the subproject and check if it exists
     subproject = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
 
@@ -50,6 +57,10 @@ def view(project_id: int, subproject_id: int):
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones", methods=["POST"])
 def create(project_id: int, subproject_id: int):
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to create milestones.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     form = request.form
     milestone_text = form.get("milestone", "").strip()
     due_date_str = form.get("due_date", "").strip()
@@ -87,6 +98,11 @@ def create(project_id: int, subproject_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>",
           methods=["POST"])
 def update(project_id: int, subproject_id: int, milestone_id: int):
+
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to update milestones.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     form = request.form
 
     milestone = db_session.query(Milestone).filter_by(id=milestone_id, sub_project_id=subproject_id).first()
@@ -106,6 +122,11 @@ def update(project_id: int, subproject_id: int, milestone_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>/status",
           methods=["POST"])
 def update_status(project_id: int, subproject_id: int, milestone_id: int):
+
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to update milestones.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     status = request.form["status"]
 
     # Fetch milestone
@@ -123,6 +144,10 @@ def update_status(project_id: int, subproject_id: int, milestone_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>",
           methods=["DELETE"])
 def delete_milestone(project_id: int, subproject_id: int, milestone_id: int):
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to delete a milestone.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     print(f"Deleting milestone {milestone_id} for project {project_id}")
 
     milestone = db_session.query(Milestone).filter_by(id=milestone_id, sub_project_id=subproject_id).first()
@@ -142,8 +167,12 @@ def delete_milestone(project_id: int, subproject_id: int, milestone_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/refine", methods=["POST"])
 @login_required
 def refine(project_id: int, subproject_id: int):
-    if current_user.plan != "StudentPlus":
-        flash("This feature is only available for Student Plus plan users.", "danger")
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to refine milestone.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
+    if not UserService.can_use_ai(current_user):
+        flash("This feature is only available for Plans that support AI.", "danger")
         return redirect(url_for('dashboard.dashboard'))
 
     context: str = request.form.get("context", "")

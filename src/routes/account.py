@@ -6,9 +6,9 @@ from flask_login import login_required, current_user, logout_user
 from src.forms import EmailForm, PasswordForm, ThemeForm
 from werkzeug.security import check_password_hash, generate_password_hash
 import stripe
-from src.services.jwt_service import JWTService
-from src.services.mail_service import MailService
+from src.services import JWTService, MailService, UserService
 from sqlalchemy.exc import IntegrityError
+from src.role import Role
 
 bp = Blueprint("account", __name__)
 
@@ -16,9 +16,13 @@ ALLOWED_THEMES = {"lavender", "dark", "light", "solarized"}
 EMAIL_REGEX = r"[^@]+@[^@]+\.[^@]+"
 
 
-@bp.route("/account", methods=["GET"])
+@bp.route("/account/panel", methods=["GET"])
 @login_required
 def panel():
+    if not UserService.can_access_page(current_user, [Role.User.value]):
+        flash("You do not have permission to access this page.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+
     try:
         user = db_session.query(User).filter_by(id=current_user.id).first()
         if not user:
@@ -129,12 +133,22 @@ def update_theme():
     session['theme'] = selected_theme
     flash(f"Theme changed to '{selected_theme}'.", "success")
 
-    return redirect(url_for('account.panel'))
+    if current_user.role == Role.User.value:
+        return redirect(url_for('account.panel'))
+    elif current_user.role == Role.Manager.value:
+        return redirect(url_for('academia.panel'))
+    elif current_user.role == Role.Admin.value:
+        return redirect(url_for('admin.panel'))
 
 
 @bp.route("/account/stripe", methods=["GET"])
 @login_required
 def manage_subscriptions():
+    if current_user.managed_by:
+        flash("You cannot manage subscriptions for a managed account.", "warning")
+        return redirect(url_for('account.panel'))
+
+
     try:
         # open stripe customer portal
         if not current_user.stripe_customer_id:
@@ -178,7 +192,7 @@ def verify_email(token):
             user.pending_email = None
 
         user.email_verified = True
-        user.email_verified_at = datetime.now(timezone.utc).timestamp() * 1000
+        user.email_verified_at = int(datetime.now(timezone.utc).timestamp() * 1000)
         db_session.commit()
 
         flash("Email successfully verified! You can now log in.", "success")
@@ -188,3 +202,41 @@ def verify_email(token):
         print(f"Error verifying email: {e}")
         flash("An error occurred while verifying your email. Please try again.", "error")
         return redirect(url_for('auth.login'))
+
+
+@bp.route("/account/code-refresh", methods=["POST"])
+@login_required
+def refresh_access_code():
+    if not current_user or current_user.role != Role.Manager.value:
+        flash("You do not have permission to perform this action.", "danger")
+        return redirect(url_for('account.panel'))
+
+    try:
+
+        # Generate a new access code
+        current_user.access_code = UserService.create_access_token()
+        db_session.commit()
+
+        flash("Access code refreshed successfully.", "success")
+        return redirect(url_for('academia.panel'))
+
+    except Exception as e:
+        print(f"Error refreshing access code: {e}")
+        flash("An error occurred while refreshing the access code. Please try again.", "danger")
+        return redirect(url_for('academia.panel'))
+
+
+@bp.route("/account/resend_activation_email", methods=["GET"])
+@login_required
+def resend_activation_email():
+    if not current_user.email_verified:
+        try:
+            MailService.send_verification_email(current_user)
+            flash("Activation email resent successfully. Please check your inbox.", "success")
+        except Exception as e:
+            print(f"Error sending activation email: {e}")
+            flash("An error occurred while resending the activation email. Please try again.", "danger")
+    else:
+        flash("Your email is already verified.", "info")
+
+    return redirect(request.referrer or url_for('dashboard.dashboard'))

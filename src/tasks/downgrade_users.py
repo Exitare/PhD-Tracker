@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from time import sleep
+from src.role import Role
 from src import db_session
 from src.db.models import User
 from src.plans import Plans
@@ -12,8 +12,18 @@ def downgrade_expired_users():
         User.plan != Plans.Student.value,
     ).all()
 
+    user: User
     for user in expired_users:
         user.plan = Plans.Student.value
+        user.stripe_subscription_id = None
+        user.stripe_subscription_item_ids = None
+
+        if user.role == Role.Manager.value:
+            # Downgrade managed users as well
+            managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
+            for managed_user in managed_users:
+                managed_user.plan = Plans.Student.value
+                managed_user.managed_by_license_active = False
 
     if expired_users:
         db_session.commit()

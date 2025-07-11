@@ -45,3 +45,34 @@ class MailService:
             args=(current_app._get_current_object(), msg),
             daemon=True  # Optional: daemon=True ends the thread with the main process
         ).start()
+
+    @staticmethod
+    def send_academia_confirmation_email(user):
+        msg = Message(
+            subject='Academia Registration Confirmation',
+            recipients=[user.email],
+            body=f'Thank you for registering, {user.first_name}!.'
+        )
+
+        # Launch in a background thread
+        threading.Thread(
+            target=MailService._send_async_email,
+            args=(current_app._get_current_object(), msg),
+            daemon=True  # Optional: daemon=True ends the thread with the main process
+        ).start()
+
+
+    @staticmethod
+    def send_payment_failed_email(user):
+        msg = Message(
+            subject='Payment Failed',
+            recipients=[user.email],
+            body="Your recent payment attempt has failed. Please update your payment information. If you have any questions, contact support."
+        )
+
+        # Launch in a background thread
+        threading.Thread(
+            target=MailService._send_async_email,
+            args=(current_app._get_current_object(), msg),
+            daemon=True  # Optional: daemon=True ends the thread with the main process
+        ).start()

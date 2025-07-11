@@ -454,7 +454,7 @@
                         <label for="edit-deadline-{{ sub.id }}" class="form-label">Deadline <span
                                 class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="edit-deadline-{{ sub.id }}" name="deadline"
-                               value="{{ sub.deadline_dt.strftime('%Y-%m-%d') }}"
+                               value="{{ sub.deadline | dateformat }}"
                                min="{{ now.strftime('%Y-%m-%d') }}" required>
                     </div>
 
