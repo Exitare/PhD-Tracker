@@ -1,16 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import current_user, login_required
 from src.role import Role
-
-from src.db.models import Project, User
+from src.db.models import Project
 from src import db_session
-import stripe
 from typing import List
 from src.models import AIJournalRecommendation
 from src.services import UserService
 from src.services.openai_service import OpenAIService
 import logging
-from src.plans import StripeMeter
 from src.services.log_service import AILogService
 
 bp = Blueprint('journal', __name__)
@@ -53,13 +50,7 @@ def get_recommendations(project_id: int):
                               used_tokens=token_count)
 
     # report usage
-    stripe.billing.MeterEvent.create(
-        event_name=StripeMeter.TokenRequests.value,
-        payload={
-            "value": str(token_count),
-            "stripe_customer_id": current_user.stripe_customer_id,
-        }
-    )
+    UserService.report_ai_usage(user=current_user, token_count=token_count)
 
     db_session.commit()
     flash("Journal recommendations updated successfully.", "success")

@@ -118,7 +118,7 @@ def create(project_id: int):
             token_count = usage.get("total_tokens", 0)
             print(f"AI token usage: {token_count}")
             # report usage
-            UserService.report_usage(user=current_user, token_count=token_count)
+            UserService.report_ai_usage(user=current_user, token_count=token_count)
 
             AILogService.log_ai_usage(session=db_session, user_id=current_user.id,
                                       event_name="create_subproject_with_milestones",

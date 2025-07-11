@@ -5,10 +5,8 @@ from flask_login import current_user, login_required
 from src import db_session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List
-import stripe
 from ics import Calendar
 from src.services import AILogService, UserService, OpenAIService, CalendarService
-from src.plans import StripeMeter
 from src.role import Role
 
 bp = Blueprint('milestone', __name__)
@@ -194,13 +192,7 @@ def refine(project_id: int, subproject_id: int):
     token_count = usage.get("total_tokens", 0)
     print(f"AI token usage: {token_count}")
     # report usage
-    stripe.billing.MeterEvent.create(
-        event_name=StripeMeter.TokenRequests.value,
-        payload={
-            "value": str(token_count),
-            "stripe_customer_id": current_user.stripe_customer_id,
-        }
-    )
+    UserService.report_ai_usage(user=current_user, token_count=token_count)
 
     AILogService.log_ai_usage(session=db_session, user_id=current_user.id, event_name="milestone_refine",
                               used_tokens=token_count)

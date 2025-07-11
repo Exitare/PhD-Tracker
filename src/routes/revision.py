@@ -4,8 +4,7 @@ from src.db.models import Project, SubProject, Milestone
 from src import db_session
 from flask_login import current_user, login_required
 from sqlalchemy import select
-import stripe
-from src.services.openai_service import OpenAIService, METER_NAME
+from src.services.openai_service import OpenAIService
 from src.services.log_service import AILogService
 from src.services import UserService
 from src.role import Role
@@ -81,7 +80,7 @@ def create(project_id: int):
             token_count = usage.get("total_tokens", 0)
             print(f"AI token usage: {token_count}")
             # report usage
-            UserService.report_usage(user=current_user, token_count=token_count)
+            UserService.report_ai_usage(user=current_user, token_count=token_count)
             # log AI usage
             AILogService.log_ai_usage(
                 session=db_session,

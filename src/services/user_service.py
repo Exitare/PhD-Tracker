@@ -1,6 +1,5 @@
 from src.db.models import User
 from src.plans import Plans, StripeMeter
-from src.role import Role
 import stripe
 import logging
 from typing import List
@@ -42,7 +41,7 @@ class UserService:
             return False
 
     @staticmethod
-    def report_usage(user: User, token_count: int) -> bool:
+    def report_ai_usage(user: User, token_count: int) -> bool:
         managed_user: bool = user.managed_by is not None
 
         print(f"AI token usage: {token_count}, user is {'managed' if managed_user else 'not managed'} by another user.")
