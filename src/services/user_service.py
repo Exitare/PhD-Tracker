@@ -17,11 +17,10 @@ class UserService:
 
     @staticmethod
     def can_access_page(user: User, allowed_roles: List) -> bool:
-        print(user, allowed_roles)
         if not user:
             return False
 
-        if user.managed_by is not None and not user.email_verified and not user.access_code:
+        if user.managed_by is not None and not user.email_verified and not user.active:
             logging.debug(f"User {user.email} is managed by another user and has not verified their email or provided an access code.")
             return False
 

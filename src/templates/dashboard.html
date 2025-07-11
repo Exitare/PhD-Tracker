@@ -88,7 +88,7 @@
     </div>
 </div>
 {% else %}
-{% if current_user.managed_by %}
+{% if current_user.managed_by and not current_user.email_verified %}
 <div class="alert alert-info text-center">
     You are currently managed by an organization. <br>
     Please verify your organization email to create new projects.

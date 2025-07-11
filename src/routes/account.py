@@ -139,6 +139,11 @@ def update_theme():
 @bp.route("/account/stripe", methods=["GET"])
 @login_required
 def manage_subscriptions():
+    if current_user.managed_by:
+        flash("You cannot manage subscriptions for a managed account.", "warning")
+        return redirect(url_for('account.panel'))
+
+
     try:
         # open stripe customer portal
         if not current_user.stripe_customer_id:
