@@ -9,6 +9,7 @@ from src.role import Role
 from werkzeug.security import generate_password_hash
 from src.forms import EmailForm, PasswordForm, ThemeForm
 import os
+from sqlalchemy.orm import joinedload
 
 bp = Blueprint('academia', __name__)
 
@@ -118,12 +119,33 @@ def panel():
     current_theme = session.get('theme', 'lavender')
     theme_form.theme.data = current_theme
 
-    # Fetch all users managed by the current user
-    managed_users = db_session.query(User).filter_by(managed_by=current_user.id).all()
+    managed_users = db_session.query(User).options(joinedload(User.usage_logs)) \
+        .filter_by(managed_by=current_user.id).all()
+
+    usage_summary_by_user = {}
+    for user in managed_users:
+        total = sum(log.used_tokens or 0 for log in user.usage_logs)
+        usage_summary_by_user[user.id] = total
 
     return render_template('academia/account.html',
                            managed_users=managed_users,
                            email_form=email_form,
+                           usage_summary_by_user=usage_summary_by_user,
                            password_form=password_form,
                            theme_form=theme_form,
                            user=current_user)
+
+
+@bp.route('/academia/managed-users/<int:user_id>/toggle-status', methods=['POST'])
+@login_required
+def toggle_user_status(user_id):
+    user = db_session.get(User, user_id)
+
+    if not user or user.managed_by != current_user.id:
+        flash("You do not have permission to modify this user.", "danger")
+        return redirect(url_for('academia.panel'))
+
+    user.active = not user.active
+    db_session.commit()
+
+    return redirect(url_for('academia.panel'))

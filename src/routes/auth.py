@@ -195,6 +195,8 @@ def login():
 
         user = db_session.query(User).filter_by(email=email).first()
         if user and check_password_hash(user.password_hash, password) and user.active:
+            user.last_sign_in = int(datetime.now(timezone.utc).timestamp() * 1000)
+            db_session.commit()
             login_user(user)
             if user.role == Role.User.value:
                 return redirect(url_for("dashboard.dashboard"))

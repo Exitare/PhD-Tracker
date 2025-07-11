@@ -133,7 +133,12 @@ def update_theme():
     session['theme'] = selected_theme
     flash(f"Theme changed to '{selected_theme}'.", "success")
 
-    return redirect(url_for('account.panel'))
+    if current_user.role == Role.User.value:
+        return redirect(url_for('account.panel'))
+    elif current_user.role == Role.Manager.value:
+        return redirect(url_for('academia.panel'))
+    elif current_user.role == Role.Admin.value:
+        return redirect(url_for('admin.panel'))
 
 
 @bp.route("/account/stripe", methods=["GET"])

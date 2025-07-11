@@ -112,28 +112,42 @@
     <h5 class="card-title mb-3">Managed Users</h5>
     {% if managed_users %}
     <div class="table-responsive">
-        <table class="table table-dark table-hover table-sm">
+        <table class="table table-hover table-sm">
             <thead>
             <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Email</th>
-                <th scope="col">Last Sign In</th>
-                <th scope="col">Usage</th>
+                <th class="text-muted" scope="col">Name</th>
+                <th class="text-muted" scope="col">Email</th>
+                <th class="text-muted" scope="col">Last Sign In</th>
+                <th class="text-muted" scope="col">Usage</th>
+                <th class="text-muted" scope="col">Status</th>
             </tr>
             </thead>
             <tbody>
             {% for u in managed_users %}
             <tr>
                 <td>{{ u.full_name or (u.first_name ~ ' ' ~ u.last_name) }}</td>
-                <td>{{ u.email }}</td>
-                <td>
-                    {% if u.last_login %}
-                    {{ u.last_login | datetimeformat }}
+                <td class="text-muted">{{ u.email }}</td>
+                <td class="text-muted">
+                    {% if u.last_sign_in %}
+                    {{ u.last_sign_in | datetimeformat }}
                     {% else %}
                     <span class="text-muted">Never</span>
                     {% endif %}
                 </td>
-                <td>{{ u.usage_summary or '—' }}</td>
+                <td>{{ usage_summary_by_user.get(u.id, 0) }} tokens</td>
+                <td>
+                    <form method="POST" action="{{ url_for('academia.toggle_user_status', user_id=u.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-check form-switch">
+                            <input
+                                    type="checkbox"
+                                    class="form-check-input {% if u.active %}bg-success{% else %}bg-danger{% endif %}"
+                                    id="toggleUser{{ u.id }}"
+                                    onchange="this.form.submit()"
+                                    {% if u.active %}checked{% endif %}>
+                        </div>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
             </tbody>

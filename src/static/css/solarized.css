@@ -341,3 +341,40 @@ button:disabled,
 .navbar-brand-contrast {
     color: #fff !important;
 }
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+    color: #ccd6d9; /* matches card text */
+    font-size: 0.95rem;
+}
+
+.table th,
+.table td {
+    background-color: #073642 !important; /* match card background */
+    color: #ccd6d9 !important;
+    border: 1px solid #586e75 !important;
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+
+.table thead th {
+    background-color: #002b36 !important; /* slightly darker for contrast */
+    color: #268bd2 !important;
+    font-weight: 600;
+    border-bottom: 2px solid #586e75;
+}
+
+.table-hover tbody tr:hover td {
+    background-color: #003845 !important; /* matches .selectable-card:hover */
+}
+
+.table-sm td,
+.table-sm th {
+    padding: 0.5rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}

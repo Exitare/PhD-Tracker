@@ -16,6 +16,7 @@ class User(Base, UserMixin):
     email_verified_at = Column(BigInteger, nullable=True, default=None)
     first_name: Mapped[str] = Column(String(150), nullable=True)
     last_name: Mapped[str] = Column(String(150), nullable=True)
+    last_sign_in: Mapped[int] = Column(BigInteger, nullable=False, default=int(datetime.now(timezone.utc).timestamp() * 1000))
     organization_name: Mapped[str] = Column(String(150), nullable=True)
     managed_by = Column(Integer, ForeignKey('users.id'), nullable=True)  # For user management hierarchy
     managed_by_stripe_id: Mapped[str] = Column(String(100), nullable=True)  # Stripe ID of the manager if applicable

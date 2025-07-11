@@ -1,13 +1,12 @@
-from flask import Blueprint, render_template, redirect, url_for, request, abort, flash
+from flask import Blueprint, render_template, redirect, url_for, request, abort, flash, jsonify
 from datetime import datetime, timezone
 from src.db.models import SubProject, Milestone, Project
 from src import db_session
 from src.services.openai_service import OpenAIService
 from flask_login import login_required, current_user
-import stripe
-from src.plans import StripeMeter
 from src.services import AILogService, UserService
 from src.role import Role
+from sqlalchemy import func
 
 bp = Blueprint('subproject', __name__)
 
@@ -43,6 +42,12 @@ def create(project_id: int):
         if not project or project.user_id != current_user.id:
             return render_template("dashboard.html", projects=[], error="Project not found.")
 
+    except Exception as e:
+        print("Error loading project for subproject creation:", e)
+        return redirect(url_for("dashboard.dashboard"))
+
+    try:
+
         title = request.form.get("title", "").strip()
         description = request.form.get("description", "").strip()
         ai_option = request.form.get("ai_option", "")
@@ -57,7 +62,7 @@ def create(project_id: int):
 
         if ai_option == "yes" and not UserService.can_use_ai(current_user):
             return render_template("project-detail.html", project_id=project_id, project=project,
-                                   error="AI-generated milestones are only available for Student+ accounts.",
+                                   error="AI-generated milestones are not only available for Student accounts.",
                                    now=datetime.now(timezone.utc))
 
         deadline_str = request.form.get("deadline", "").strip()
@@ -67,8 +72,8 @@ def create(project_id: int):
                 return render_template("project-detail.html", project_id=project_id, project=project,
                                        error="Deadline cannot be earlier than today.")
         except ValueError:
-            return render_template("project-detail.html", project_id=project_id, project=project,
-                                   error="Invalid date format for deadline.")
+            flash("Invalid date format for deadline.", "danger")
+            return redirect(url_for('subproject.show_sub_project_form', project_id=project.id))
 
         # check if the title already exists for the same user but different subproject
         duplicate = (
@@ -83,33 +88,8 @@ def create(project_id: int):
         )
 
         if duplicate:
-            flash("A subproject with this title already exists.", "danger")
-
-            project = db_session.query(Project).filter_by(id=project_id).first()
-            if not project or project.user_id != current_user.id:
-                return render_template("dashboard.html", projects=[], error="Project not found.")
-
-            subprojects = (
-                db_session.query(SubProject)
-                .filter_by(project_id=project_id)
-                .all()
-            )
-
-            # For milestone counts
-            subprojects_with_milestones = []
-            for sub in subprojects:
-                milestones = db_session.query(Milestone).filter_by(sub_project_id=sub.id).all()
-                subprojects_with_milestones.append({
-                    "subproject": sub,
-                    "milestones": milestones
-                })
-
-            return render_template(
-                "project-detail.html",
-                project=project,
-                subprojects=subprojects_with_milestones,
-                now=datetime.now(timezone.utc)
-            )
+            flash("A goal with this title already exists.", "danger")
+            return redirect(url_for('subproject.show_sub_project_form', project_id=project.id))
 
         new_subproject = SubProject(
             title=title,
@@ -138,13 +118,7 @@ def create(project_id: int):
             token_count = usage.get("total_tokens", 0)
             print(f"AI token usage: {token_count}")
             # report usage
-            stripe.billing.MeterEvent.create(
-                event_name=StripeMeter.TokenRequests.value,
-                payload={
-                    "value": str(token_count),
-                    "stripe_customer_id": current_user.stripe_customer_id,
-                }
-            )
+            UserService.report_usage(user=current_user, token_count=token_count)
 
             AILogService.log_ai_usage(session=db_session, user_id=current_user.id,
                                       event_name="create_subproject_with_milestones",
@@ -157,7 +131,7 @@ def create(project_id: int):
     except Exception as e:
         db_session.rollback()
         print("Database error:", e)
-        return render_template("project-detail.html", project_id=project_id,
+        return render_template("project-detail.html", project_id=project_id, project=project,
                                error="Failed to add subproject. Please try again.", now=datetime.now(timezone.utc))
 
 
@@ -256,3 +230,17 @@ def delete(project_id: int, subproject_id: int):
     db_session.delete(sub)
     db_session.commit()
     return redirect(url_for("project.view", project_id=project_id))
+
+
+@bp.route('/dashboard/projects/<int:project_id>/subprojects/check_title/', methods=['POST'])
+@login_required
+def check_subproject_title(project_id: int):
+    data = request.get_json()
+    title = data.get("title", "").strip().lower()
+
+    exists = db_session.query(SubProject).filter(
+        SubProject.project_id == project_id,
+        func.lower(SubProject.title) == title
+    ).first() is not None
+
+    return jsonify({"exists": exists})

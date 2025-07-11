@@ -345,3 +345,41 @@ button:disabled,
 .navbar-brand-contrast {
     color: #fff !important;
 }
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    background-color: transparent;
+    border-collapse: collapse;
+    color: #f0f0f5;
+    font-size: 0.95rem;
+}
+
+.table th,
+.table td {
+    background-color: #2b2640 !important; /* ensure dark bg */
+    color: #f0f0f5 !important; /* force light text */
+    border: 1px solid #3d355a !important; /* subtle grid lines */
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+
+.table thead th {
+    background-color: #2b2640 !important;
+    color: #a18bff !important; /* lavender headers */
+    font-weight: 600;
+    border-bottom: 2px solid #554c75;
+}
+
+.table-hover tbody tr:hover td {
+    background-color: #3a3455 !important;
+}
+
+.table-sm td,
+.table-sm th {
+    padding: 0.5rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}

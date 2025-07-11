@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Create Subproject - {{ project.title }}{% endblock %}
+{% block title %}Create Goal - {{ project.title }}{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -128,6 +128,51 @@
         } else {
             submitBtn.textContent = "Saving...";
         }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const titleInput = document.getElementById("subproject-title");
+        const submitBtn = document.getElementById("saveSubprojectBtn");
+
+        const errorMsg = document.createElement("div");
+        errorMsg.className = "alert alert-danger mt-2";
+        errorMsg.style.display = "none";
+        titleInput.parentNode.appendChild(errorMsg);
+
+        let debounceTimeout;
+
+        titleInput.addEventListener("input", function () {
+            clearTimeout(debounceTimeout);
+            const title = titleInput.value.trim();
+
+            if (!title) {
+                errorMsg.style.display = "none";
+                submitBtn.disabled = false;
+                return;
+            }
+
+            debounceTimeout = setTimeout(() => {
+                fetch(`{{ url_for('subproject.check_subproject_title', project_id=project.id) }}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({title})
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            errorMsg.textContent = "A goal with this title already exists in this project.";
+                            errorMsg.style.display = "block";
+                            submitBtn.disabled = true;
+                        } else {
+                            errorMsg.style.display = "none";
+                            submitBtn.disabled = false;
+                        }
+                    });
+            }, 300); // debounce delay
+        });
     });
 </script>
 {% endblock %}

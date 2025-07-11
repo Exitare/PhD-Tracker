@@ -69,10 +69,6 @@ def view(project_id: int):
                 "milestones": milestones
             })
 
-        for item in subprojects:
-            sub = item["subproject"]
-            sub.deadline_dt = datetime.fromtimestamp(sub.deadline / 1000, tz=timezone.utc)
-
         return render_template(
             "project-detail.html",
             project=project,

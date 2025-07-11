@@ -36,8 +36,7 @@ class UserService:
         :param user:
         :return:
         """
-
-        if user.role == Plans.StudentPlus.value or user.role == Plans.StudentPro.value or user.role == Plans.CustomPlan.value:
+        if user.plan == Plans.StudentPlus.value or user.plan == Plans.StudentPro.value or user.plan == Plans.CustomPlan.value:
             return True
         else:
             return False
