@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="card p-4 shadow-lg mb-4">
-    <h2 class="card-title mb-4">Account Overview</h2>
+    <h2 class="card-title mb-4">Management Overview</h2>
 
     <!-- Account Summary -->
     <div class="row">
@@ -86,7 +86,7 @@
         <label for="{{ theme_form.theme.id }}" class="form-label">Design Theme</label>
         <div class="d-flex align-items-center gap-2">
             {{ theme_form.theme(class="form-control") }}
-            <button class="btn btn-primary" type="submit">Apply</button>
+            <button class="btn btn-success" type="submit">Apply</button>
         </div>
     </form>
 
@@ -107,6 +107,38 @@
     </div>
 </div>
 
+<!-- Email Update (Collapsible) -->
+<div class="collapse mb-4" id="emailFormCollapse">
+    <div class="card p-4 shadow-sm">
+        <h5 class="card-title mb-3">Update Email</h5>
+        <form method="POST" action="{{ url_for('account.update_email') }}">
+            <input type="hidden" name="csrf_token" value="{{ email_form.csrf_token.current_token }}">
+            <label for="{{ email_form.email.id }}" class="form-label">New Email</label>
+            {{ email_form.email(class="form-control", placeholder="your@email.com") }}
+            <label for="{{ email_form.password.id }}" class="form-label mt-3">Current Password</label>
+            {{ email_form.password(class="form-control", placeholder="Enter your current password") }}
+            <button class="btn btn-success mt-3" type="submit">Update Email</button>
+        </form>
+    </div>
+</div>
+
+<!-- Password Update (Collapsible) -->
+<div class="collapse mb-4" id="passwordFormCollapse">
+    <div class="card p-4 shadow-sm">
+        <h5 class="card-title mb-3">Update Password</h5>
+        <form method="POST" action="{{ url_for('account.update_password') }}">
+            <input type="hidden" name="csrf_token" value="{{ password_form.csrf_token.current_token }}">
+            <label for="{{ password_form.current_password.id }}" class="form-label">Current Password</label>
+            {{ password_form.current_password(class="form-control", placeholder="Current password") }}
+            <label for="{{ password_form.password.id }}" class="form-label mt-3">New Password</label>
+            {{ password_form.password(class="form-control", placeholder="New password") }}
+            <label for="{{ password_form.confirm.id }}" class="form-label mt-3">Confirm Password</label>
+            {{ password_form.confirm(class="form-control", placeholder="Confirm password") }}
+            <button class="btn btn-success mt-3" type="submit">Update Password</button>
+        </form>
+    </div>
+</div>
+
 <!-- Managed Users -->
 <div class="card p-4 shadow-sm mb-4">
     <h5 class="card-title mb-3">Managed Users</h5>
@@ -119,7 +151,7 @@
                 <th class="text-muted" scope="col">Email</th>
                 <th class="text-muted" scope="col">Last Sign In</th>
                 <th class="text-muted" scope="col">Usage</th>
-                <th class="text-muted" scope="col">Status</th>
+                <th class="text-muted" scope="col">Active</th>
             </tr>
             </thead>
             <tbody>
@@ -158,35 +190,5 @@
     {% endif %}
 </div>
 
-<!-- Email Update (Collapsible) -->
-<div class="collapse mb-4" id="emailFormCollapse">
-    <div class="card p-4 shadow-sm">
-        <h5 class="card-title mb-3">Update Email</h5>
-        <form method="POST" action="{{ url_for('account.update_email') }}">
-            <input type="hidden" name="csrf_token" value="{{ email_form.csrf_token.current_token }}">
-            <label for="{{ email_form.email.id }}" class="form-label">New Email</label>
-            {{ email_form.email(class="form-control", placeholder="your@email.com") }}
-            <label for="{{ email_form.password.id }}" class="form-label mt-3">Current Password</label>
-            {{ email_form.password(class="form-control", placeholder="Enter your current password") }}
-            <button class="btn btn-primary mt-3" type="submit">Update Email</button>
-        </form>
-    </div>
-</div>
 
-<!-- Password Update (Collapsible) -->
-<div class="collapse mb-4" id="passwordFormCollapse">
-    <div class="card p-4 shadow-sm">
-        <h5 class="card-title mb-3">Update Password</h5>
-        <form method="POST" action="{{ url_for('account.update_password') }}">
-            <input type="hidden" name="csrf_token" value="{{ password_form.csrf_token.current_token }}">
-            <label for="{{ password_form.current_password.id }}" class="form-label">Current Password</label>
-            {{ password_form.current_password(class="form-control", placeholder="Current password") }}
-            <label for="{{ password_form.password.id }}" class="form-label mt-3">New Password</label>
-            {{ password_form.password(class="form-control", placeholder="New password") }}
-            <label for="{{ password_form.confirm.id }}" class="form-label mt-3">Confirm Password</label>
-            {{ password_form.confirm(class="form-control", placeholder="Confirm password") }}
-            <button class="btn btn-primary mt-3" type="submit">Update Password</button>
-        </form>
-    </div>
-</div>
 {% endblock %}
