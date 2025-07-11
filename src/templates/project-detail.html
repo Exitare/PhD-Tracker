@@ -66,22 +66,6 @@
                     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h3 class="card-title mb-0" style="color: #a18bff;">📌 Project Details</h3>
                         <div class="d-flex gap-2">
-                            {% if project.type == "paper" and current_user.plan != "student" and not
-                            recommendations %}
-                            <form method="POST"
-                                  action="{{ url_for('journal.get_recommendations', project_id=project.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button class="btn btn-sm btn-outline-primary" type="submit"
-                                        onclick="setTimeout(() => { this.innerHTML = 'Generating...'; this.disabled = true; }, 10);">
-                                    {% if project.journal_recommendations %}
-                                    📚 Regenerate Recommendations
-                                    {% else %}
-                                    📚 Generate Recommendations
-                                    {% endif %}
-                                </button>
-                            </form>
-                            {% endif %}
-
                             <button onclick="enableProjectEdit()" class="btn btn-outline-primary btn-sm">✏️ Edit
                             </button>
                         </div>
