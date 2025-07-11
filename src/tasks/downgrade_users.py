@@ -3,6 +3,9 @@ from src.role import Role
 from src import db_session
 from src.db.models import User
 from src.plans import Plans
+import logging
+from src.utils.logging_config import setup_logging
+logger = logging.getLogger(__name__)
 
 
 def downgrade_expired_users():
@@ -27,16 +30,17 @@ def downgrade_expired_users():
 
     if expired_users:
         db_session.commit()
-        print(f"[AutoDowngrade] Downgraded {len(expired_users)} users.")
+        print(f"[AutoDowngrade] Downgraded {len(expired_users)} users to Student plan.")
     else:
-        print("[AutoDowngrade] No users to downgrade.")
+        logger.info("[AutoDowngrade] No users to downgrade.")
 
 def run_downgrade_loop(shutdown_event, interval_seconds=300):
-    print("[AutoDowngrade] Worker started.")
+    setup_logging(console_level=logging.INFO)  # <<< ADD THIS LINE
+    logger.info("[AutoDowngrade] Worker started.")
     try:
         while not shutdown_event.is_set():
             downgrade_expired_users()
             shutdown_event.wait(timeout=interval_seconds)
     finally:
         db_session.remove()
-        print("[AutoDowngrade] Worker exiting and cleaned up DB session.")
+        logger.info("[AutoDowngrade] Worker exiting and cleaned up DB session.")

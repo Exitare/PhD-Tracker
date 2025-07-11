@@ -3,3 +3,4 @@
 .env
 milestones.db
 __pycache__
+logs/

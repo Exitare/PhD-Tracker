@@ -5,6 +5,8 @@ from src.models import AIMilestone, AIJournalRecommendation
 from src.db.models import Milestone
 from typing import List, Tuple, Dict, Any
 from dotenv import load_dotenv
+import logging
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -19,7 +21,8 @@ class OpenAIService:
         prompt = """
         You are an expert assistant trained to extract poster submission deadlines and session times for this conference:""" + conference_name + """
 
-Your task is to search the official conference website or official call for abstracts page and return ONLY verified, current data for the year """ + datetime.now().strftime("%B %d, %Y") + """.
+Your task is to search the official conference website or official call for abstracts page and return ONLY verified, current data for the year """ + datetime.now().strftime(
+            "%B %d, %Y") + """.
 Do not include outdated information from last year or any other year.
 Conference Name: """ + conference_name + """
 Return data ONLY IF you find it clearly and explicitly stated on an official source (conference website, program PDF, or call for abstracts). Do not guess or use outdated sources.
@@ -35,7 +38,7 @@ Return exactly one JSON object in this format:
 
 Do not return anything other than the JSON.
          """
-        print(prompt)
+
         response = client.chat.completions.create(
             model='gpt-4.1',
             messages=[
@@ -46,13 +49,13 @@ Do not return anything other than the JSON.
 
         content = response.choices[0].message.content.strip()
 
-        print(content)
-
         try:
             # Ensure it's proper JSON even if it's wrapped in string accidentally
             requirements = json.loads(content)
         except json.JSONDecodeError as e:
-            print(content)
+            logger.error(e)
+            logger.error(content)
+
             raise ValueError(f"Failed to parse JSON response: {e}\nRaw content:\n{content}")
 
         # Extract token usage
@@ -177,6 +180,8 @@ Do not return anything other than the JSON.
             # Ensure it's proper JSON even if it's wrapped in string accidentally
             requirements = json.loads(content)
         except json.JSONDecodeError as e:
+            logger.error(e)
+            logger.error(content)
             raise ValueError(f"Failed to parse JSON response: {e}\nRaw content:\n{content}")
 
         # Extract token usage
@@ -237,6 +242,7 @@ Do not return anything other than the JSON.
 
             content = content.strip()
             if not content.startswith("["):
+                logger.error("Expected JSON list as output, but got:\n" + content)
                 raise ValueError("Expected JSON list as output.")
 
             raw_data = json.loads(content)
@@ -248,8 +254,8 @@ Do not return anything other than the JSON.
             return recommendations, usage
 
         except Exception as e:
-            print("Error parsing journal recommendations:", e)
-            print("Raw content:\n", content)
+            logger.error("Error parsing journal recommendations:", e)
+            logger.error("Raw content:\n", content)
             return [], {"error": str(e), "raw_content": content}
 
     @staticmethod
@@ -323,8 +329,8 @@ Do not return anything other than the JSON.
             return milestones, usage
 
         except Exception as e:
-            print("Error parsing reviewer feedback milestones:", e)
-            print("Raw content:\n", content)
+            logger.error("Error parsing reviewer feedback milestones:", e)
+            logger.error("Raw content:\n", content)
             return [], {"error": str(e), "raw_content": content}
 
     @staticmethod
@@ -332,7 +338,7 @@ Do not return anything other than the JSON.
                           additional_user_context: str, deadline: str) -> Tuple[
         List[AIMilestone], Dict[str, Any]]:
 
-        print(milestones)
+        logger.debug(milestones)
         prompt = f"""
         I am working on a project with the following description: "{project_description}".
         This is my subproject description: "{subproject_description}".
@@ -376,8 +382,8 @@ Do not return anything other than the JSON.
 
             return refined_milestones, usage
         except Exception as e:
-            print("Error parsing refined milestones:", e)
-            print("Raw content:\n", content)
+            logger.error("Error parsing refined milestones:", e)
+            logger.error("Raw content:\n", content)
             return [], {"error": str(e), "raw_content": content}
 
     @staticmethod
@@ -419,6 +425,6 @@ Do not return anything other than the JSON.
 
             return milestones, usage
         except Exception as e:
-            print("Error parsing milestones:", e)
-            print("Raw content:\n", content)
+            logger.error("Error parsing milestones:", e)
+            logger.error("Raw content:\n", content)
             return [], {"error": str(e), "raw_content": content}

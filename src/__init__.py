@@ -12,6 +12,10 @@ import stripe
 from multiprocessing import Process, Event
 from src.tasks.downgrade_users import run_downgrade_loop
 from .extensions import mail
+import logging
+from src.utils.logging_config import setup_logging
+
+logger = logging.getLogger(__name__)
 
 _shutdown_event = Event()
 _downgrade_process = None
@@ -101,16 +105,16 @@ def start_background_downgrade_process():
     global _downgrade_process
     _downgrade_process = Process(target=run_downgrade_loop, args=(_shutdown_event,))
     _downgrade_process.start()
-    print(f"[Flask] Started background downgrade process with PID {_downgrade_process.pid}")
+    logger.info(f"[Flask] Started background downgrade process with PID {_downgrade_process.pid}")
 
 
 def stop_background_downgrade_process():
     global _downgrade_process
     if _downgrade_process is not None:
-        print("[Flask] Shutting down background downgrade process...")
+        logger.info("[Flask] Shutting down background downgrade process...")
         _shutdown_event.set()
         _downgrade_process.join(timeout=10)
         if _downgrade_process.is_alive():
-            print("[Flask] Background process did not shut down in time.")
+            logger.info("[Flask] Background process did not shut down in time.")
         else:
-            print("[Flask] Background process shut down cleanly.")
+            logger.info("[Flask] Background process shut down cleanly.")
