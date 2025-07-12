@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    mode = "dev" if args.dev else "prod"
+    mode: str = args.dev
     if args.dev:
         setup_logging(console_level=logging.DEBUG)
     elif mode == "staging":
