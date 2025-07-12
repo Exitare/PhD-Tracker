@@ -15,4 +15,5 @@ langchain-community
 google-search-results
 bs4
 tiktoken
- faiss-cpu
+faiss-cpu
+waitress
