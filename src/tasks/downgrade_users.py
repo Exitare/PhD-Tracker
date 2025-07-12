@@ -43,8 +43,8 @@ def downgrade_expired_users():
 
 def run_downgrade_loop(shutdown_event, interval_seconds=300):
     # Initialize DB session in this process
-    dev_mode = os.getenv("PROD", "1") == "0"
-    init_db(dev_mode=dev_mode)
+    mode: str = os.getenv("MODE", "dev")
+    init_db(mode=mode)
 
     db_session = get_db_session()
     setup_logging(console_level=logging.INFO)  # <<< ADD THIS LINE

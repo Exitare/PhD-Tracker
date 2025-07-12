@@ -14,8 +14,8 @@ def get_db_session():
         raise RuntimeError("Database session not initialized. Call init_db() first.")
     return db_session
 
-def init_db(dev_mode: bool):
-    if dev_mode:
+def init_db(mode: str):
+    if mode == "dev":
         db_url = "sqlite:///milestones.db"
     else:
         # Read individual environment variables
@@ -38,5 +38,5 @@ def init_db(dev_mode: bool):
     db_session = scoped_session(sessionmaker(bind=engine))
     Base.query = db_session.query_property()
 
-    if dev_mode:
+    if mode == "dev":
         Base.metadata.create_all(engine)  # Only run in dev!

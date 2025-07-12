@@ -23,7 +23,7 @@ _downgrade_process = None
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 
-def create_app(dev_mode: bool) -> Flask:
+def create_app() -> Flask:
     load_dotenv()
 
     app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))

@@ -14,11 +14,11 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
     # Determine environment
-    production: bool = bool(int(os.getenv("PROD", 0)))
+    mode: str = os.getenv("MODE", "dev")
 
     # Set DB URL automatically based on environment
-    if production:
-        print(">>> Production mode")
+    if mode != "dev":
+        print(f">>> {mode} mode")
         user = os.getenv("DB_USER")
         password = os.getenv("DB_PASSWORD")
         host = os.getenv("DB_HOST", "localhost")
