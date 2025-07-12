@@ -230,6 +230,10 @@ def stripe_success():
 
         session = stripe.checkout.Session.retrieve(session_id)
 
+        if session["payment_status"] != "paid" or session["status"] != "complete":
+            flash("Payment was not successful. Please try again.", "danger")
+            return redirect(url_for("auth.introduction"))
+
         subscription_id = session.get("subscription")
         if not subscription_id:
             flash("No subscription found in the session.", "danger")
@@ -252,12 +256,12 @@ def stripe_success():
             if subscription["items"]["data"]:
                 # get prices ids from subscription items
                 price_ids = [item["price"]["id"] for item in subscription["items"]["data"]]
-                item_id = subscription["items"]["data"][0]["id"]
                 current_user.stripe_subscription_id = subscription_id
-                current_user.stripe_subscription_item_id = item_id
                 current_user.plan = Plans.get_plan_name(price_ids)
                 item = subscription["items"]["data"][0]
                 current_user.stripe_subscription_expires_at = int(item["current_period_end"] * 1000)
+                current_user.stripe_subscription_item_ids = ",".join(price_ids)
+                current_user.stripe_subscription_canceled = bool(subscription["cancel_at_period_end"])
                 db_session.commit()
                 flash(f"Your {current_user.plan} subscription is now active!", "success")
             else:

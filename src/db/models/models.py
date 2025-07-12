@@ -20,7 +20,7 @@ class User(Base, UserMixin):
     organization_name: Mapped[str] = Column(String(150), nullable=True)
     managed_by = Column(Integer, ForeignKey('users.id'), nullable=True)  # For user management hierarchy
     managed_by_stripe_id: Mapped[str] = Column(String(100), nullable=True)  # Stripe ID of the manager if applicable
-    managed_by_license_active: Mapped[bool] = Column(Boolean, default=False, nullable=False)  # Whether the managed user is active under the manager's license
+    managed_by_license_active: Mapped[bool] = Column(Boolean, default=False, nullable=False)  # Whether the managers license is active right now.
     pending_email: Mapped[str] = Column(String(150), nullable=True)
     password_hash: Mapped[str] = Column(String(200), nullable=False)
     created_at = Column(BigInteger, nullable=False, default=int(datetime.now(timezone.utc).timestamp() * 1000))
@@ -30,6 +30,7 @@ class User(Base, UserMixin):
     stripe_subscription_id = Column(String, nullable=True)
     stripe_subscription_item_ids = Column(String, nullable=True)
     stripe_subscription_expires_at = Column(BigInteger, nullable=True)
+    stripe_subscription_canceled = Column(Boolean, default=False, nullable=False) # Whether the subscription is canceled or not
     role = Column(Enum("user", "manager", "admin", name="user_role"), default="user", nullable=False)
     access_code = Column(String(100), nullable=True)  # For manager accounts to let users join their team
 

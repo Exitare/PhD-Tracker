@@ -10,6 +10,11 @@ from src.services import JWTService, MailService, UserService
 from sqlalchemy.exc import IntegrityError
 from src.role import Role
 from typing import Dict
+from src.plans import Plans
+import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint("account", __name__)
 
@@ -246,3 +251,162 @@ def resend_activation_email():
         flash("Your email is already verified.", "info")
 
     return redirect(request.referrer or url_for('dashboard.dashboard'))
+
+
+@bp.route("/account/choose-plan", methods=["POST"])
+@login_required
+def choose_plan():
+    plan: str = request.form.get('plan')
+    user: User = current_user
+
+    if not user or not UserService.can_access_page(user, [Role.User.value]):
+        flash("You do not have permission to access this page.", "danger")
+        return redirect(url_for('dashboard.dashboard'))
+
+    if plan not in [Plans.Student.value, Plans.StudentPlus.value, Plans.StudentPro.value]:
+        flash("Please select a valid plan option.", "warning")
+        return redirect(url_for('account.panel'))
+
+    try:
+        # Downgrading to Student (free) plan
+        if plan == Plans.Student.value:
+            if user.stripe_subscription_id:
+                # Set subscription to cancel at end of current billing period
+                subscription = stripe.Subscription.modify(
+                    user.stripe_subscription_id,
+                    cancel_at_period_end=True
+                )
+
+                price_ids = [item["price"]["id"] for item in subscription["items"]["data"]]
+                current_user.stripe_subscription_id = subscription["id"]
+                current_user.plan = Plans.get_plan_name(price_ids)
+                current_user.stripe_subscription_item_ids = ",".join(price_ids)
+                current_user.stripe_subscription_expires_at = int(
+                    subscription["items"].data[0]["current_period_end"] * 1000)
+                current_user.stripe_subscription_canceled = bool(subscription["cancel_at_period_end"])
+                db_session.commit()
+
+            flash(
+                "Your subscription will be cancelled at the end of the current period and downgraded to the free Student plan.",
+                "success")
+            return redirect(url_for("account.panel"))
+
+        # Upgrading to Student+ or Student Pro
+        if plan == Plans.StudentPlus.value:
+            logger.debug(f"Gathering price for plan: {plan}")
+            price_items = [
+                {"price": os.environ["STUDENT_PLUS_PRICE_ID"]}
+            ]
+        else:
+            logger.debug(f"Gathering prices for plan: {plan}")
+            price_items = [
+                {"price": os.environ["STUDENT_PRO_OVERCHARGE_PRICE_ID"]},  # metered
+                {"price": os.environ["STUDENT_PRO_PRICE_ID"], "quantity": 1}  # licensed
+            ]
+
+        if user.stripe_subscription_id:
+            subscription = stripe.Subscription.retrieve(user.stripe_subscription_id)
+            current_items = subscription["items"]["data"]
+            items_to_delete = [{"id": item["id"], "deleted": True} for item in current_items]
+
+            updated = stripe.Subscription.modify(
+                user.stripe_subscription_id,
+                cancel_at_period_end=False,
+                proration_behavior='create_prorations',
+                items=items_to_delete + price_items
+            )
+
+            subscription_item_ids = [item["id"] for item in updated["items"]["data"]]
+
+            user.plan = plan
+            user.stripe_subscription_id = updated["id"]
+            user.stripe_subscription_item_ids = ",".join(subscription_item_ids)
+            user.stripe_subscription_canceled = updated["cancel_at_period_end"]
+            logger.debug(f"Canceled at period end: {user.stripe_subscription_canceled}")
+
+            if int(updated["items"].data[0]["current_period_end"] * 1000):
+                user.stripe_subscription_expires_at = int(updated["items"].data[0]["current_period_end"] * 1000)
+            db_session.commit()
+
+            flash("Your subscription was successfully updated.", "success")
+            return redirect(url_for("account.panel"))
+
+        elif user.stripe_customer_id:
+            checkout_session = stripe.checkout.Session.create(
+                customer=user.stripe_customer_id,
+                payment_method_types=['card'],
+                line_items=price_items,
+                mode='subscription',
+                success_url=url_for('account.stripe_success', _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=url_for('account.panel', _external=True),
+            )
+            return redirect(checkout_session.url)
+
+        else:
+            flash("Stripe customer not found for this account.", "danger")
+            return redirect(url_for("account.panel"))
+
+    except Exception as e:
+        logger.exception("Stripe subscription error")
+        flash("An error occurred while processing your subscription. Please try again.", "danger")
+        return redirect(url_for("account.panel"))
+
+
+@bp.route("/account/stripe/success", methods=["GET"])
+@login_required
+def stripe_success():
+    session_id = request.args.get("session_id")
+    if not session_id:
+        flash("No session ID provided.", "danger")
+        return redirect(url_for("account.panel"))
+
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+
+        # if not paid or not completed
+        if session["payment_status"] != "paid" or session["status"] != "complete":
+            flash("Payment was not successful. Please try again.", "danger")
+            return redirect(url_for("account.panel"))
+
+        subscription_id = session.get("subscription")
+        if not subscription_id:
+            flash("No subscription found in the session.", "danger")
+            return redirect(url_for('account.panel'))
+
+        subscription = stripe.Subscription.retrieve(subscription_id)
+        try:
+            stripe.Subscription.modify(
+                subscription["id"],
+                billing_thresholds={
+                    "amount_gte": 2500  # $25 in cents
+                }
+            )
+        except Exception as e:
+            print("Stripe billing threshold error:", e)
+            print("Subscription details:", subscription)
+
+        # Get the first subscription item (usually one per sub)
+        try:
+            if subscription["items"]["data"]:
+                # get prices ids from subscription items
+                price_ids = [item["price"]["id"] for item in subscription["items"]["data"]]
+                current_user.stripe_subscription_id = subscription_id
+                current_user.plan = Plans.get_plan_name(price_ids)
+                current_user.stripe_subscription_item_ids = ",".join(price_ids)
+                current_user.stripe_subscription_expires_at = int(
+                    subscription["items"].data[0]["current_period_end"] * 1000)
+                current_user.stripe_subscription_canceled = bool(subscription["cancel_at_period_end"])
+                db_session.commit()
+                flash(f"Your {current_user.plan} subscription is now active!", "success")
+            else:
+                flash("No subscription items found. Contact support.", "danger")
+
+        except Exception as e:
+            logger.exception("Error processing subscription items")
+            flash("An error occurred while processing your subscription. Please try again.", "danger")
+
+    except Exception as e:
+        logger.exception("Error retrieving Stripe session")
+        flash("An error occurred while processing your payment. Please try again.", "danger")
+
+    return redirect(url_for("account.panel"))
