@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from src.db.models import User
 from src.db import init_db, get_db_session
 from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision, account, \
-    webhooks, journal, venue, academia, admin
+    webhooks, journal, venue, academia, admin, plans
 import os
 from datetime import datetime, timezone
 from flask_login import LoginManager
@@ -54,6 +54,7 @@ def create_app() -> Flask:
     app.register_blueprint(venue.bp)
     app.register_blueprint(academia.bp)
     app.register_blueprint(admin.bp)
+    app.register_blueprint(plans.bp)
 
     app.config.update(
         MAIL_SERVER='mail.smtp2go.com',

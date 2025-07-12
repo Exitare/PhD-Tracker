@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Choose Your Plan | My Academic Tracker{% endblock %}
+
+{% block description %}
+Compare all available plans for students and academic teams. Get started for free with our student plan or upgrade to unlock AI-powered academic tools.
+{% endblock %}
+
+{% block og_title %}Student Plans & Academic Upgrades | My Academic Tracker{% endblock %}
+{% block og_description %}Start free with our Student Plan or explore advanced options with AI-powered features and premium support. Designed for students and academic professionals.{% endblock %}
+
+{% block twitter_title %}Choose a Student Plan | My Academic Tracker{% endblock %}
+{% block twitter_description %}Track your academic progress easily. Start free or upgrade for AI tools and support. Flexible plans for every student or academic team.{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="text-center mb-4">
+        <h1 class="milestone-title">Find the Right Plan for You</h1>
+        <p class="lead text-muted">From basic project tracking to AI-powered academic tools — we’ve got a plan for every
+            student or team.</p>
+    </div>
+
+    <div class="row g-4">
+        {% include "partials/_plan_cards.html" %}
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="{{ url_for('auth.register_step1') }}" class="btn btn-primary btn-lg">
+            🎓 Get Started for Free
+        </a>
+    </div>
+</div>
+{% endblock %}
