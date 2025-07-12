@@ -176,26 +176,35 @@
     </div>
 </div>
 
-{% if not user.managed_by %}
+{% if not current_user.managed_by and current_user.plan != "custom_plan" %}
 <hr class="my-5">
+
 <div class="text-center mb-4">
-    <h4 class="card-title">Upgrade Your Plan</h4>
-    <p class="text-muted">Choose a plan that fits your workflow best.</p>
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#upgradePlanCollapse"
+            aria-expanded="false" aria-controls="upgradePlanCollapse">
+        Show Plans
+    </button>
 </div>
 
-
-{% set hide_student_plan = True if current_user.plan == 'student' else False %}
-{% set current_plan = "student_pro" %}
-<form method="POST" action="{{ url_for('account.choose_plan') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="row g-4 justify-content-center" id="plan-cards">
-        {% include "partials/_plan_cards.html" %}
+<div class="collapse" id="upgradePlanCollapse">
+    <div class="text-center mb-4">
+        <h4 class="card-title">Upgrade Your Plan</h4>
+        <p class="text-muted">Choose a plan that fits your workflow best.</p>
     </div>
 
-    <div class="d-grid mt-4 text-center">
-        <button type="submit" class="btn btn-success btn-lg px-5">Choose Plan</button>
-    </div>
-</form>
+    {% set hide_student_plan = True if current_user.plan == 'student' else False %}
+    {% set current_plan = "student_pro" %}
+    <form method="POST" action="{{ url_for('account.choose_plan') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row g-4 justify-content-center" id="plan-cards">
+            {% include "partials/_plan_cards.html" %}
+        </div>
+
+        <div class="d-grid mt-4 text-center">
+            <button type="submit" class="btn btn-success btn-lg px-5">Choose Plan</button>
+        </div>
+    </form>
+</div>
 {% endif %}
 
 {% endblock %}
