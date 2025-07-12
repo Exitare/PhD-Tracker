@@ -115,7 +115,7 @@ def panel():
     theme_form = ThemeForm()
 
     # Set the currently selected theme in the form
-    current_theme = session.get('theme', 'lavender')
+    current_theme = session.get('theme', 'lavender-dark')
     theme_form.theme.data = current_theme
 
     managed_users = db_session.query(User).options(joinedload(User.usage_logs)) \

@@ -6,8 +6,6 @@ import atexit
 import logging
 from src.utils.logging_config import setup_logging
 
-
-
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--dev', action='store_true', help='Run the server in development mode')
