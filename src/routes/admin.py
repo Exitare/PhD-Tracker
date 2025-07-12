@@ -5,6 +5,9 @@ import stripe
 from src.role import Role
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 from src import db_session
 from src.services import UserService
@@ -17,7 +20,7 @@ bp = Blueprint("admin", __name__)
 def manage_users():
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
-    if not user or user.role != Role.Admin.value:
+    if not user or not UserService.can_access_page(user, allowed_roles=[Role.Admin.value]):
         flash("You do not have permission to access this page.", "danger")
         logout_user()
         return redirect(url_for("auth.login"))
@@ -34,8 +37,6 @@ def manage_users():
             "stripe_customer_id": tmp_user.stripe_customer_id
         })
 
-    print(display_users)
-
     return render_template('admin/user_management.html', users=display_users)
 
 
@@ -44,7 +45,7 @@ def manage_users():
 def dashboard():
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
-    if not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
+    if not user or not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
         flash("You do not have permission to access this page.", "danger")
         logout_user()
         return redirect(url_for("auth.login"))
@@ -149,9 +150,9 @@ def archive_price(price_id):
     return redirect(url_for("admin.manage_prices"))
 
 
-@bp.route("/admin/users/manage", methods=["POST"])
+@bp.route("/admin/users/status/<int:user_id>", methods=["POST"])
 @login_required
-def toggle_user_status():
+def toggle_user_status(user_id: int):
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
     if not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
@@ -159,22 +160,26 @@ def toggle_user_status():
         logout_user()
         return redirect(url_for("auth.login"))
 
-    user_id = request.form.get("user_id")
-
     # change active to false
     target_user = db_session.query(User).filter_by(id=user_id).first()
     if not target_user:
+        logger.debug(f"User with ID {user_id} not found.")
         flash("User not found.", "danger")
-        return redirect(url_for("admin.dashboard"))
+        return redirect(request.referrer or url_for("admin.dashboard"))
 
     if target_user.active:
         target_user.active = False
         target_user.deactivated_at = int(datetime.now(timezone.utc).timestamp() * 1000)
+        db_session.commit()
         flash(f"User {target_user.email} has been deactivated.", "success")
+        return redirect(request.referrer or url_for("admin.dashboard"))
     else:
         target_user.active = True
         target_user.deactivated_at = None
+        db_session.commit()
         flash(f"User {target_user.email} has been reactivated.", "success")
+        # redirect to referer page
+        return redirect(request.referrer or url_for("admin.dashboard"))
 
 
 def parse_dollar_amount(value_str):

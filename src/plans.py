@@ -23,9 +23,14 @@ class Plans(Enum):
         # Resolve each price_id to a Plan, or CustomPlan if unknown
         plans = [stripe_price_map.get(pid, cls.CustomPlan) for pid in price_ids]
 
-        # Choose the highest ranked plan (based on enum order)
-        highest_plan = max(plans, key=lambda plan: list(cls).index(plan))
+        plan_priority = {
+            cls.Student: 0,
+            cls.StudentPlus: 1,
+            cls.StudentPro: 2,
+            cls.CustomPlan: -1,  # fallback, always lowest
+        }
 
+        highest_plan = max(plans, key=lambda plan: plan_priority[plan])
         return highest_plan.value
 
 

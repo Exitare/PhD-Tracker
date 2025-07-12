@@ -27,7 +27,7 @@ class TestPlansEnum(unittest.TestCase):
         self.assertEqual(Plans.get_plan_name(["price_unknown_999"]), "custom_plan")
 
     def test_mixed_known_and_unknown_returns_custom_plan(self):
-        self.assertEqual(Plans.get_plan_name(["price_pro_456", "price_unknown_999"]), "custom_plan")
+        self.assertEqual(Plans.get_plan_name(["price_pro_456", "price_unknown_999"]), "student_pro")
 
     def test_all_unknown_ids_returns_custom_plan(self):
         self.assertEqual(Plans.get_plan_name(["foo", "bar"]), "custom_plan")
