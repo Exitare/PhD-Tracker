@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, declarative_base
 import os
 import logging
+from urllib.parse import quote_plus
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ def init_db(mode: str):
     else:
         # Read individual environment variables
         db_user = os.environ.get("DB_USER")
-        db_password = os.environ.get("DB_PASSWORD")
+        db_password = quote_plus(os.environ.get("DB_PASSWORD"))
         db_host = os.environ.get("DB_HOST", "localhost")
         db_port = os.environ.get("DB_PORT", "3306")  # default for MySQL
         db_name = os.environ.get("DB_NAME")
