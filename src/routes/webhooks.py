@@ -111,41 +111,62 @@ def stripe_webhook():
                 managed_user.stripe_subscription_canceled = False
 
 
-    elif event_type == "invoice.payment_succeeded":
+
+    elif event_type == "checkout.session.completed":
         subscription_id = data.get("subscription")
-        if subscription_id and user and user.stripe_subscription_id == subscription_id:
-            price_ids: List[str] = [item["price"]["id"] for item in data["items"]["data"]]
-            # Determine the highest plan based on price IDs
+        customer_id = data.get("customer")
+
+        if not subscription_id or not customer_id:
+            logging.warning("Subscription or customer ID missing in checkout.session.completed")
+            return "", 200
+
+        # Fetch subscription from Stripe to get line items and price info
+
+        subscription = stripe.Subscription.retrieve(subscription_id)
+        price_ids: List[str] = [item["price"]["id"] for item in subscription["items"]["data"]]
+
+        # Fetch user from your DB
+        user = db_session.query(User).filter_by(stripe_customer_id=customer_id).first()
+        if user:
             user.plan = Plans.get_plan_name(price_ids)
             user.stripe_subscription_id = subscription_id
             user.stripe_subscription_item_ids = ",".join(price_ids)
-            user.stripe_subscription_expires_at = int(data["lines"]["data"][0]["period"]["end"]) * 1000
+            user.stripe_subscription_expires_at = int(subscription["current_period_end"]) * 1000
             user.stripe_subscription_canceled = False
 
             if user.role == Role.Manager.value:
-                logging.debug(f"Updating managed users for manager: {user.email} due to subscription deletion.")
-                # If the user is a manager, we need to deactivate all managed users
+                logging.debug(f"Updating managed users for manager: {user.email} after checkout session.")
                 managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
+
                 for managed_user in managed_users:
                     managed_user.plan = user.plan
                     managed_user.stripe_subscription_canceled = False
 
 
-    elif event_type == "invoice.payment_failed":
-        user.stripe_subscription_expires_at = int(datetime.now(timezone.utc).timestamp() * 1000)
-        user.plan = Plans.Student.value
-        user.stripe_subscription_id = None
-        user.stripe_subscription_item_ids = None
-        db_session.add(user)
-        MailService.send_payment_failed_email(user)
 
-        if user.role == Role.Manager.value:
-            logging.debug(f"Updating managed users for manager: {user.email} due to subscription deletion.")
-            # If the user is a manager, we need to deactivate all managed users
-            managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
-            for managed_user in managed_users:
-                managed_user.plan = Plans.Student.value
-                managed_user.stripe_subscription_canceled = False
+    elif event_type == "invoice.payment_failed":
+        if user:
+            user.stripe_subscription_expires_at = int(datetime.now(timezone.utc).timestamp() * 1000)
+            user.plan = Plans.Student.value
+            user.stripe_subscription_id = None
+            user.stripe_subscription_item_ids = None
+            user.stripe_subscription_canceled = True
+
+            if user.role == Role.Manager.value:
+                logging.debug(f"Updating managed users for manager: {user.email} due to subscription failure.")
+                managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
+
+                for managed_user in managed_users:
+                    managed_user.plan = Plans.Student.value
+                    managed_user.stripe_subscription_canceled = True
+
+
+            db_session.commit()
+            MailService.send_payment_failed_email(user)
+
+        else:
+
+            logging.warning("invoice.payment_failed event received but user not found.")
 
     # Save webhook event log
     log = StripeWebhookEvent(
