@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, jsonify, flash, redirect, url_for
 import threading
 from flask_login import current_user, login_required
 from src.db.models import Project
-from src import db_session
+from src.db import get_db_session
 from src.handler.OpenAIHandler import OpenAIHandler
 from flask import request
 import json
@@ -23,6 +23,7 @@ def regenerate_requirements(project_id: int, venue_name: str):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     project: Project = db_session.query(Project).filter_by(id=project_id).first()
 
     if not project or project.user_id != current_user.id:
@@ -75,6 +76,7 @@ def start_venue_requirements_job(project_id: int, venue_name: str):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     project: Project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         return render_template("dashboard.dashboard", projects=[])
@@ -111,6 +113,7 @@ def get_venue_requirements_result(project_id: int, venue_name: str):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     # Load project from DB that belongs to current user
     project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
     print(project)
@@ -129,6 +132,7 @@ def view(project_id: int, venue_name: str):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
 
     if not project:
@@ -166,6 +170,7 @@ def save_requirements(project_id: int, venue_name: str):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
 
     if not project:

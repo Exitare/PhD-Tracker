@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import current_user, login_required
 from src.role import Role
 from src.db.models import Project
-from src import db_session
+from src.db import get_db_session
 from typing import List
 from src.models import AIJournalRecommendation
 from src.services import UserService
@@ -20,6 +20,7 @@ def get_recommendations(project_id: int):
         flash("You do not have permission to access this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         print("Project not found")
@@ -64,6 +65,7 @@ def select(project_id: int):
         flash("You do not have permission to access this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         abort(404)

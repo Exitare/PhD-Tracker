@@ -113,11 +113,24 @@
         {% endif %}
 
         {% if not current_user.email_verified %}
-        <a href="{{ url_for('account.resend_activation_email') }}"
-           class="btn btn-success"
-           onclick="this.classList.add('disabled'); this.innerText='Sending email...';">
-            Resend Activation Email
-        </a>
+        {% set email_cooldown_active = current_user.activation_email_triggered_at and
+        (current_user.activation_email_triggered_at > (now - 15 * 60 * 1000)) %}
+
+        <div class="d-flex flex-column">
+            <a href="{{ url_for('account.resend_activation_email') }}"
+               class="btn btn-success {% if email_cooldown_active %}disabled{% endif %}"
+               {% if not email_cooldown_active
+               %}onclick="this.classList.add('disabled'); this.innerText='Sending email...';" {% endif %}
+               {% if email_cooldown_active %}aria-disabled="true" tabindex="-1" {% endif %}>
+                Resend Activation Email
+            </a>
+
+            {% if email_cooldown_active %}
+            <div class="text-muted small mt-1">
+                You can resend the email again in about 15 minutes.
+            </div>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
 </div>

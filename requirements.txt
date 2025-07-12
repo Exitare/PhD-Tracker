@@ -17,3 +17,5 @@ bs4
 tiktoken
 faiss-cpu
 waitress
+pymysql
+alembic

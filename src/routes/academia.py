@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from flask_login import login_required, current_user, login_user
-from src import db_session
+from src.db import get_db_session
 from src.db.models import User
 from datetime import datetime, timezone
 import stripe
@@ -22,6 +22,7 @@ def view():
 @bp.route("/academia/register", methods=["POST", "GET"])
 def register():
     if request.method == "POST":
+        db_session = get_db_session()
         first_name = request.form.get("first_name", "").strip()
         last_name = request.form.get("last_name", "").strip()
         org_name = request.form.get("org_name", "").strip()
@@ -117,7 +118,7 @@ def panel():
     # Set the currently selected theme in the form
     current_theme = session.get('theme', 'lavender-dark')
     theme_form.theme.data = current_theme
-
+    db_session = get_db_session()
     managed_users = db_session.query(User).options(joinedload(User.usage_logs)) \
         .filter_by(managed_by=current_user.id).all()
 
@@ -138,6 +139,7 @@ def panel():
 @bp.route('/academia/managed-users/<int:user_id>/toggle-status', methods=['POST'])
 @login_required
 def toggle_user_status(user_id):
+    db_session = get_db_session()
     user = db_session.get(User, user_id)
 
     if not user or user.managed_by != current_user.id:

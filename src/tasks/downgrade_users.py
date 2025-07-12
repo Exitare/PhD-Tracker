@@ -1,14 +1,16 @@
 from datetime import datetime, timezone
 from src.role import Role
-from src import db_session
+from src.db import get_db_session, init_db
 from src.db.models import User
 from src.plans import Plans
 import logging
 from src.utils.logging_config import setup_logging
+import os
 logger = logging.getLogger(__name__)
 
 
 def downgrade_expired_users():
+    db_session = get_db_session()
     now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     expired_users = db_session.query(User).filter(
         User.stripe_subscription_expires_at < now_ms,
@@ -40,6 +42,11 @@ def downgrade_expired_users():
         logger.info("[AutoDowngrade] No users to downgrade.")
 
 def run_downgrade_loop(shutdown_event, interval_seconds=300):
+    # Initialize DB session in this process
+    dev_mode = os.getenv("PROD", "1") == "0"
+    init_db(dev_mode=dev_mode)
+
+    db_session = get_db_session()
     setup_logging(console_level=logging.INFO)  # <<< ADD THIS LINE
     logger.info("[AutoDowngrade] Worker started.")
     try:

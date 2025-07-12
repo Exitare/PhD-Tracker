@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from flask import Blueprint, request, redirect, render_template, url_for, abort, flash
 from src.db.models import Project, SubProject, Milestone
-from src import db_session
+from src.db import get_db_session
 from flask_login import current_user, login_required
 from src.role import Role
 
@@ -17,6 +17,7 @@ def create_project():
         flash("You do not have permission to create a project.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     if request.method == "POST":
         title = request.form["title"]
         description = request.form["description"]
@@ -53,6 +54,7 @@ def view(project_id: int):
 
 
     try:
+        db_session = get_db_session()
         # Load the project
         project = db_session.query(Project).filter_by(id=project_id).first()
         if not project:
@@ -87,6 +89,7 @@ def edit(project_id: int):
         flash("You do not have permission to edit this project.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         abort(404)
@@ -128,6 +131,7 @@ def delete(project_id: int):
         flash("You do not have permission to delete this project.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     project = db_session.query(Project).filter_by(id=project_id).first()
     if not project:
         flash("Project not found.", "danger")

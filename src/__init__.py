@@ -2,7 +2,7 @@ from flask import Flask
 from .extensions import csrf
 from dotenv import load_dotenv
 from src.db.models import User
-from src.db import init_db, db_session
+from src.db import init_db, get_db_session
 from src.routes import dashboard, project, notes, sub_project, milestone, auth, home, about, revision, account, \
     webhooks, journal, venue, academia, admin
 import os
@@ -23,7 +23,7 @@ _downgrade_process = None
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 
-def create_app():
+def create_app(dev_mode: bool) -> Flask:
     load_dotenv()
 
     app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
@@ -35,8 +35,8 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"  # Redirect unauthorized users here
 
-    # Initialize database tables (runs once)
-    init_db()
+
+    db_session = get_db_session()
 
     # Register blueprints
     app.register_blueprint(dashboard.bp)
@@ -96,7 +96,7 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db_session.get(User, int(user_id))  # or db_session.query(User).get(int(user_id))
+        return db_session.get(User, int(user_id))  # or get_db_session.query(User).get(int(user_id))
 
     return app
 

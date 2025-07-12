@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from src import db_session
+from src.db import get_db_session
 from src.services import UserService
 
 bp = Blueprint("admin", __name__)
@@ -18,6 +18,7 @@ bp = Blueprint("admin", __name__)
 @bp.route("/admin/users", methods=["GET"])
 @login_required
 def manage_users():
+    db_session = get_db_session()
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
     if not user or not UserService.can_access_page(user, allowed_roles=[Role.Admin.value]):
@@ -43,6 +44,7 @@ def manage_users():
 @bp.route("/admin", methods=["GET"])
 @login_required
 def dashboard():
+    db_session = get_db_session()
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
     if not user or not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
@@ -68,6 +70,7 @@ def dashboard():
 @bp.route("/admin/price", methods=["GET", "POST"])
 @login_required
 def manage_prices():
+    db_session = get_db_session()
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
     if not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
@@ -153,6 +156,7 @@ def archive_price(price_id):
 @bp.route("/admin/users/status/<int:user_id>", methods=["POST"])
 @login_required
 def toggle_user_status(user_id: int):
+    db_session = get_db_session()
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
     if not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):

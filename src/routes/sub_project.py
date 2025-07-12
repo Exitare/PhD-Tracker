@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, abort, flash, jsonify
 from datetime import datetime, timezone
 from src.db.models import SubProject, Milestone, Project
-from src import db_session
+from src.db import get_db_session
 from src.services.openai_service import OpenAIService
 from flask_login import login_required, current_user
 from src.services import AILogService, UserService
@@ -18,6 +18,7 @@ def show_sub_project_form(project_id: int):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     try:
         project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
         if not project:
@@ -36,6 +37,7 @@ def create(project_id: int):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     try:
         project = db_session.query(Project).filter_by(id=project_id).first()
         # Ensure the project exists and belongs to the current user
@@ -142,6 +144,7 @@ def view(project_id: int, subproject_id: int):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
         abort(404, description="Subproject not found")
@@ -172,6 +175,8 @@ def edit(project_id: int, subproject_id: int):
     if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
+
+    db_session = get_db_session()
 
     sub = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not sub:
@@ -222,6 +227,7 @@ def delete(project_id: int, subproject_id: int):
         flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     sub = db_session.query(SubProject).filter_by(id=subproject_id).first()
     if not sub:
         abort(404, description="Subproject not found")
@@ -237,7 +243,7 @@ def delete(project_id: int, subproject_id: int):
 def check_subproject_title(project_id: int):
     data = request.get_json()
     title = data.get("title", "").strip().lower()
-
+    db_session = get_db_session()
     exists = db_session.query(SubProject).filter(
         SubProject.project_id == project_id,
         func.lower(SubProject.title) == title

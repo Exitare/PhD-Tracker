@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from src.db.models import Milestone
-from src import db_session
+from src.db import get_db_session
 from flask_wtf.csrf import validate_csrf
 from wtforms.validators import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -11,6 +11,7 @@ bp = Blueprint('notes', __name__)
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>/note",
           methods=["GET"])
 def get_note(project_id: int, subproject_id: int, milestone_id: int):
+    db_session = get_db_session()
     milestone = db_session.query(Milestone).filter_by(id=milestone_id).first()
     return jsonify(note=milestone.notes if milestone else "")
 
@@ -28,8 +29,9 @@ def save_note(project_id: int, subproject_id: int, milestone_id: int):
 
     data = request.get_json()
     note = data.get("note", "")
-
+    db_session = get_db_session()
     try:
+
         milestone = db_session.query(Milestone).filter_by(id=milestone_id, sub_project_id=subproject_id).first()
         if not milestone:
             return jsonify(success=False, message="Milestone not found."), 404
