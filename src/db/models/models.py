@@ -20,7 +20,6 @@ class User(Base, UserMixin):
     organization_name: Mapped[str] = Column(String(150), nullable=True)
     managed_by = Column(Integer, ForeignKey('users.id'), nullable=True)  # For user management hierarchy
     managed_by_stripe_id: Mapped[str] = Column(String(100), nullable=True)  # Stripe ID of the manager if applicable
-    managed_by_license_active: Mapped[bool] = Column(Boolean, default=False, nullable=False)  # Whether the managers license is active right now.
     pending_email: Mapped[str] = Column(String(150), nullable=True)
     password_hash: Mapped[str] = Column(String(200), nullable=False)
     created_at = Column(BigInteger, nullable=False, default=int(datetime.now(timezone.utc).timestamp() * 1000))
