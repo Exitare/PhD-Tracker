@@ -89,7 +89,7 @@
 
 
     <div class="mt-4 d-flex gap-3 flex-wrap">
-        {% if not current_user.managed_by %}
+        {% if not current_user.managed_by and current_user.plan != 'student' %}
         <a href="{{ url_for('account.manage_subscriptions') }}"
            class="btn btn-success"
            onclick="this.classList.add('disabled'); this.innerText='Loading data...';">
