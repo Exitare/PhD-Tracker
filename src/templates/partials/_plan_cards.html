@@ -1,0 +1,56 @@
+<!-- Student -->
+{% if not hide_student_plan %}
+<div class="col-md-4">
+    <div class="card pricing-card h-100" data-plan="student">
+        <div class="card-body text-center">
+            <h5 class="card-title">🎓 Student</h5>
+            <h6 class="text-muted mb-3">Free</h6>
+            <ul class="list-unstyled mb-4">
+                <li>✔ Track unlimited projects</li>
+                <li>✔ Manual milestone creation</li>
+                <li>✔ Manual project requirement creation</li>
+            </ul>
+        </div>
+    </div>
+    <label for="student" class="visually-hidden">Select Student Plan</label>
+    <input type="radio" class="visually-hidden" name="plan" id="student" value="student"
+           {% if current_plan== "student" %}checked{% endif %} required>
+</div>
+{% endif %}
+
+
+<!-- Student+ -->
+<div class="col-md-4">
+    <div class="card pricing-card h-100" data-plan="student_plus">
+        <div class="card-body text-center">
+            <h5 class="card-title">🚀 Student+</h5>
+            <h6 class="text-muted mb-3">Pay-as-you-go</h6>
+            <ul class="list-unstyled mb-4">
+                <li>✔ Everything in Student</li>
+                <li>✔ AI-powered milestone generation</li>
+                <li>✔ AI-powered requirement search (Base model)</li>
+            </ul>
+        </div>
+    </div>
+    <label for="student_plus" class="visually-hidden">Select Student+ Plan</label>
+    <input type="radio" class="visually-hidden" name="plan" id="student_plus" value="student_plus"
+           {% if current_plan== "student_plus" %}checked{% endif %} required>
+</div>
+
+<!-- Student Pro -->
+<div class="col-md-4">
+    <div class="card pricing-card h-100" data-plan="student_pro">
+        <div class="card-body text-center">
+            <h5 class="card-title">💼 Student Pro</h5>
+            <h6 class="text-muted mb-3">$20/month</h6>
+            <ul class="list-unstyled mb-4">
+                <li>✔ Everything in Student+</li>
+                <li>✔ Improved AI models</li>
+                <li>✔ Premium support</li>
+            </ul>
+        </div>
+    </div>
+    <label for="student_pro" class="visually-hidden">Select Student Pro Plan</label>
+    <input type="radio" class="visually-hidden" name="plan" id="student_pro" value="student_pro"
+           {% if current_plan== "student_pro" %}checked{% endif %} required>
+</div>

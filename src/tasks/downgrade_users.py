@@ -20,13 +20,18 @@ def downgrade_expired_users():
         user.plan = Plans.Student.value
         user.stripe_subscription_id = None
         user.stripe_subscription_item_ids = None
+        user.stripe_subscription_expires_at = None
+        user.stripe_subscription_canceled = False
 
         if user.role == Role.Manager.value:
             # Downgrade managed users as well
             managed_users = db_session.query(User).filter_by(managed_by=user.id).all()
             for managed_user in managed_users:
                 managed_user.plan = Plans.Student.value
-                managed_user.managed_by_license_active = False
+                managed_user.stripe_subscription_id = None
+                managed_user.stripe_subscription_item_ids = None
+                managed_user.stripe_subscription_expires_at = None
+                managed_user.stripe_subscription_canceled = False
 
     if expired_users:
         db_session.commit()

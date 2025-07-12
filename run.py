@@ -5,6 +5,7 @@ import os
 import atexit
 import logging
 from src.utils.logging_config import setup_logging
+from waitress import serve
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -29,4 +30,7 @@ if __name__ == '__main__':
         atexit.register(stop_background_downgrade_process)
 
     logging.info(f"Running server in {'development' if args.dev else 'production'} mode on port {args.port}")
-    app.run(debug=True, port=args.port)
+    if args.dev:
+        app.run(debug=True, port=args.port)
+    else:
+        serve(app, host=f'127.0.0.1:{args.port}')

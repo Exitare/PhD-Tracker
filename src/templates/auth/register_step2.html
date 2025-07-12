@@ -13,57 +13,9 @@
         <input type="hidden" name="email" value="{{ email }}">
         <input type="hidden" name="password" value="{{ password }}">
 
+        {% set current_plan = "student_pro" %}
         <div class="row g-4 justify-content-center" id="plan-cards">
-            <!-- Student -->
-            <div class="col-md-4">
-                <div class="card pricing-card h-100" data-plan="student">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">🎓 Student</h5>
-                        <h6 class="text-muted mb-3">Free</h6>
-                        <ul class="list-unstyled mb-4">
-                            <li>✔ Track unlimited projects</li>
-                            <li>✔ Manual milestone creation</li>
-                            <li>✔ Manual project requirement creation</li>
-                        </ul>
-                    </div>
-                </div>
-                <label for="student" class="visually-hidden">Select Student Plan</label>
-                <input type="radio" class="visually-hidden" name="plan" id="student" value="student" required>
-            </div>
-
-            <!-- Student+ -->
-            <div class="col-md-4">
-                <div class="card pricing-card h-100" data-plan="student_plus">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">🚀 Student+</h5>
-                        <h6 class="text-muted mb-3">Pay-as-you-go</h6>
-                        <ul class="list-unstyled mb-4">
-                            <li>✔ Everything in Student</li>
-                            <li>✔ AI-powered milestone generation</li>
-                            <li>✔ AI-powered requirement search (Base model)</li>
-                        </ul>
-                    </div>
-                </div>
-                <label for="student_plus" class="visually-hidden">Select Student+ Plan</label>
-                <input type="radio" class="visually-hidden" name="plan" id="student_plus" value="student_plus" required>
-            </div>
-
-            <!-- Student Pro -->
-            <div class="col-md-4">
-                <div class="card pricing-card h-100" data-plan="student_pro">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">💼 Student Pro</h5>
-                        <h6 class="text-muted mb-3">$20/month</h6>
-                        <ul class="list-unstyled mb-4">
-                            <li>✔ Everything in Student+</li>
-                            <li>✔ Improved AI models</li>
-                            <li>✔ Premium support</li>
-                        </ul>
-                    </div>
-                </div>
-                <label for="student_pro" class="visually-hidden">Select Student Pro Plan</label>
-                <input type="radio" class="visually-hidden" name="plan" id="student_pro" value="student_pro" required>
-            </div>
+            {% include "partials/_plan_cards.html" %}
         </div>
 
         {% if error %}
@@ -75,20 +27,25 @@
         </div>
     </form>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
     // Highlight selected card visually
     const cards = document.querySelectorAll('.pricing-card');
     cards.forEach(card => {
         card.addEventListener('click', () => {
-            // Clear existing selections
             cards.forEach(c => c.classList.remove('selected'));
-            // Add to selected card
             card.classList.add('selected');
-            // Select radio
             const plan = card.getAttribute('data-plan');
             document.getElementById(plan).checked = true;
         });
+
+        // Preselect if radio is checked on load
+        const plan = card.getAttribute('data-plan');
+        if (document.getElementById(plan).checked) {
+            card.classList.add('selected');
+        }
     });
 </script>
 {% endblock %}

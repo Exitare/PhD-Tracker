@@ -56,19 +56,34 @@
                 <div class="text-muted small">Status</div>
                 <div class="fw-semibold">
                     {% if user.managed_by %}
-                    <span class="text-success">Managed Plan ({{current_user.organization_name}})</span>
+                    <span class="text-success">Managed Plan ({{ user.organization_name }})</span>
+
                     {% elif user.plan == 'student' %}
-                    <span class="text-success">Active (Student)</span>
+                    {% if user.stripe_subscription_expires_at and user.stripe_subscription_expires_at > now %}
+                    <span class="text-warning">
+                        Canceled – active until {{ user.stripe_subscription_expires_at | datetimeformat }}
+                    </span>
+                    {% else %}
+                    <span class="text-success">Free Plan</span>
+                    {% endif %}
+
                     {% elif user.stripe_subscription_expires_at %}
                     {% if user.stripe_subscription_expires_at > now %}
+                    {% if user.stripe_subscription_canceled %}
+                    <span class="text-warning">
+                            Canceled – active until {{ user.stripe_subscription_expires_at | datetimeformat }}
+                        </span>
+                    {% else %}
                     <span class="text-success">
-                        Active until {{ user.stripe_subscription_expires_at | datetimeformat }}
-                     </span>
+                            Active until {{ user.stripe_subscription_expires_at | datetimeformat }}
+                        </span>
+                    {% endif %}
                     {% else %}
                     <span class="text-warning">
                         Expired on {{ user.stripe_subscription_expires_at | datetimeformat }}
                     </span>
                     {% endif %}
+
                     {% else %}
                     <span class="text-warning">Inactive</span>
                     {% endif %}
@@ -147,4 +162,41 @@
         </form>
     </div>
 </div>
+
+{% if not user.managed_by %}
+<hr class="my-5">
+<div class="text-center mb-4">
+    <h4 class="card-title">Upgrade Your Plan</h4>
+    <p class="text-muted">Choose a plan that fits your workflow best.</p>
+</div>
+
+
+{% set hide_student_plan = True if current_user.plan == 'student' else False %}
+{% set current_plan = "student_pro" %}
+<form method="POST" action="{{ url_for('account.choose_plan') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-4 justify-content-center" id="plan-cards">
+        {% include "partials/_plan_cards.html" %}
+    </div>
+
+    <div class="d-grid mt-4 text-center">
+        <button type="submit" class="btn btn-success btn-lg px-5">Choose Plan</button>
+    </div>
+</form>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const cards = document.querySelectorAll('.pricing-card');
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            cards.forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            const plan = card.getAttribute('data-plan');
+            document.getElementById(plan).checked = true;
+        });
+    });
+</script>
 {% endblock %}
