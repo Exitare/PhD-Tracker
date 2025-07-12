@@ -14,8 +14,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    mode: str = args.dev
+    mode: str = os.getenv('MODE', 'dev')
+
     if args.dev:
+        logging.info("Overriding prod environment variable to dev for development mode.")
+        os.environ["MODE"] = "dev"
+        mode = "dev"
+
+    if mode:
         setup_logging(console_level=logging.DEBUG)
     elif mode == "staging":
         setup_logging(console_level=logging.DEBUG)
@@ -24,15 +30,13 @@ if __name__ == '__main__':
 
         # Initialize database tables (runs once)
     logging.info('[Flask] Initializing database...')
-    init_db(mode=args.dev)
+    init_db(mode=mode)
     logging.info('[Flask] Database initialized successfully.')
 
     app = create_app()
 
     # if args dev override PROD environment variable
-    if args.dev:
-        logging.info("Overriding prod environment variable to dev for development mode.")
-        os.environ["MODE"] = "dev"
+
 
     # Start background process safely
     if int(os.getenv("RUN_BACKGROUND_TASKS", 0)) == 1:
