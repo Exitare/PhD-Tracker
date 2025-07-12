@@ -3,10 +3,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}PhD{% endblock %}</title>
+    <title>{% block title %}PhD | Academic Tracker{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <!-- SEO -->
+    <meta name="description"
+          content="{% block description %}Organize your academic goals, deadlines, and projects in one place.{% endblock %}">
+    <meta http-equiv="Content-Language" content="en">
+    <link rel="canonical" href="{{ request.url }}">
+    <meta name="theme-color" content="#1e1a2b">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}PhD | Academic Tracker{% endblock %}">
+    <meta property="og:description"
+          content="{% block og_description %}Track your research, milestones, and deadlines with ease. Built for students, postdocs, and academics.{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:image" content="{{ url_for('static', filename='img/og-image.png', _external=True) }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}PhD | Academic Tracker{% endblock %}">
+    <meta name="twitter:description"
+          content="{% block twitter_description %}Smarter academic tracking. AI-supported tools for researchers and students alike.{% endblock %}">
+    <meta name="twitter:image" content="{{ url_for('static', filename='img/twitter-image.png', _external=True) }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+
+    <!-- CSS & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/' ~ (session.get('theme', 'lavender-dark') ~ '.css')) }}">
@@ -108,7 +135,7 @@
 <footer class="app-footer mt-5 py-4">
     <div class="container text-center text-md-start d-flex flex-column flex-md-row justify-content-between align-items-center">
         <div class="mb-3 mb-md-0">
-            <strong>&copy; {{ now | datetimeformat("%Y") }} Academic Tracker</strong> – Built for researchers.
+            <strong>&copy; {{ now | datetimeformat("%Y") }} PHD by AnoBrain.ai</strong> – Built for researchers.
         </div>
         <div class="d-flex gap-3">
             <a href="{{ url_for('about.about') }}" class="footer-link">About</a>

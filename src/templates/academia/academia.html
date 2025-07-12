@@ -1,48 +1,65 @@
 {% extends "base.html" %}
 
-{% block title %}University License – Academic Access{% endblock %}
+{% block title %}Academic Group Plans | My Academic Tracker{% endblock %}
+
+{% block description %}
+Flexible academic plans for labs, departments, and institutions. Get unlimited access with centralized billing and tools to manage research efficiently.
+{% endblock %}
+
+{% block og_title %}Group Academic Plans | Centralized Access & Billing{% endblock %}
+{% block og_description %}Academic plans built for labs, departments, and universities. Centralized billing, unlimited users, and tailored access to research tools.{% endblock %}
+
+{% block twitter_title %}Academic Group Plans | Easy Access & Central Billing{% endblock %}
+{% block twitter_description %}Flexible group plans for labs, departments, or institutions. Enjoy centralized billing, admin tools, and unlimited access for your team.{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="card p-4 mb-4">
-        <h1 class="card-title mb-3">University License</h1>
-        <p class="text-muted mb-4">Empower your institution with full access to our tools. Our academic site license is
-            designed for scalability, simplicity, and support.</p>
+        <h1 class="card-title mb-3">Academic Group Plans</h1>
+        <p class="text-muted mb-4">
+            Empower your lab, department, or institution with streamlined access to our academic tools.
+            Group plans are built for flexibility, centralized billing, and easy management—whether you're a university,
+            a single lab, or an administrative unit.
+        </p>
 
         <div class="mb-4">
             <h2 class="display-5-strong mb-2">What's Included</h2>
             <ul class="text-muted">
-                <li>✔️ Unlimited seats for faculty, staff, and students</li>
-                <li>✔️ Admin dashboard to manage usage</li>
+                <li>✔️ Unlimited seats for students, faculty, and staff</li>
+                <li>✔️ Centralized billing and usage management</li>
+                <li>✔️ Admin dashboard with access controls</li>
+                <li>✔️ Tailored pricing based on your needs</li>
                 <li>✔️ Priority email support</li>
-                <li>✔️ Free onboarding assistance for IT teams</li>
             </ul>
         </div>
 
         <div class="mb-4">
-            <h2 class="display-5-strong mb-2">Eligibility</h2>
-            <p class="text-muted">Available to accredited colleges, universities, and academic consortia. Departmental
-                or university-wide licenses supported.</p>
+            <h2 class="display-5-strong mb-2">Who It's For</h2>
+            <p class="text-muted">
+                Everyone is eligible. Whether you're a single lab, department, or university, you can take advantage of
+                academic group plans—if your unit supports centralized billing.
+            </p>
         </div>
 
         <div class="mb-4">
             <h2 class="display-5-strong mb-2">Pricing</h2>
             <p class="text-muted">
-                University licenses are tailored to each institution’s needs. Pricing is based on enrollment size,
-                usage, and scope of access.
-                Please <a href="mailto:academia@yourdomain.com" class="text-decoration-none">contact us</a> for a custom
+                Plans are fully customized based on your needs. Pricing is determined by team size, access scope, and
+                usage expectations.
+                <br>
+                <a href="mailto:academia@yourdomain.com" class="text-decoration-none">Contact us</a> to request a custom
                 quote.
             </p>
         </div>
 
-
         <div>
-            <h2 class="display-5-strong mb-2">How to Purchase</h2>
-            <p class="text-muted mb-3">To receive a personalized quote or schedule a call, reach out to our academic
-                team or begin your registration process below.</p>
+            <h2 class="display-5-strong mb-2">How to Get Started</h2>
+            <p class="text-muted mb-3">
+                Reach out for a custom quote or begin your academic plan registration below.
+            </p>
             <div class="d-flex flex-column flex-md-row gap-3">
-                <a href="mailto:academia@yourdomain.com" class="btn btn-outline-secondary">📨 Contact Us</a>
                 <a href="{{ url_for('academia.register') }}" class="btn btn-primary">📝 Sign Up</a>
+                <a href="{{ url_for('academia.contact') }}" class="btn btn-outline-secondary">📨 Contact Us</a>
             </div>
         </div>
     </div>

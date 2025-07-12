@@ -1,18 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}University License Sign Up{% endblock %}
+{% block title %}Academic Group Plan Sign Up | My Academic Tracker{% endblock %}
+
+{% block description %}
+Create an academic account for your lab, department, or institution. Centralized billing, unlimited user access, and tools to streamline academic workflows.
+{% endblock %}
+
+{% block og_title %}Sign Up for Academic Group Access | My Academic Tracker{% endblock %}
+{% block og_description %}Get started with an academic group plan for your organization. Ideal for labs, departments, and universities seeking smart academic tools with centralized billing.{% endblock %}
+
+{% block twitter_title %}Academic Plan Registration | My Academic Tracker{% endblock %}
+{% block twitter_description %}Create your account and unlock academic tools for your whole team. Supports centralized billing and institutional access.{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="card p-4 mb-4">
-        <h1 class="card-title mb-4">University License Sign Up</h1>
-        <form method="POST" action="{{ url_for('academia.register') }}">
+        <h1 class="card-title mb-4">Academia Sign Up</h1>
+        <form method="POST" action="{{ url_for('academia.register') }}" id="signupForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label" for="first_name">First Name</label>
-                    <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Jane" required>
+                    <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Jane"
+                           required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="last_name">Last Name</label>
@@ -22,12 +33,14 @@
 
             <div class="mb-3">
                 <label class="form-label" for="org_name">Organization Name</label>
-                <input type="text" class="form-control" id="org_name" name="org_name" placeholder="University of Example" required>
+                <input type="text" class="form-control" id="org_name" name="org_name"
+                       placeholder="University of Example" required>
             </div>
 
             <div class="mb-4">
                 <label class="form-label" for="email">Institutional Email</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="jane.doe@example.edu" required>
+                <input type="email" class="form-control" id="email" name="email" placeholder="jane.doe@example.edu"
+                       required>
             </div>
 
             <div class="mb-4">
@@ -35,8 +48,37 @@
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
 
-            <button type="submit" class="btn btn-primary">Create</button>
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Create</button>
+                <a href="{{ url_for('academia.view') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("signupForm");
+        const submitBtn = document.getElementById("submitBtn");
+        const requiredFields = form.querySelectorAll("[required]");
+
+        const checkValidity = () => {
+            let allFilled = true;
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    allFilled = false;
+                }
+            });
+            submitBtn.disabled = !allFilled;
+        };
+
+        requiredFields.forEach(field => {
+            field.addEventListener("input", checkValidity);
+        });
+
+        checkValidity(); // initial run
+    });
+</script>
 {% endblock %}

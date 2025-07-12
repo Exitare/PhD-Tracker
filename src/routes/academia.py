@@ -19,6 +19,37 @@ def view():
     return render_template('academia/academia.html')
 
 
+@bp.route("/academia/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "POST":
+        try:
+            first_name = request.form.get("first_name", "").strip()
+            last_name = request.form.get("last_name", "").strip()
+            email = request.form.get("email", "").strip()
+            num_students: int = int(request.form.get("num_students", "").strip())
+            additional_information = request.form.get("additional_information", "").strip()
+            organization = request.form.get("organization", "").strip()
+            phone_number: str = request.form.get("phone", "").strip()
+
+            # Input validation
+            if not first_name or not last_name or not email or not num_students or not additional_information or not organization:
+                flash("All fields are required.", "danger")
+                return render_template("academia/contact.html")
+
+            MailService.send_academia_inquiry_email(first_name=first_name, last_name=last_name, email=email,
+                                                    num_students=num_students, organization=organization,
+                                                    additional_information=additional_information, phone_number=phone_number)
+
+            flash("Your inquiry has been sent successfully! We'll get back to you shortly.", "success")
+
+        except Exception as e:
+            print(f"Academia contact form error: {e}")
+            flash("An error occurred while sending your inquiry. Please try again later.", "danger")
+            return render_template("academia/contact.html")
+
+    return render_template('academia/contact.html')
+
+
 @bp.route("/academia/register", methods=["POST", "GET"])
 def register():
     if request.method == "POST":

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Group Plan Contact | My Academic Tracker{% endblock %}
+
+{% block description %}
+Request an academic group plan for your lab, department, or institution. Includes centralized billing, unlimited access, and tools for collaborative research tracking.
+{% endblock %}
+
+{% block og_title %}Request Academic Access | My Academic Tracker{% endblock %}
+{% block og_description %}Submit your request for a group academic plan. Central billing, unlimited users, and smart academic tools—available to any research unit or institution.{% endblock %}
+
+{% block twitter_title %}Contact Us for Academic Plans | My Academic Tracker{% endblock %}
+{% block twitter_description %}Reach out to get started with a lab, department, or institutional plan. Unlimited seats, centralized billing, and built-in research tools.{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="tracker-card p-5">
+        <h1 class="milestone-title mb-4">Academic Group Plan Contact Form</h1>
+        <form method="POST" action="{{ url_for('academia.contact') }}" id="licenseForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="row mb-3">
+                <div class="col-md-6 mb-3">
+                    <label for="organization" class="form-label">Organization Name</label>
+                    <input type="text" class="form-control" id="organization" name="organization" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6 mb-3">
+                    <label for="first_name" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="last_name" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="phone" class="form-label">Phone Number (optional)</label>
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="e.g. +1 234 567 8900">
+            </div>
+
+            <div class="mb-3">
+                <label for="num_students" class="form-label">Number of Students</label>
+                <input type="number" class="form-control" id="num_students" name="num_students" required min="1">
+            </div>
+
+            <div class="mb-4">
+                <label for="additional_information" class="form-label">Additional Information</label>
+                <textarea class="form-control" id="additional_information" name="additional_information" rows="4"
+                          placeholder="Please provide any additional questions or information you would like to share."
+                          required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>Submit Request</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("licenseForm");
+        const submitBtn = document.getElementById("submitBtn");
+
+        const requiredFields = form.querySelectorAll("[required]");
+
+        const checkFields = () => {
+            let allFilled = true;
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    allFilled = false;
+                }
+            });
+            submitBtn.disabled = !allFilled;
+        };
+
+        requiredFields.forEach(field => {
+            field.addEventListener("input", checkFields);
+        });
+
+        checkFields(); // Initial check
+    });
+</script>
+{% endblock %}
