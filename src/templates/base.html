@@ -91,7 +91,15 @@
 
 
                 {% else %}
-
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('about.about') }}">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('plans.plans') }}">Pricing</a>
+                </li>
+                 <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('academia.view') }}">Academia Plans</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
                 </li>
