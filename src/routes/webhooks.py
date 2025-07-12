@@ -1,5 +1,5 @@
 from flask import Blueprint, request, abort
-from src import db_session
+from src.db import get_db_session
 from src.db.models import User, StripeWebhookEvent
 from datetime import datetime, timezone
 import stripe
@@ -36,6 +36,7 @@ def stripe_webhook():
         abort(400)
 
     event_id: str = event["id"]
+    db_session = get_db_session()
 
     # Check for duplicate events
     if db_session.query(StripeWebhookEvent).filter_by(event_id=event_id).first():

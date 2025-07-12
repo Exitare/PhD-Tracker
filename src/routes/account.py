@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from src.db.models import User
-from src.db import db_session
+from src.db import get_db_session
 from flask_login import login_required, current_user, logout_user
 from src.forms import EmailForm, PasswordForm, ThemeForm
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -35,6 +35,7 @@ def panel():
         flash("You do not have permission to access this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     try:
         user = db_session.query(User).filter_by(id=current_user.id).first()
         if not user:
@@ -69,7 +70,7 @@ def update_email():
     if form.validate():
         new_email = form.email.data.strip().lower()
         password = form.password.data
-
+        db_session = get_db_session()
         if not check_password_hash(current_user.password_hash, password):
             flash("Incorrect password.", "danger")
             return redirect(url_for("account.panel"))
@@ -107,6 +108,7 @@ def update_password():
     form = PasswordForm(request.form)
 
     if form.validate():
+        db_session = get_db_session()
         # Check if the current password is correct
         if not check_password_hash(current_user.password_hash, form.current_password.data):
             flash("Current password is incorrect.", "danger")
@@ -186,6 +188,7 @@ def verify_email(token):
             flash("Invalid or expired verification link.", "error")
             return redirect(url_for('auth.login'))
 
+        db_session = get_db_session()
         user = db_session.query(User).filter_by(email=email).first()
         if not user:
             print("User not found for email:", email)
@@ -222,6 +225,7 @@ def refresh_access_code():
         flash("You do not have permission to perform this action.", "danger")
         return redirect(url_for('account.panel'))
 
+    db_session = get_db_session()
     try:
 
         # Generate a new access code
@@ -267,6 +271,7 @@ def choose_plan():
         flash("Please select a valid plan option.", "warning")
         return redirect(url_for('account.panel'))
 
+    db_session = get_db_session()
     try:
         # Downgrading to Student (free) plan
         if plan == Plans.Student.value:
@@ -360,6 +365,7 @@ def stripe_success():
         flash("No session ID provided.", "danger")
         return redirect(url_for("account.panel"))
 
+    db_session = get_db_session()
     try:
         session = stripe.checkout.Session.retrieve(session_id)
 

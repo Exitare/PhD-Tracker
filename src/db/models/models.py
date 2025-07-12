@@ -10,7 +10,7 @@ class User(Base, UserMixin):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    stripe_customer_id: Mapped[str] = Column(String, unique=True)
+    stripe_customer_id: Mapped[str] = Column(String(100), unique=True)
     email: Mapped[str] = Column(String(150), unique=True, nullable=False)
     email_verified = Column(Boolean, default=False, nullable=False)
     email_verified_at = Column(BigInteger, nullable=True, default=None)
@@ -26,8 +26,8 @@ class User(Base, UserMixin):
     active = Column(Boolean, default=True, nullable=False)  # Whether the user is active or not
     deactivated_at = Column(BigInteger, nullable=True, default=None)
     plan: Mapped[str] = Column(String(50), default='student')
-    stripe_subscription_id = Column(String, nullable=True)
-    stripe_subscription_item_ids = Column(String, nullable=True)
+    stripe_subscription_id = Column(String(100), nullable=True)
+    stripe_subscription_item_ids = Column(String(100), nullable=True)
     stripe_subscription_expires_at = Column(BigInteger, nullable=True)
     stripe_subscription_canceled = Column(Boolean, default=False, nullable=False) # Whether the subscription is canceled or not
     role = Column(Enum("user", "manager", "admin", name="user_role"), default="user", nullable=False)

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from flask import Blueprint, request, redirect, render_template, url_for, abort, flash
 from src.db.models import Project, SubProject, Milestone
-from src import db_session
+from src.db import get_db_session
 from flask_login import current_user, login_required
 from sqlalchemy import select
 from src.services.openai_service import OpenAIService
@@ -19,6 +19,7 @@ def view(project_id):
         flash("You do not have permission to view a revision.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     try:
         stmt = select(Project).where(
             Project.id == project_id,
@@ -66,6 +67,7 @@ def create(project_id: int):
         return redirect(url_for("revision.start", project_id=project_id))
 
     milestones = []
+    db_session = get_db_session()
     if UserService.can_use_ai(current_user):
         # ===Call OpenAI to generate milestones ===
         milestones, usage = OpenAIService.submit_reviewer_feedback_milestone_generation(

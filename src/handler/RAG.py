@@ -8,7 +8,7 @@ import json
 import os
 import logging
 from src.db.models import Project
-from src import db_session
+from src import get_db_session
 from flask import flash
 
 
@@ -16,7 +16,7 @@ class RAGHandler:
 
     @staticmethod
     def extract_venue_requirements(project_id: int, user_id: int, venue_name: str) -> bool:
-        project: Project = db_session.query(Project).filter_by(id=project_id).first()
+        project: Project = get_db_session().query(Project).filter_by(id=project_id).first()
 
         if not project:
             flash("Project not found.", "danger")

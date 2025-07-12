@@ -2,7 +2,7 @@ from flask import Blueprint, request, redirect, url_for, abort, jsonify, flash, 
 from datetime import datetime
 from src.db.models import Milestone, SubProject
 from flask_login import current_user, login_required
-from src import db_session
+from src.db import get_db_session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 from ics import Calendar
@@ -18,6 +18,7 @@ def download_milestone_calendar(project_id: int, subproject_id: int):
         flash("You do not have permission to create a project.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
+    db_session = get_db_session()
     # check that current user has access to the subproject
     subproject = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not subproject or subproject.project.user_id != current_user.id:
@@ -40,7 +41,7 @@ def view(project_id: int, subproject_id: int):
     if not UserService.can_access_page(current_user, [Role.User.value]):
         flash("You do not have permission to view a project.", "danger")
         return redirect(url_for("dashboard.dashboard"))
-
+    db_session = get_db_session()
     # Get the subproject and check if it exists
     subproject = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
 
@@ -78,7 +79,7 @@ def create(project_id: int, subproject_id: int):
     except ValueError:
         flash("Invalid date format.", "danger")
         return redirect(url_for("subproject.view", project_id=project_id, subproject_id=subproject_id))
-
+    db_session = get_db_session()
     # Create and save milestone
     milestone = Milestone(
         sub_project_id=subproject_id,
@@ -96,13 +97,12 @@ def create(project_id: int, subproject_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>",
           methods=["POST"])
 def update(project_id: int, subproject_id: int, milestone_id: int):
-
     if not UserService.can_access_page(current_user, [Role.User.value]):
         flash("You do not have permission to update milestones.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     form = request.form
-
+    db_session = get_db_session()
     milestone = db_session.query(Milestone).filter_by(id=milestone_id, sub_project_id=subproject_id).first()
     if not milestone:
         abort(404, description="Milestone not found")
@@ -120,13 +120,12 @@ def update(project_id: int, subproject_id: int, milestone_id: int):
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>/status",
           methods=["POST"])
 def update_status(project_id: int, subproject_id: int, milestone_id: int):
-
     if not UserService.can_access_page(current_user, [Role.User.value]):
         flash("You do not have permission to update milestones.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     status = request.form["status"]
-
+    db_session = get_db_session()
     # Fetch milestone
     milestone = db_session.query(Milestone).filter_by(id=milestone_id, sub_project_id=subproject_id).first()
     if not milestone:
@@ -147,7 +146,7 @@ def delete_milestone(project_id: int, subproject_id: int, milestone_id: int):
         return redirect(url_for("dashboard.dashboard"))
 
     print(f"Deleting milestone {milestone_id} for project {project_id}")
-
+    db_session = get_db_session()
     milestone = db_session.query(Milestone).filter_by(id=milestone_id, sub_project_id=subproject_id).first()
     if not milestone:
         return jsonify(success=False, message="Milestone not found."), 404
@@ -172,7 +171,7 @@ def refine(project_id: int, subproject_id: int):
     if not UserService.can_use_ai(current_user):
         flash("This feature is only available for Plans that support AI.", "danger")
         return redirect(url_for('dashboard.dashboard'))
-
+    db_session = get_db_session()
     context: str = request.form.get("context", "")
     subproject: SubProject = db_session.query(SubProject).filter_by(id=subproject_id, project_id=project_id).first()
     if not subproject or subproject.project.user_id != current_user.id:

@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.db.models import User
-from src.db import db_session
+from src.db import get_db_session
 from flask_login import login_required, current_user
 import stripe
 import os
@@ -32,6 +32,7 @@ def register_step1():
         # TODO: Add email validation regex
         # TODO: Add password strength validation
         # Check if user already exists
+        db_session = get_db_session()
         existing_user = db_session.query(User).filter_by(email=email).first()
         if existing_user:
             error = "If the email is valid and available, you'll receive a verification link shortly."
@@ -110,6 +111,7 @@ def choose_plan():
             flash("You have already selected a plan. Please contact support if you need to change it.", "warning")
             return redirect(url_for('auth.introduction'))
 
+        db_session = get_db_session()
         plan: str = request.form.get('plan')
 
         if plan == Plans.StudentPlus.value:
@@ -190,6 +192,7 @@ def login():
             return redirect(url_for("admin.dashboard"))
 
     if request.method == "POST":
+        db_session = get_db_session()
         email = request.form["email"].strip().lower()
         password = request.form["password"]
 
@@ -239,6 +242,7 @@ def stripe_success():
             flash("No subscription found in the session.", "danger")
             return redirect(url_for('auth.introduction'))
 
+        db_session = get_db_session()
         subscription = stripe.Subscription.retrieve(subscription_id)
         try:
             stripe.Subscription.modify(

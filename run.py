@@ -19,10 +19,17 @@ if __name__ == '__main__':
     else:
         setup_logging(console_level=logging.INFO)
 
-    app = create_app()
-    logging.info("Initializing database...")
-    init_db()
-    logging.debug("Database initialized.")
+        # Initialize database tables (runs once)
+    logging.info('[Flask] Initializing database...')
+    init_db(dev_mode=args.dev)
+    logging.info('[Flask] Database initialized successfully.')
+
+    app = create_app(dev_mode=args.dev)
+
+    # if args dev override PROD environment variable
+    if args.dev:
+        logging.info("Overriding prod environment variable to 0 for development mode.")
+        os.environ["PROD"] = "0"
 
     # Start background process safely
     if int(os.getenv("RUN_BACKGROUND_TASKS", 0)) == 1:
@@ -33,4 +40,4 @@ if __name__ == '__main__':
     if args.dev:
         app.run(debug=True, port=args.port)
     else:
-        serve(app, host=f'127.0.0.1:{args.port}')
+        serve(app, host='127.0.0.1', port=args.port)
