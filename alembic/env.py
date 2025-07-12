@@ -4,6 +4,7 @@ from alembic import context
 import os
 from src.db import Base
 import src.db.models
+from urllib.parse import quote_plus
 
 print(">>> Alembic env.py is executing...")
 print(f">>> Loaded tables: {list(Base.metadata.tables.keys())}")
@@ -20,7 +21,7 @@ if config.config_file_name is not None:
     if mode != "dev":
         print(f">>> {mode} mode")
         user = os.getenv("DB_USER")
-        password = os.getenv("DB_PASSWORD")
+        password = quote_plus(os.environ.get("DB_PASSWORD"))
         host = os.getenv("DB_HOST", "localhost")
         port = os.getenv("DB_PORT", "3306")
         name = os.getenv("DB_NAME")
