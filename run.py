@@ -39,7 +39,7 @@ if __name__ == '__main__':
         start_background_downgrade_process()
         atexit.register(stop_background_downgrade_process)
 
-    logging.info(f"Running server in {'development' if args.dev else 'production'} mode on port {args.port}")
+    logging.info(f"Running server in {mode} mode on port {args.port}")
     if args.dev:
         app.run(debug=True, port=args.port)
     else:
