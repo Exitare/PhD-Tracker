@@ -5,6 +5,7 @@ import os
 from src.db import Base
 import src.db.models
 from urllib.parse import quote_plus
+import configparser
 
 print(">>> Alembic env.py is executing...")
 print(f">>> Loaded tables: {list(Base.metadata.tables.keys())}")
@@ -12,6 +13,11 @@ print(f">>> Loaded tables: {list(Base.metadata.tables.keys())}")
 config = context.config
 
 if config.config_file_name is not None:
+    # Use RawConfigParser to prevent issues with '%' in passwords
+    raw_cfg = configparser.RawConfigParser()
+    raw_cfg.read(config.config_file_name)
+    config.file_config = raw_cfg
+
     fileConfig(config.config_file_name)
 
     # Determine environment
