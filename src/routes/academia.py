@@ -48,8 +48,7 @@ def register():
             email_domain = email.split('@')[-1]
 
             # Create Stripe customer first
-            stripe_customer = stripe.Customer.create(email=email, name=f"{first_name} {last_name}",
-                                                     invoice_prefix=email_domain)
+            stripe_customer = stripe.Customer.create(email=email, name=f"{first_name} {last_name}")
 
             # create a unique access code
             access_code = UserService.create_access_token()

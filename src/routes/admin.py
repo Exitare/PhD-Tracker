@@ -44,7 +44,7 @@ def manage_users():
 def dashboard():
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
-    if not UserService.can_access_page(user=user, roles=[Role.Admin.value]):
+    if not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
         flash("You do not have permission to access this page.", "danger")
         logout_user()
         return redirect(url_for("auth.login"))
@@ -69,7 +69,7 @@ def dashboard():
 def manage_prices():
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
-    if not UserService.can_access_page(user=user, roles=[Role.Admin.value]):
+    if not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
         flash("You do not have permission to access this page.", "danger")
         logout_user()
         return redirect(url_for("auth.login"))
@@ -154,7 +154,7 @@ def archive_price(price_id):
 def toggle_user_status():
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
-    if not UserService.can_access_page(user=user, roles=[Role.Admin.value]):
+    if not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
         flash("You do not have permission to access this page.", "danger")
         logout_user()
         return redirect(url_for("auth.login"))
