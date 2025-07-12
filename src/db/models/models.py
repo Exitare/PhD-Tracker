@@ -31,6 +31,7 @@ class User(Base, UserMixin):
     stripe_subscription_expires_at = Column(BigInteger, nullable=True)
     stripe_subscription_canceled = Column(Boolean, default=False, nullable=False) # Whether the subscription is canceled or not
     role = Column(Enum("user", "manager", "admin", name="user_role"), default="user", nullable=False)
+    activation_email_triggered_at = Column(BigInteger, nullable=True, default=None)  # Timestamp when the activation email was last sent
     access_code = Column(String(100), nullable=True)  # For manager accounts to let users join their team
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")

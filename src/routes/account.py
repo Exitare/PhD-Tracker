@@ -247,6 +247,9 @@ def resend_activation_email():
     if not current_user.email_verified:
         try:
             MailService.send_verification_email(current_user)
+            current_user.activation_email_triggered_at = int(datetime.now(timezone.utc).timestamp() * 1000)
+            db_session = get_db_session()
+            db_session.commit()
             flash("Activation email resent successfully. Please check your inbox.", "success")
         except Exception as e:
             print(f"Error sending activation email: {e}")
