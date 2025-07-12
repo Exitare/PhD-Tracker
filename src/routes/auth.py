@@ -189,7 +189,7 @@ def login():
         elif current_user.role == Role.Manager.value:
             return redirect(url_for("academia.panel"))
         else:
-            return redirect(url_for("admin.dashboard"))
+            return redirect(url_for("admin.panel"))
 
     if request.method == "POST":
         db_session = get_db_session()
@@ -206,7 +206,7 @@ def login():
             elif user.role == Role.Manager.value:
                 return redirect(url_for("academia.panel"))
             else:
-                return redirect(url_for("admin.dashboard"))
+                return redirect(url_for("admin.panel"))
         else:
             return render_template("auth/login.html", error="Invalid email or password.")
 

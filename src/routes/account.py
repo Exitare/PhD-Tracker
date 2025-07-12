@@ -177,7 +177,12 @@ def manage_subscriptions():
     except Exception as e:
         print(f"Stripe error: {e}")
         flash("An error occurred while managing subscriptions. Please try again.", "danger")
-        return redirect(url_for('account.panel'))
+        if current_user.role == Role.User.value:
+            return redirect(url_for('account.panel'))
+        elif current_user.role == Role.Manager.value:
+            return redirect(url_for('academia.panel'))
+        else:
+            return redirect(url_for('admin.panel'))
 
 
 @bp.route("/account/verify-email/<token>", methods=["GET"])

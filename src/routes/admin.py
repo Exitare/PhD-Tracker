@@ -43,7 +43,7 @@ def manage_users():
 
 @bp.route("/admin", methods=["GET"])
 @login_required
-def dashboard():
+def panel():
     db_session = get_db_session()
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
@@ -169,21 +169,21 @@ def toggle_user_status(user_id: int):
     if not target_user:
         logger.debug(f"User with ID {user_id} not found.")
         flash("User not found.", "danger")
-        return redirect(request.referrer or url_for("admin.dashboard"))
+        return redirect(request.referrer or url_for("admin.panel"))
 
     if target_user.active:
         target_user.active = False
         target_user.deactivated_at = int(datetime.now(timezone.utc).timestamp() * 1000)
         db_session.commit()
         flash(f"User {target_user.email} has been deactivated.", "success")
-        return redirect(request.referrer or url_for("admin.dashboard"))
+        return redirect(request.referrer or url_for("admin.panel"))
     else:
         target_user.active = True
         target_user.deactivated_at = None
         db_session.commit()
         flash(f"User {target_user.email} has been reactivated.", "success")
         # redirect to referer page
-        return redirect(request.referrer or url_for("admin.dashboard"))
+        return redirect(request.referrer or url_for("admin.panel"))
 
 
 def parse_dollar_amount(value_str):

@@ -15,7 +15,7 @@ def dashboard():
         return redirect(url_for("academia.panel"))
     elif current_user.role == Role.Admin.value:
         # If the user is an admin, redirect to the admin dashboard
-        return redirect(url_for("admin.dashboard"))
+        return redirect(url_for("admin.panel"))
 
     try:
         db_session = get_db_session()
