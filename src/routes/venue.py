@@ -37,10 +37,12 @@ def regenerate_requirements(project_id: int, venue_name: str):
     if project.type != 'paper' and project.type != 'poster':
         flash("Unsupported project type for venue requirements.", "danger")
         return redirect(url_for("project.view", project_id=project_id))
+
     success: bool = False
     if use_rag:
         print("🔄 Regenerating venue requirements using RAG...")
-        success = RAGHandler.extract_venue_requirements(project, venue_name)
+        success = RAGHandler.extract_venue_requirements(project_id=project_id, user_id=current_user.id,
+                                                        venue_name=venue_name)
     else:
         print("🔄 Regenerating venue requirements using OpenAI...")
         if project.type == 'paper':

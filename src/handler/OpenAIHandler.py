@@ -75,14 +75,16 @@ class OpenAIHandler:
 
             # 🔁 Re-fetch project safely inside this session/thread
             project: Project | None = db_session.query(Project).filter_by(id=project_id, user_id=user_id).first()
-            if project:
-                project.venue_requirements = json.dumps(json_response)
-                db_session.commit()
-                print("✅ Venue requirements updated successfully.")
-                return True
-            else:
+
+            if not project:
                 print("❌ Project not found or doesn't belong to user.")
-            return False
+                return False
+
+            project.venue_requirements = json.dumps(json_response)
+            db_session.commit()
+            print("✅ Venue requirements updated successfully.")
+            return True
+        
         except Exception as e:
             db_session.rollback()
             print(f"❌ Error while calling LLM: {e}")

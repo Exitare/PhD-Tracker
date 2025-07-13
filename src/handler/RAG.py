@@ -16,7 +16,8 @@ class RAGHandler:
 
     @staticmethod
     def extract_venue_requirements(project_id: int, user_id: int, venue_name: str) -> bool:
-        project: Project = get_db_session().query(Project).filter_by(id=project_id).first()
+        db_session = get_db_session()
+        project: Project = db_session.query(Project).filter_by(id=project_id).first()
 
         if not project:
             flash("Project not found.", "danger")
