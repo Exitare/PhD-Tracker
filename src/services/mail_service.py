@@ -32,8 +32,26 @@ class MailService:
         ).start()
 
     @staticmethod
-    def send_verification_email(user):
-        token = JWTService.generate_email_token(user.email)
+    def send_password_reset_email(user: User):
+        token = JWTService.generate_password_reset_token(user=user)
+        reset_url = url_for('auth.reset_password', token=token, _external=True)
+
+        msg = Message(
+            subject='Your password reset link',
+            recipients=[user.email],
+            body='To reset your password, click the link below:\n' + reset_url
+        )
+
+        # Launch in a background thread
+        threading.Thread(
+            target=MailService._send_async_email,
+            args=(current_app._get_current_object(), msg),
+            daemon=True  # Optional: daemon=True ends the thread with the main process
+        ).start()
+
+    @staticmethod
+    def send_verification_email(user: User):
+        token = JWTService.generate_email_token(user=user)
         verify_url = url_for('account.verify_email', token=token, _external=True)
 
         msg = Message(

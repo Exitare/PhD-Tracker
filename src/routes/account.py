@@ -6,7 +6,7 @@ from flask_login import login_required, current_user, logout_user
 from src.forms import EmailForm, PasswordForm, ThemeForm
 from werkzeug.security import check_password_hash, generate_password_hash
 import stripe
-from src.services import JWTService, MailService, UserService
+from src.services import JWTService, MailService, UserService, TokenPayload
 from sqlalchemy.exc import IntegrityError
 from src.role import Role
 from typing import Dict
@@ -26,6 +26,7 @@ ALLOWED_THEMES: Dict[str, str] = {
 }
 
 EMAIL_REGEX = r"[^@]+@[^@]+\.[^@]+"
+
 
 
 @bp.route("/account/panel", methods=["GET"])
@@ -188,10 +189,13 @@ def manage_subscriptions():
 @bp.route("/account/verify-email/<token>", methods=["GET"])
 def verify_email(token):
     try:
-        email = JWTService.verify_email_token(token)
-        if not email:
+        payload: TokenPayload | None = JWTService.verify_token(token)
+
+        if not payload or not payload.email:
             flash("Invalid or expired verification link.", "error")
             return redirect(url_for('auth.login'))
+
+        email = payload.email
 
         db_session = get_db_session()
         user = db_session.query(User).filter_by(email=email).first()

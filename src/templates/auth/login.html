@@ -1,5 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Login{% endblock %}
+
+{% block title %}Login | My Academic Tracker{% endblock %}
+
+{% block description %}
+Login to My Academic Tracker and access your academic tools and milestones. Stay organized and on top of your academic progress.
+{% endblock %}
+
+{% block og_title %}Login to My Academic Tracker{% endblock %}
+{% block og_description %}
+Access your academic dashboard and continue managing your research milestones with ease. Simple, secure login for all users.
+{% endblock %}
+
+{% block twitter_title %}Login | My Academic Tracker{% endblock %}
+{% block twitter_description %}
+Log in to access powerful tools for managing your academic journey. Built for students, labs, and institutions.
+{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -27,8 +42,14 @@
                     </div>
                     {% endif %}
                 </form>
+
                 <div class="mt-3 text-center">
-                    Don't have an account? <a href="{{ url_for('auth.register_step1') }}">Register</a>
+                    <a href="{{ url_for('auth.forgot_password') }}">Forgot password?</a>
+                </div>
+
+                <div class="mt-2 text-center">
+                    Don’t have an account?
+                    <a href="{{ url_for('auth.register_step1') }}">Register</a>
                 </div>
             </div>
         </div>

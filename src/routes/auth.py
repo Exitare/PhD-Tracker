@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,10 +8,89 @@ from flask_login import login_required, current_user
 import stripe
 import os
 from src.plans import Plans
-from src.services.mail_service import MailService
+from src.services import MailService, JWTService, TokenPayload
 from src.role import Role
+import jwt
+import logging
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint("auth", __name__)
+
+
+@bp.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    if request.method == "GET":
+        token = request.args.get("token")
+        if not token:
+            flash("Missing token.", "error")
+            return redirect(url_for('auth.login'))
+
+        print(token)
+        token_payload = JWTService.verify_token(token)
+        if not token_payload:
+            flash("Invalid or expired password reset link.", "error")
+            return redirect(url_for('auth.login'))
+
+        return render_template("auth/reset_password.html", token=token)
+
+    elif request.method == "POST":
+        # POST request
+        token = request.form.get("token")
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+
+        if not token:
+            flash("Missing token.", "error")
+            return redirect(url_for('auth.login'))
+
+        if password != confirm_password:
+            flash("Passwords do not match.", "error")
+            return render_template("auth/reset_password.html", token=token)
+
+        token_payload: TokenPayload = JWTService.verify_token(token)
+        if not token_payload:
+            flash("Invalid or expired password reset link.", "error")
+            return redirect(url_for('auth.login'))
+
+        try:
+            user_id = token_payload.id
+            db_session = get_db_session()
+            user = db_session.query(User).filter_by(id=user_id).first()
+
+            if not user:
+                logger.debug(f"User not found: {user_id}")
+                flash("The token provided is invalid.", "error")
+                return redirect(url_for('auth.login'))
+
+            user.password_hash = generate_password_hash(password)
+            db_session.commit()
+
+            flash("Password successfully reset. You can now log in.", "success")
+            return redirect(url_for('auth.login'))
+
+        except Exception as e:
+            logger.error(f"Error resetting password: {e}")
+            flash("An error occurred while resetting your password. Please try again.", "error")
+            return render_template("auth/reset_password.html", token=token)
+
+
+@bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        db_session = get_db_session()
+        user = db_session.query(User).filter_by(email=email).first()
+
+        if not user:
+            flash("If an account with that email exists, a reset link has been sent.", "info")
+            return redirect(url_for("auth.login"))
+
+        MailService.send_password_reset_email(user=user)
+        flash("If an account with that email exists, a reset link has been sent.", "success")
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/forgot_password.html")
 
 
 # Register
