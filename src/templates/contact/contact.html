@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Contact | PhD Tracker{% endblock %}
+{% block description %}Contact the team behind the PhD Tracker — we're happy to help you with feedback, questions, or support.{% endblock %}
+{% block og_title %}Contact Us{% endblock %}
+{% block og_description %}Reach out to the PhD Tracker team. We'd love to hear from you.{% endblock %}
+{% block twitter_title %}Contact PhD Tracker{% endblock %}
+{% block twitter_description %}Questions or feedback? Contact the PhD Tracker team directly.{% endblock %}
+{% block meta_extra %}
+<meta name="robots" content="index, follow">
+{% endblock %}
+
+{% block content %}
+<div class="card p-4 shadow-lg">
+    <h2 class="card-title mb-4">Contact Us</h2>
+    <form method="POST" action="{{ url_for('home.contact') }}" id="contactForm">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.first_name.label(class="form-label") }}
+            {{ form.first_name(class="form-control", id="first_name", placeholder="Enter your first name") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.last_name.label(class="form-label") }}
+            {{ form.last_name(class="form-control", id="last_name", placeholder="Enter your last name") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.phone.label(class="form-label") }}
+            {{ form.phone(class="form-control", id="phone", placeholder="Phone number") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control", id="email", placeholder="Your email address") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.message.label(class="form-label") }}
+            {{ form.message(class="form-control", id="message", placeholder="What's on your mind?", rows=5) }}
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Send Message</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const requiredFields = [
+            document.getElementById("first_name"),
+            document.getElementById("last_name"),
+            document.getElementById("email"),
+            document.getElementById("message")
+        ];
+        const submitBtn = document.getElementById("submitBtn");
+
+        function checkRequiredFields() {
+            const allFilled = requiredFields.every(input => input && input.value.trim() !== "");
+            submitBtn.disabled = !allFilled;
+        }
+
+        requiredFields.forEach(field => {
+            field.addEventListener("input", checkRequiredFields);
+        });
+
+        checkRequiredFields(); // Initial check on page load
+    });
+</script>
+{% endblock %}

@@ -97,6 +97,44 @@ class MailService:
             daemon=True  # Optional: daemon=True ends the thread with the main process
         ).start()
 
+
+    @staticmethod
+    def send_generic_inquiry_email(first_name: str, last_name: str, email: str, phone_number:str, message: str):
+        msg = Message(
+            subject='Generic Inquiry Received',
+            recipients=["contact@anobrain.ai" if mode != "dev" else "raphael.kirchgaessner@anobrain.ai"],
+            body=f'We have received an inquiry from {first_name} {last_name}.\n' +
+                 f'Message: {message}\n' +
+                 f'Email: {email}\n' +
+                    f'Phone: {phone_number}\n'
+        )
+
+        # Launch in a background thread
+        threading.Thread(
+            target=MailService._send_async_email,
+            args=(current_app._get_current_object(), msg),
+            daemon=True  # Optional: daemon=True ends the thread with the main process
+        ).start()
+
+        msg = Message(
+            subject='Your Inquiry has been received',
+            recipients=[email],
+            body=f'Thank you for your inquiry, {first_name} {last_name}.\n' +
+                 'We will get back to you shortly regarding your message.\n' +
+                 'If you have any further questions, feel free to reach out. Thank you for your interest in AnoBrain!'
+        )
+
+        # Launch in a background thread
+        threading.Thread(
+            target=MailService._send_async_email,
+            args=(current_app._get_current_object(), msg),
+            daemon=True  # Optional: daemon=True ends the thread with the main process
+        ).start()
+
+
+
+
+
     @staticmethod
     def send_academia_inquiry_email(first_name: str, last_name: str, email: str, num_students: int,
                                     additional_information: str, phone_number: str,
