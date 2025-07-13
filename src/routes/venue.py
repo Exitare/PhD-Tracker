@@ -11,6 +11,9 @@ import json
 from src.plans import Plans
 from src.services import UserService
 from src.role import Role
+import logging
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint('venue', __name__)
 use_rag: bool = bool(int(os.environ.get('USE_RAG')))
@@ -38,18 +41,14 @@ def regenerate_requirements(project_id: int, venue_name: str):
         flash("Unsupported project type for venue requirements.", "danger")
         return redirect(url_for("project.view", project_id=project_id))
 
-    success: bool = False
     if use_rag:
-        print("🔄 Regenerating venue requirements using RAG...")
+        logger.info("🔄 Regenerating venue requirements using RAG...")
         success = RAGHandler.extract_venue_requirements(project_id=project_id, user_id=current_user.id,
                                                         venue_name=venue_name)
     else:
-        print("🔄 Regenerating venue requirements using OpenAI...")
-        if project.type == 'paper':
-            success = OpenAIHandler.get_journal_requirements(db_session, project.id, venue_name, current_user.id)
-
-        elif project.type == 'poster':
-            success = OpenAIHandler.get_poster_requirements(db_session, project.id, venue_name, current_user.id)
+        logger.info("🔄 Regenerating venue requirements using OpenAI...")
+        success = OpenAIHandler.get_venue_requirements(db_session=db_session, project=project, venue_name=venue_name,
+                                                       user_id=current_user.id)
 
         # reload project to get updated requirements
         project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
@@ -90,19 +89,14 @@ def start_venue_requirements_job(project_id: int, venue_name: str):
         return redirect(url_for("project.view", project_id=project_id))
 
     if use_rag:
-        print("Using RAG to extract venue requirements...")
+        logger.info("Using RAG to extract venue requirements...")
         thread = threading.Thread(target=RAGHandler.extract_venue_requirements,
                                   args=(project_id, current_user.id, venue_name,))
 
     else:
-        print("Using OpenAI to get venue requirements...")
-        if project.type == 'paper':
-            thread = threading.Thread(target=OpenAIHandler.get_journal_requirements,
-                                      args=(db_session, project.id, venue_name, current_user.id,))
-
-        else:
-            thread = threading.Thread(target=OpenAIHandler.get_poster_requirements,
-                                      args=(db_session, project.id, venue_name, current_user.id,))
+        logger.info("Using OpenAI to get venue requirements...")
+        thread = threading.Thread(target=OpenAIHandler.get_venue_requirements,
+                                      args=(db_session, project, venue_name, current_user.id,))
 
     thread.start()
     return jsonify({"status": "Task started", "venue": venue_name})
@@ -118,9 +112,7 @@ def get_venue_requirements_result(project_id: int, venue_name: str):
     db_session = get_db_session()
     # Load project from DB that belongs to current user
     project: Project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
-    print(project)
     if project and project.venue_requirements:
-        print(project.venue_requirements)
         flash("Requirements have been retrieved.", "success")
         return jsonify({"status": "ready"})
 
@@ -192,12 +184,12 @@ def save_requirements(project_id: int, venue_name: str):
                 flash("At least one requirement must be provided.", "danger")
                 return redirect(url_for("poster.view", project_id=project_id, journal_name=venue_name))
 
-            print("Updated requirements:", updated_requirements)
             project.venue_requirements_data = updated_requirements
-            print("Project venue requirements data:", project.venue_requirements_data)
             db_session.commit()
             flash("Venue requirements saved successfully.", "success")
         except Exception as e:
+            logger.exception(f"Error saving venue requirements.")
+            logger.exception(e)
             db_session.rollback()
             flash(f"Failed to save venue requirements: {str(e)}", "danger")
 

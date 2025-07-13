@@ -47,12 +47,16 @@ class UserService:
 
         logger.debug(f"AI token usage: {token_count}, user is {'managed' if managed_user else 'not managed'} by another user.")
 
-        # report usage
-        stripe.billing.MeterEvent.create(
-            event_name=StripeMeter.TokenRequests.value,
-            payload={
-                "value": str(token_count),
-                "stripe_customer_id": user.managed_by_stripe_id if managed_user else user.stripe_customer_id,
-            }
-        )
+        try:
+            # report usage
+            stripe.billing.MeterEvent.create(
+                event_name=StripeMeter.TokenRequests.value,
+                payload={
+                    "value": str(token_count),
+                    "stripe_customer_id": user.managed_by_stripe_id if managed_user else user.stripe_customer_id,
+                }
+            )
+        except Exception as e:
+            logger.exception(f"Error reporting AI usage for user {user.email}: {e}")
+
         return True
