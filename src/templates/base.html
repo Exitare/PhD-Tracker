@@ -97,7 +97,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('plans.plans') }}">Pricing</a>
                 </li>
-                 <li class="nav-item">
+                <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('academia.view') }}">Academia Plans</a>
                 </li>
                 <li class="nav-item">
@@ -157,4 +157,33 @@
 
 {% block scripts %}{% endblock %}
 </body>
+<div id="cookie-banner" class="cookie-banner card shadow-lg p-4"
+     style="display: none; position: fixed; bottom: 20px; left: 20px; z-index: 9999; max-width: 400px; background-color: #2b2640; border: 1px solid #444; border-radius: 1rem;">
+    <p class="mb-3">
+        🍪 We only use cookies that are technically necessary for the site to function (e.g., sessions). No tracking,
+        ads, or analytics.
+    </p>
+    <div class="d-flex justify-content-end gap-2">
+        <button id="acceptCookies" class="btn btn-sm btn-success">Accept</button>
+        <button id="rejectCookies" class="btn btn-sm btn-danger">Reject</button>
+    </div>
+</div>
+
+<script>
+    // Check if cookie consent has already been set
+    if (!localStorage.getItem("cookieConsent")) {
+        document.getElementById("cookie-banner").style.display = "block";
+    }
+
+    document.getElementById("acceptCookies").addEventListener("click", function () {
+        localStorage.setItem("cookieConsent", "accepted");
+        document.getElementById("cookie-banner").style.display = "none";
+    });
+
+    document.getElementById("rejectCookies").addEventListener("click", function () {
+        localStorage.setItem("cookieConsent", "rejected");
+        document.getElementById("cookie-banner").style.display = "none";
+    });
+</script>
+
 </html>
