@@ -1,0 +1,50 @@
+name: Deploy PhDTracker App Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Deploy with rsync
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.PROD_APP_DIRECTORY }}/
+
+      - name: Reload PhDTracker production app
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.PROD_APP_DIRECTORY }}
+            source venv/bin/activate
+            pip install -r requirements.txt
+
+            if pm2 list | grep -q "PhdTrackerProd"; then
+              echo "Restarting existing PM2 process..."
+              pm2 restart PhdTrackerProd --update-env
+            else
+              echo "Starting new PM2 process..."
+              pm2 start run.py \
+                --name PhdTrackerProd \
+                --interpreter ./venv/bin/python \
+                --time \
+                --log ./logs/pm2.log \
+                -- --port 5501
+            fi
