@@ -170,14 +170,43 @@
 </div>
 
 <script>
-    // Check if cookie consent has already been set
-    if (!localStorage.getItem("cookieConsent")) {
+    const isProduction = "{{ MODE }}" === "prod";
+
+    function loadGoogleAnalytics() {
+        const gaScript = document.createElement('script');
+        gaScript.setAttribute('async', '');
+        gaScript.setAttribute('src', 'https://www.googletagmanager.com/gtag/js?id=G-HR05XWQQKL');
+        document.head.appendChild(gaScript);
+
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+        gtag('config', 'G-HR05XWQQKL');
+    }
+
+    const consent = localStorage.getItem("cookieConsent");
+
+    // ✅ Always show banner if no consent recorded
+    if (!consent) {
         document.getElementById("cookie-banner").style.display = "block";
+    }
+
+    // ✅ Load GA only if in production AND user accepted cookies
+    if (isProduction && consent === "accepted") {
+        loadGoogleAnalytics();
     }
 
     document.getElementById("acceptCookies").addEventListener("click", function () {
         localStorage.setItem("cookieConsent", "accepted");
         document.getElementById("cookie-banner").style.display = "none";
+
+        if (isProduction) {
+            loadGoogleAnalytics();
+        }
     });
 
     document.getElementById("rejectCookies").addEventListener("click", function () {

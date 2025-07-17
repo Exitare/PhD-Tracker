@@ -99,6 +99,10 @@ def create_app() -> Flask:
     def load_user(user_id):
         return db_session.get(User, int(user_id))  # or get_db_session.query(User).get(int(user_id))
 
+    @app.context_processor
+    def inject_mode():
+        return dict(MODE=os.environ.get("MODE"))
+
     return app
 
 
