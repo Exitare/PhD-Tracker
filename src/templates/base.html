@@ -47,68 +47,36 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-light mb-4">
+<nav class="navbar navbar-expand-lg modern-navbar fixed-top shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold navbar-brand-contrast" href="{{ url_for('home.home') }}">📚 PhD</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+        <a class="navbar-brand fw-semibold text-white" href="{{ url_for('home.home') }}">
+            <i class="fas fa-graduation-cap me-2"></i> PhD
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="fas fa-bars text-white fs-4"></span>
         </button>
-
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav gap-2 align-items-center">
                 {% if current_user.is_authenticated and current_user.role == 'user' %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('account.panel') }}">Account</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
-                </li>
-
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('account.panel') }}">Account</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
                 {% elif current_user.is_authenticated and current_user.role == 'manager' %}
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('academia.panel') }}">Manage</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
-                </li>
-
-
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('academia.panel') }}">Manage</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
                 {% elif current_user.is_authenticated and current_user.role == 'admin' %}
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin.panel') }}">Admin</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
-                </li>
-
-
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.panel') }}">Admin</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
                 {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('about.about') }}">About</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('plans.plans') }}">Pricing</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('academia.view') }}">Academia Plans</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.register_step1') }}">Register</a>
-                </li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('about.about') }}">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('plans.plans') }}">Pricing</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('academia.view') }}">Academia</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
+                <li class="nav-item"><a class="btn btn-sm btn-outline-light rounded-pill px-3"
+                                        href="{{ url_for('auth.register_step1') }}">Register</a></li>
                 {% endif %}
-
-
             </ul>
         </div>
     </div>
@@ -160,8 +128,8 @@
 <div id="cookie-banner" class="cookie-banner card shadow-lg p-4"
      style="display: none; position: fixed; bottom: 20px; left: 20px; z-index: 9999; max-width: 400px; background-color: #2b2640; border: 1px solid #444; border-radius: 1rem;">
     <p class="mb-3">
-        🍪 We only use cookies that are technically necessary for the site to function (e.g., sessions). No tracking,
-        ads, or analytics.
+        🍪 We use cookies (e.g., session management and analytics). By accepting cookies, you help us to improve your experience.
+        Should you choose to reject cookies, we only use essential technical cookies.
     </p>
     <div class="d-flex justify-content-end gap-2">
         <button id="acceptCookies" class="btn btn-sm btn-success">Accept</button>

@@ -44,7 +44,8 @@ if __name__ == '__main__':
         atexit.register(stop_background_downgrade_process)
 
     logging.info(f"Running server in {mode} mode on port {args.port}")
-    if args.dev:
+    if mode == "dev":
+        logging.info("Running in development mode with debug enabled.")
         app.run(debug=True, port=args.port)
     else:
         serve(app, host='127.0.0.1', port=args.port)
