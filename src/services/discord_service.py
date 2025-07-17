@@ -5,6 +5,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+mode = os.getenv("MODE", "dev").lower()
+
 class DiscordService:
 
     @staticmethod
@@ -22,6 +24,14 @@ class DiscordService:
         if not webhook_url:
             logger.warning("Discord webhook URL is not set.")
             return False
+
+        if mode == "dev":
+            content = f"[DEV] {content}"
+        elif mode == "staging":
+            content = f"[STAGING] {content}"
+        else:
+            content = f"[PROD] {content}"
+
 
         data = {
             "content": content,

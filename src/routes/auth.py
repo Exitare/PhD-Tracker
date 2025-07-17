@@ -12,6 +12,7 @@ from src.services import MailService, JWTService, TokenPayload
 from src.role import Role
 import jwt
 import logging
+from src.services.discord_service import DiscordService
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +167,7 @@ def register_step1():
 
             # send verification email
             MailService.send_verification_email(user)
+            DiscordService.send_message(f"A new user has registered: {user.email} (ID: {user.id})")
 
             login_user(user)
             if not access_code:
@@ -280,6 +282,8 @@ def login():
             user.last_sign_in = int(datetime.now(timezone.utc).timestamp() * 1000)
             db_session.commit()
             login_user(user)
+            DiscordService.send_message(f"A new user has signed in: {user.email} (ID: {user.id})")
+
             if user.role == Role.User.value:
                 return redirect(url_for("dashboard.dashboard"))
             elif user.role == Role.Manager.value:
