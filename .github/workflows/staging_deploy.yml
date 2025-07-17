@@ -25,7 +25,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.STAGING_APP_DIRECTORY }}/
 
-      - name: Reload PhDTracker staging app
+      - name: Set up Python environment
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -33,8 +33,25 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ secrets.STAGING_APP_DIRECTORY }}
+
+            # Create virtual environment if it doesn't exist
+            if [ ! -d "venv" ]; then
+              echo "Creating virtual environment..."
+              python3 -m venv venv
+            fi
+
             source venv/bin/activate
+            pip install --upgrade pip setuptools wheel
             pip install -r requirements.txt
+
+      - name: Deploy PhDTracker staging app
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.STAGING_APP_DIRECTORY }}
 
             if pm2 list | grep -q "PhdTrackerStaging"; then
               echo "Restarting existing PM2 process..."
