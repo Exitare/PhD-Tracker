@@ -1,11 +1,35 @@
 {% extends "base.html" %}
+
 {% block title %}Journal Requirements - {{ project.title }}{% endblock %}
+
+{% block description %}
+View structured journal formatting and submission requirements for {{ project.selected_venue }} within your project {{ project.title }}.
+{% endblock %}
+
+{% block og_title %}Journal Submission Guidelines for {{ project.selected_venue }}{% endblock %}
+{% block og_description %}
+See the official formatting and submission rules for {{ project.selected_venue }} as they apply to your project {{ project.title }}. Easily recreate formatting with AI assistance.
+{% endblock %}
+
+{% block twitter_title %}Journal Requirements - {{ project.title }}{% endblock %}
+{% block twitter_description %}
+Explore submission requirements for {{ project.selected_venue }} and optionally recreate formatting with AI.
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary mb-3">
-        ← Back to Project
-    </a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary">
+            ← Back to Project
+        </a>
+        <a href="{{ url_for('venue.regenerate_requirements', project_id=project.id, venue_name=project.selected_venue) }}"
+           class="btn btn-outline-primary"
+           id="recreate-btn"
+           onclick="disableRecreateButton(this)"
+           aria-label="Use AI to recreate formatting based on this journal's requirements">
+            🤖 Recreate with AI
+        </a>
+    </div>
 
     <h2 class="milestone-title mb-4">
         📚 Journal Requirements for <strong>{{ project.selected_venue }}</strong>
@@ -141,8 +165,7 @@
             {% if reqs.source_url %}
             <p class="mt-4 small text-muted">
                 📎 Source: <a href="{{ reqs.source_url }}" target="_blank" rel="noopener"
-                             class="text-decoration-underline text-info">
-                {{ reqs.source_url }}</a>
+                             class="text-decoration-underline text-info">{{ reqs.source_url }}</a>
             </p>
             {% endif %}
         </div>
@@ -153,4 +176,13 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function disableRecreateButton(element) {
+        element.innerText = 'Recreating requirements...';
+        element.classList.add('disabled');
+    }
+</script>
 {% endblock %}

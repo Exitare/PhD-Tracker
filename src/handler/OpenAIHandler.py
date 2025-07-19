@@ -1,4 +1,3 @@
-import json
 from sqlalchemy.orm import Session
 from src.services import OpenAIService, UserService, AILogService
 from src.db.models import Project, User
