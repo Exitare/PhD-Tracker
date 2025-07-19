@@ -14,15 +14,18 @@ Plan, track, and organize your academic goals with My Academic Tracker. Designed
 
 {% block content %}
 <!-- Hero -->
-<div class="text-center mb-5">
-    <h1 class="display-4 fw-bold display-4-strong">Your Academic Success, Streamlined</h1>
-    <p class="lead text-muted">Plan, track, and achieve your academic goals with ease—built for students, postdocs, and
-        anyone managing complex academic projects.</p>
-    {% if not current_user.is_authenticated %}
-    <a href="{{ url_for('auth.register_step1') }}" class="btn btn-primary btn-lg mt-3">Get Started for Free</a>
-    {% else %}
-    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-primary btn-lg mt-3">Go to Dashboard</a>
-    {% endif %}
+<div class="container">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold display-4-strong">Your Academic Success, Streamlined</h1>
+        <p class="lead text-muted">Plan, track, and achieve your academic goals with ease—built for students, postdocs,
+            and
+            anyone managing complex academic projects.</p>
+        {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.register_step1') }}" class="btn btn-primary btn-lg mt-3">Get Started for Free</a>
+        {% else %}
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-primary btn-lg mt-3">Go to Dashboard</a>
+        {% endif %}
+    </div>
 </div>
 
 <!-- Feature 1: What It Does -->

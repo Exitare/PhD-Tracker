@@ -11,38 +11,40 @@
 {% endblock %}
 
 {% block content %}
-<div class="card p-4 shadow-lg">
-    <h2 class="card-title mb-4">Contact Us</h2>
-    <form method="POST" action="{{ url_for('home.contact') }}" id="contactForm">
-        {{ form.hidden_tag() }}
+<div class="container">
+    <div class="card p-4 shadow-lg">
+        <h2 class="card-title mb-4">Contact Us</h2>
+        <form method="POST" action="{{ url_for('home.contact') }}" id="contactForm">
+            {{ form.hidden_tag() }}
 
-        <div class="mb-3">
-            {{ form.first_name.label(class="form-label") }}
-            {{ form.first_name(class="form-control", id="first_name", placeholder="Enter your first name") }}
-        </div>
+            <div class="mb-3">
+                {{ form.first_name.label(class="form-label") }}
+                {{ form.first_name(class="form-control", id="first_name", placeholder="Enter your first name") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.last_name.label(class="form-label") }}
-            {{ form.last_name(class="form-control", id="last_name", placeholder="Enter your last name") }}
-        </div>
+            <div class="mb-3">
+                {{ form.last_name.label(class="form-label") }}
+                {{ form.last_name(class="form-control", id="last_name", placeholder="Enter your last name") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.phone.label(class="form-label") }}
-            {{ form.phone(class="form-control", id="phone", placeholder="Phone number") }}
-        </div>
+            <div class="mb-3">
+                {{ form.phone.label(class="form-label") }}
+                {{ form.phone(class="form-control", id="phone", placeholder="Phone number") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.email.label(class="form-label") }}
-            {{ form.email(class="form-control", id="email", placeholder="Your email address") }}
-        </div>
+            <div class="mb-3">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control", id="email", placeholder="Your email address") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.message.label(class="form-label") }}
-            {{ form.message(class="form-control", id="message", placeholder="What's on your mind?", rows=5) }}
-        </div>
+            <div class="mb-3">
+                {{ form.message.label(class="form-label") }}
+                {{ form.message(class="form-control", id="message", placeholder="What's on your mind?", rows=5) }}
+            </div>
 
-        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Send Message</button>
-    </form>
+            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Send Message</button>
+        </form>
+    </div>
 </div>
 {% endblock %}
 

@@ -3,7 +3,7 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row align-items-center mb-4 text-center text-md-start">
+<div class="row align-items-center mb-4 text-center text-md-start my-5">
     <!-- Left column (optional space or future filters) -->
     <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
         <!-- Left space or filters could go here -->
@@ -111,6 +111,7 @@
         {% endif %}
     </div>
 </div>
+
 {% else %}
 <div class="alert alert-info text-center">
     No projects yet. <a href="{{ url_for('project.create_project') }}">Click here to add one.</a>
