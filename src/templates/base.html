@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}PhD | Academic Tracker{% endblock %}</title>
+    <title>{% block title %}PhD Tracker by AnoBrain{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -15,7 +15,7 @@
     <meta name="theme-color" content="#1e1a2b">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="{% block og_title %}PhD | Academic Tracker{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}PhD Tracker by AnoBrain{% endblock %}">
     <meta property="og:description"
           content="{% block og_description %}Track your research, milestones, and deadlines with ease. Built for students, postdocs, and academics.{% endblock %}">
     <meta property="og:type" content="website">
@@ -24,7 +24,7 @@
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{% block twitter_title %}PhD | Academic Tracker{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}PhD Tracker by AnoBrain{% endblock %}">
     <meta name="twitter:description"
           content="{% block twitter_description %}Smarter academic tracking. AI-supported tools for researchers and students alike.{% endblock %}">
     <meta name="twitter:image" content="{{ url_for('static', filename='img/twitter-image.png', _external=True) }}">
