@@ -41,29 +41,38 @@ def regenerate_requirements(project_id: int, venue_name: str):
         flash("Unsupported project type for venue requirements.", "danger")
         return redirect(url_for("project.view", project_id=project_id))
 
-    if use_rag:
+    if use_rag and current_user.plan == Plans.StudentPro.value:
         logger.info("🔄 Regenerating venue requirements using RAG...")
         success = RAGHandler.extract_venue_requirements(project_id=project_id, user_id=current_user.id,
                                                         venue_name=venue_name)
+
     else:
         logger.info("🔄 Regenerating venue requirements using OpenAI...")
         success = OpenAIHandler.get_venue_requirements(db_session=db_session, project=project, venue_name=venue_name,
                                                        user_id=current_user.id)
 
-        # reload project to get updated requirements
-        project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
-        if not project:
-            flash("Project not found or you do not have permission to access it.", "danger")
-            return redirect(url_for("dashboard.dashboard"))
+    # reload project to get updated requirements
+    project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
+    if not project:
+        flash("Project not found or you do not have permission to access it.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
 
-        if not project.venue_requirements:
-            flash("Venue requirements not available. Please generate them first.", "warning")
-            return redirect(url_for("project.view", project_id=project_id))
+    if not project.venue_requirements:
+        flash("Venue requirements not available. Please generate them first.", "warning")
+        return redirect(url_for("project.view", project_id=project_id))
+
+    try:
+        project.venue_requirements = json.loads(project.venue_requirements)
+    except json.JSONDecodeError:
+        flash("Failed to decode venue requirements. Please try generating them again.", "danger")
+        return redirect(
+            url_for("project.view", project_id=project_id))
 
     if success:
         flash("Venue requirements regenerated successfully.", "success")
+
     return render_template(
-        f"{project.type}/requirements.html",
+        f"{'journal' if project.type == 'paper' else project.type}/requirements.html",
         project_id=project_id,
         journal_name=venue_name,
         project=project
@@ -88,7 +97,7 @@ def start_venue_requirements_job(project_id: int, venue_name: str):
         flash("Unsupported project type for venue requirements.", "danger")
         return redirect(url_for("project.view", project_id=project_id))
 
-    if use_rag:
+    if use_rag and current_user.plan == Plans.StudentPro.value:
         logger.info("Using RAG to extract venue requirements...")
         thread = threading.Thread(target=RAGHandler.extract_venue_requirements,
                                   args=(project_id, current_user.id, venue_name,))
@@ -96,7 +105,7 @@ def start_venue_requirements_job(project_id: int, venue_name: str):
     else:
         logger.info("Using OpenAI to get venue requirements...")
         thread = threading.Thread(target=OpenAIHandler.get_venue_requirements,
-                                      args=(db_session, project, venue_name, current_user.id,))
+                                  args=(db_session, project, venue_name, current_user.id,))
 
     thread.start()
     return jsonify({"status": "Task started", "venue": venue_name})

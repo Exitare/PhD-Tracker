@@ -6,13 +6,13 @@ from src.db.models import Milestone
 from typing import List, Tuple, Dict, Any
 from dotenv import load_dotenv
 import logging
+
 logger = logging.getLogger(__name__)
 
 load_dotenv()
 
 client = OpenAI(api_key=os.environ.get("OPENAI_KEY"))
 model: str = os.environ.get("OPENAI_MODEL")
-METER_NAME: str = "tokenrequests"
 
 
 class OpenAIService:
@@ -31,9 +31,10 @@ Return exactly one JSON object in this format:
 
 {
   "abstract_submission_due": "e.g. 'Friday, March 7, 2025'",
-  "final_submission_due": "e.g. 'Friday, March 21, 2025'",
+  "fee": "e.g. $50",
+  "character_limit": "e.g. '300 words'",
   "poster_networking_hours": "e.g. 'Monday, March 24, 2025, 2:00 PM - 4:00 PM'",
-  "source_url": "Direct URL to the official source where the above data was found"
+  "conference_url": "https://example.com/conference2025"
 }
 
 Do not return anything other than the JSON.

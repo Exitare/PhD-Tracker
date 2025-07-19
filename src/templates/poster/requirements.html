@@ -4,29 +4,22 @@
 {% block content %}
 <div class="container my-5">
     <div class="row align-items-center mb-4 text-center text-md-start">
-        <!-- Back Button (Left) -->
         <div class="col-12 col-md-4 mb-2 mb-md-0 text-md-start">
             <a href="{{ url_for('project.view', project_id=project.id) }}" class="btn btn-outline-secondary">
                 ← Back to Project
             </a>
         </div>
-
-        <!-- Title (Center) -->
         <div class="col-12 col-md-4 mb-2 mb-md-0 text-center">
             <h1 class="milestone-title m-0">📋 Poster Requirements</h1>
             <p class="text-muted m-0">For: <strong>{{ project.selected_venue }}</strong></p>
         </div>
-
-        <!-- Empty Right Column (for spacing or future use) -->
         <div class="col-12 col-md-4 text-md-end"></div>
     </div>
-
 
     <div class="row justify-content-center">
         <div class="col-12 col-md-12 col-lg-12">
 
             {% if project.venue_requirements_data %}
-            <!-- VIEW MODE -->
             <div id="req-view-card" class="card tracker-card p-4">
                 <div class="card-body">
                     {% set reqs = project.venue_requirements_data %}
@@ -36,19 +29,23 @@
                         <div class="col-md-7">{{ reqs.abstract_submission_due or "Not available" }}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-5 text-muted">📦 Final Submission Due:</div>
-                        <div class="col-md-7">{{ reqs.final_submission_due or "Not available" }}</div>
-                    </div>
-                    <div class="row mb-2">
                         <div class="col-md-5 text-muted">🕒 Poster Networking Hours:</div>
                         <div class="col-md-7">{{ reqs.poster_networking_hours or "Not available" }}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-5 text-muted">🔗 Source URL:</div>
+                        <div class="col-md-5 text-muted">💰 Fee:</div>
+                        <div class="col-md-7">{{ reqs.fee or "Not available" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-5 text-muted">🔤 Character Limit:</div>
+                        <div class="col-md-7">{{ reqs.character_limit or "Not available" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-5 text-muted">🌐 Conference URL:</div>
                         <div class="col-md-7">
-                            {% if reqs.source_url %}
-                            <a href="{{ reqs.source_url }}" target="_blank" class="text-decoration-none">
-                                {{ reqs.source_url }}
+                            {% if reqs.conference_url %}
+                            <a href="{{ reqs.conference_url }}" target="_blank" class="text-decoration-none">
+                                {{ reqs.conference_url }}
                             </a>
                             {% else %}
                             <span class="text-muted">Not available</span>
@@ -62,7 +59,6 @@
                                 ✏️ Edit Requirements
                             </button>
                         </div>
-
                         {% if current_user.plan != 'student' %}
                         <div class="col-auto">
                             <a href="{{ url_for('venue.regenerate_requirements', project_id=project.id, venue_name=project.selected_venue) }}"
@@ -77,7 +73,6 @@
             </div>
             {% endif %}
 
-            <!-- EDIT MODE (Always rendered) -->
             <form method="POST" id="req-edit-card"
                   class="card tracker-card p-4 {% if project.venue_requirements_data %}d-none{% endif %}"
                   action="{{ url_for('venue.save_requirements', project_id=project.id, venue_name=project.selected_venue) }}">
@@ -87,8 +82,7 @@
 
                     <div class="row mb-3">
                         <div class="col-12">
-                            <h3 class="card-title">✏️ {% if project.venue_requirements_data %}Edit{% else %}Add{% endif
-                                %} Poster Requirements</h3>
+                            <h3 class="card-title">✏️ {% if project.venue_requirements_data %}Edit{% else %}Add{% endif %} Poster Requirements</h3>
                         </div>
                     </div>
 
@@ -97,39 +91,43 @@
                             <label for="abstract_due" class="form-label">📅 Abstract Submission Due:</label>
                         </div>
                         <div class="col-md-7">
-                            <input type="text" id="abstract_due" name="abstract_submission_due"
-                                   class="form-control"
-                                   value="{{ reqs.abstract_submission_due or '' }}">
+                            <input type="text" id="abstract_due" name="abstract_submission_due" class="form-control" value="{{ reqs.abstract_submission_due or '' }}">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-md-5 text-muted">
-                            <label for="final_due" class="form-label">📦 Final Submission Due:</label>
-                        </div>
-                        <div class="col-md-7">
-                            <input type="text" id="final_due" name="final_submission_due"
-                                   class="form-control"
-                                   value="{{ reqs.final_submission_due or '' }}">
-                        </div>
-                    </div>
+
                     <div class="row mb-3">
                         <div class="col-md-5 text-muted">
                             <label for="networking_hours" class="form-label">🕒 Poster Networking Hours:</label>
                         </div>
                         <div class="col-md-7">
-                            <input type="text" id="networking_hours" name="poster_networking_hours"
-                                   class="form-control"
-                                   value="{{ reqs.poster_networking_hours or '' }}">
+                            <input type="text" id="networking_hours" name="poster_networking_hours" class="form-control" value="{{ reqs.poster_networking_hours or '' }}">
                         </div>
                     </div>
+
                     <div class="row mb-3">
                         <div class="col-md-5 text-muted">
-                            <label for="source_url" class="form-label">🔗 Source URL:</label>
+                            <label for="fee" class="form-label">💰 Fee:</label>
                         </div>
                         <div class="col-md-7">
-                            <input type="url" id="source_url" name="source_url"
-                                   class="form-control"
-                                   value="{{ reqs.source_url or '' }}">
+                            <input type="text" id="fee" name="fee" class="form-control" value="{{ reqs.fee or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-5 text-muted">
+                            <label for="character_limit" class="form-label">🔤 Character Limit:</label>
+                        </div>
+                        <div class="col-md-7">
+                            <input type="text" id="character_limit" name="character_limit" class="form-control" value="{{ reqs.character_limit or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-5 text-muted">
+                            <label for="conference_url" class="form-label">🌐 Conference URL:</label>
+                        </div>
+                        <div class="col-md-7">
+                            <input type="url" id="conference_url" name="conference_url" class="form-control" value="{{ reqs.conference_url or '' }}">
                         </div>
                     </div>
 
