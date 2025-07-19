@@ -1,6 +1,11 @@
 
+# PhD Tracker
 
+### QA Deployment Status  
+[![Deploy PhDTracker App Staging](https://github.com/Exitare/PhD-Tracker/actions/workflows/staging_deploy.yml/badge.svg)](https://github.com/Exitare/PhD-Tracker/actions/workflows/staging_deploy.yml)
 
+### Live Deployment Status   
+[![Deploy PhDTracker App Production](https://github.com/Exitare/PhD-Tracker/actions/workflows/prod_deploy.yml/badge.svg)](https://github.com/Exitare/PhD-Tracker/actions/workflows/prod_deploy.yml)
 
 
 ## Alembic
