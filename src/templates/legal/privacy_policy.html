@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy | PhD Tracker by AnoBrain{% endblock %}
+{% block description %}Review how PhD Tracker by AnoBrain collects, uses, and protects your data. We respect your privacy and never sell or use your information for AI training.{% endblock %}
+
+{% block og_title %}Privacy Policy | PhD Tracker by AnoBrain{% endblock %}
+{% block og_description %}We use only essential cookies, protect your research data, and never share or train AI models on your information. Learn more here.{% endblock %}
+
+{% block twitter_title %}Privacy Policy | PhD Tracker by AnoBrain{% endblock %}
+{% block twitter_description %}Your privacy is our priority. We do not use your data for AI training and do not sell it. Full data deletion guaranteed.{% endblock %}
+
+{% block content %}
+<div class="card p-4 shadow-sm mb-5">
+    <h1 class="mb-3">Privacy Policy</h1>
+    <p class="text-muted mb-4"><strong>Last Updated:</strong> {{ now | datetimeformat('%B %d, %Y') }}</p>
+
+    <div class="mb-4">
+        <h4 class="mb-2">1. Use of Cookies</h4>
+        <p>We use cookies only for essential technical functionality such as session management, security, and ensuring
+            the site works properly. These cookies cannot be disabled.</p>
+    </div>
+
+    <div class="mb-4">
+        <h4 class="mb-2">2. Google Analytics (Opt-in)</h4>
+        <p>We use Google Analytics to understand site usage and improve user experience. Analytics tracking is only
+            enabled if users explicitly opt in to cookie usage. No personal data we collect is ever sent to Google Analytics.</p>
+    </div>
+
+    <div class="mb-4">
+        <h4 class="mb-2">3. Data Storage and Security</h4>
+        <p>All user data is stored securely on our servers using industry-standard encryption and security practices. We
+            do not sell user data, nor do we use any user data for training artificial intelligence models.</p>
+    </div>
+
+    <div class="mb-4">
+        <h4 class="mb-2">4. Data Deletion and Ownership</h4>
+        <p>If a user deletes data from the platform, that data is permanently and completely removed from our servers.
+            We do not retain deleted data for any purpose. All research content, ideas, and intellectual property remain
+            the sole property of the user. We do not claim any ownership or usage rights over user-submitted
+            content.</p>
+    </div>
+
+    <p class="mt-4">If you have any questions about this Privacy Policy, feel free to <a
+            href="{{ url_for('home.contact') }}">contact us</a>.</p>
+</div>
+{% endblock %}

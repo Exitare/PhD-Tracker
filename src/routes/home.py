@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, request, redirect, url_for, flash
+from flask import Blueprint, render_template, session, request, redirect, url_for, flash, send_from_directory
 from src.forms import ContactForm
 from src.services import MailService
 
@@ -10,6 +10,16 @@ def home():
     if 'theme' not in session:
         session['theme'] = "lavender-dark"
     return render_template('home.html')
+
+
+@bp.route("/termsofservice", methods=["GET"])
+def terms_of_service():
+    return render_template("legal/terms_of_service.html")
+
+
+@bp.route("/privacy", methods=["GET"])
+def privacy_policy():
+    return render_template("legal/privacy_policy.html")
 
 
 @bp.route("/contact", methods=['GET', "POST"])

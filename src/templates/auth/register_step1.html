@@ -61,8 +61,21 @@
                         <div class="alert alert-danger mt-3">{{ error }}</div>
                         {% endif %}
 
+                        <div class="form-check mb-2 py-2">
+                            <input class="form-check-input" type="checkbox" id="acceptTerms" name="accept_terms"
+                                   required>
+                            <label class="form-check-label" for="acceptTerms">
+                                I have read and agree to the
+                                <a href="{{ url_for('home.terms_of_service') }}" target="_blank"
+                                   class="text-decoration-underline">Terms of Service</a>
+                                and
+                                <a href="{{ url_for('home.privacy_policy') }}" target="_blank"
+                                   class="text-decoration-underline">Privacy Policy</a>.
+                            </label>
+                        </div>
+
                         <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary">Continue</button>
+                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Continue</button>
                         </div>
                     </form>
 
@@ -76,4 +89,45 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const email = document.getElementById("email");
+        const password = document.getElementById("password");
+        const acceptTerms = document.getElementById("acceptTerms");
+        const univCheck = document.getElementById("univCheck");
+        const firstName = document.getElementById("first_name");
+        const lastName = document.getElementById("last_name");
+        const accessCode = document.getElementById("access_code");
+        const submitBtn = document.getElementById("submitBtn");
+
+        function validateForm() {
+            const isEmailValid = email.value.trim() !== "";
+            const isPasswordValid = password.value.trim() !== "";
+            const isTermsChecked = acceptTerms.checked;
+
+            let isUniversityValid = true;
+
+            if (univCheck.checked) {
+                isUniversityValid =
+                    firstName.value.trim() !== "" &&
+                    lastName.value.trim() !== "" &&
+                    accessCode.value.trim() !== "";
+            }
+
+            submitBtn.disabled = !(isEmailValid && isPasswordValid && isTermsChecked && isUniversityValid);
+        }
+
+        // Listen to all relevant inputs
+        [email, password, acceptTerms, univCheck, firstName, lastName, accessCode].forEach(el => {
+            el.addEventListener("input", validateForm);
+            el.addEventListener("change", validateForm);
+        });
+
+        // Initial check
+        validateForm();
+    });
+</script>
 {% endblock %}
