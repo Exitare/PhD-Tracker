@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Showcase | My Academic Tracker{% endblock %}
+
+{% block description %}
+A visual showcase of research and academic project milestones created using My Academic Tracker. See how users break down goals into real progress.
+{% endblock %}
+
+{% block og_title %}Project Showcase – My Academic Tracker{% endblock %}
+{% block og_description %}
+Explore milestone highlights from real academic projects. This visual showcase demonstrates how My Academic Tracker turns goals into achievements.
+{% endblock %}
+
+{% block twitter_title %}Showcase – Milestones in Action{% endblock %}
+{% block twitter_description %}
+Discover how researchers use My Academic Tracker to manage projects visually. Real examples, real results.
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="milestone-title">🚀 Project Showcase</h1>
+        <p class="text-muted">See how big ideas become achievable goals—one milestone at a time.</p>
+    </div>
+
+    <!-- Section 1: Image Left, Text Right -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-6 mb-3 mb-md-0 text-center">
+            <img src="{{ url_for('static', filename='images/showcase/dashboard.jpg') }}"
+                 class="img-fluid rounded shadow"
+                 alt="Dashboard overview with project due dates">
+        </div>
+        <div class="col-md-6">
+            <h3 class="card-title">📊 Dashboard Overview</h3>
+            <p class="text-muted">
+                The dashboard provides a streamlined overview of all your active projects, including upcoming due dates,
+                selected venues, and overall project status at a glance. Perfect for staying on top of deadlines without
+                digging through individual project pages.
+            </p>
+        </div>
+    </div>
+
+    <!-- Section 2: Text Left, Image Right -->
+    <div class="row align-items-center mb-5 flex-md-row-reverse">
+        <div class="col-md-6 mb-3 mb-md-0 text-center">
+            <img src="{{ url_for('static', filename='images/showcase/project.jpg') }}"
+                 class="img-fluid rounded shadow" alt="Detailed project overview with revisions and metadata">
+        </div>
+        <div class="col-md-6">
+            <h3 class="card-title">🗂️ Project Overview</h3>
+            <p class="text-muted">
+                Dive into a single project's workspace to view all key details in one place—title, selected venue,
+                deadlines, revision history, and more. This page serves as your project's control center, making it easy
+                to stay organized and manage every milestone with confidence.
+            </p>
+        </div>
+    </div>
+
+    <!-- Section 3: Image Left, Text Right -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-6 mb-3 mb-md-0 text-center">
+            <img src="{{ url_for('static', filename='images/showcase/goal_creation.jpg') }}"
+                 class="img-fluid rounded shadow"
+                 alt="Goal creation interface showing multiple milestones and deadlines">
+        </div>
+        <div class="col-md-6">
+            <h3 class="card-title">🎯 Goal Creation & Management</h3>
+            <p class="text-muted">
+                Each project can be broken down into multiple goals, each with its own deadline and scope. Whether it’s
+                a major milestone like paper submission or smaller tasks like designing an experiment or analyzing data,
+                this flexible system helps you stay on track while tackling complex academic workflows step-by-step.
+            </p>
+        </div>
+    </div>
+
+    <!-- Section 4: Text Left, Image Right -->
+    <div class="row align-items-center mb-5 flex-md-row-reverse">
+        <div class="col-md-6 mb-3 mb-md-0 text-center">
+            <img src="{{ url_for('static', filename='images/showcase/milestones.jpg') }}"
+                 class="img-fluid rounded shadow"
+                 alt="Milestone timeline with progress and annotations">
+        </div>
+        <div class="col-md-6">
+            <h3 class="card-title">📅 Milestones & Progress Tracking</h3>
+            <p class="text-muted">
+                Each goal is divided into smaller milestones—each with its own deadline and optional notes. The visual
+                timeline makes it easy to assess how far you've progressed toward completing a goal. From initial
+                planning to final execution, this structure keeps everything on track and transparent.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
