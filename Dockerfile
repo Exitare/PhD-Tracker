@@ -11,8 +11,5 @@ COPY . .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
-# Expose the default port
-EXPOSE 5000
-
 # Default command
 CMD ["python", "run.py"]
