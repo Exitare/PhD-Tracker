@@ -9,7 +9,7 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "127.0.0.1:3311:3306"
+      - "127.0.0.1:3331:3306"
     volumes:
       - phd_tracker_data:/var/lib/mysql
 
