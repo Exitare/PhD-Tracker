@@ -30,8 +30,8 @@ jobs:
             cd ${{ secrets.STAGING_APP_DIRECTORY }}
 
             echo "Shutting down any existing containers..."
-            docker-compose down --remove-orphans
+            docker-compose -f docker-compose.staging.yml down --remove-orphans
 
             echo "Rebuilding and starting containers..."
-            docker-compose build
-            docker-compose up -d
+            docker-compose -f docker-compose.staging.yml build
+            docker-compose -f docker-compose.staging.yml up -d
