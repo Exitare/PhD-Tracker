@@ -9,7 +9,7 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "127.0.0.1:3312:3306"
+      - "127.0.0.1:3311:3306"
     volumes:
       - db_data:/var/lib/mysql
 
@@ -25,7 +25,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "127.0.0.1:12000:5000"
+      - "127.0.0.1:5501:5000"
     command: >
       bash -c "python wait_for_db.py &&
                alembic upgrade head &&
