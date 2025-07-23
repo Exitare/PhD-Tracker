@@ -11,7 +11,7 @@ services:
     ports:
       - "127.0.0.1:3330:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - phd_tracker_qa_data:/var/lib/mysql
 
   app:
     build: .
@@ -33,4 +33,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  db_data:
+  phd_tracker_qa_data:
