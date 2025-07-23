@@ -48,4 +48,4 @@ if __name__ == '__main__':
         logging.info("Running in development mode with debug enabled.")
         app.run(debug=True, port=args.port)
     else:
-        serve(app, host='127.0.0.1', port=args.port)
+        serve(app, host='0.0.0.0', port=args.port)

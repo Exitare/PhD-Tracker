@@ -13,11 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-
       - name: Deploy with rsync
         run: |
           mkdir -p ~/.ssh
@@ -25,7 +20,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.STAGING_APP_DIRECTORY }}/
 
-      - name: Set up Python environment
+      - name: Deploy using Docker Compose
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -34,34 +29,9 @@ jobs:
           script: |
             cd ${{ secrets.STAGING_APP_DIRECTORY }}
 
-            # Create virtual environment if it doesn't exist
-            if [ ! -d "venv" ]; then
-              echo "Creating virtual environment..."
-              python3 -m venv venv
-            fi
+            echo "Shutting down any existing containers..."
+            docker-compose down --remove-orphans
 
-            source venv/bin/activate
-            pip install --upgrade pip setuptools wheel
-            pip install -r requirements.txt
-
-      - name: Deploy PhDTracker staging app
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ${{ secrets.STAGING_APP_DIRECTORY }}
-
-            if pm2 list | grep -q "PhdTrackerStaging"; then
-              echo "Restarting existing PM2 process..."
-              pm2 restart PhdTrackerStaging --update-env
-            else
-              echo "Starting new PM2 process..."
-              pm2 start run.py \
-                --name PhdTrackerStaging \
-                --interpreter ./venv/bin/python \
-                --time \
-                --log ./logs/pm2.log \
-                -- --port 5500
-            fi
+            echo "Rebuilding and starting containers..."
+            docker-compose build
+            docker-compose up -d

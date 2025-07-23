@@ -1,0 +1,33 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: phd_tracker_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "127.0.0.1:3330:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: phd_tracker_app
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      MODE: staging
+    volumes:
+      - .:/app
+    ports:
+      - "127.0.0.1:5500:5000"
+    command: bash -c "alembic upgrade head && python run.py"
+    restart: unless-stopped
+
+volumes:
+  db_data:
