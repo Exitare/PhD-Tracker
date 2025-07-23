@@ -1,7 +1,7 @@
 services:
   db:
     image: mysql:8.0
-    container_name: phd_tracker_db
+    container_name: phd_tracker_db_qa
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
@@ -15,7 +15,7 @@ services:
 
   app:
     build: .
-    container_name: phd_tracker_app
+    container_name: phd_tracker_app_qa
     depends_on:
       - db
     env_file:
