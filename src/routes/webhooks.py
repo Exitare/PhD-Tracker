@@ -1,4 +1,4 @@
-from flask import Blueprint, request, abort
+from quart import Blueprint, request, abort
 from src.db import get_db_session
 from src.db.models import User, StripeWebhookEvent
 from datetime import datetime, timezone
@@ -23,7 +23,7 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 @bp.route("/webhooks", methods=["POST"])
 @csrf.exempt
-def stripe_webhook():
+async def stripe_webhook():
     payload = request.data
     sig_header = request.headers.get("stripe-signature")
 

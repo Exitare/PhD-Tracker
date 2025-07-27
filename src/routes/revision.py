@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from flask import Blueprint, request, redirect, render_template, url_for, abort, flash
+from quart import Blueprint, request, redirect, render_template, url_for, abort, flash
 from src.db.models import Project, SubProject, Milestone
 from src.db import get_db_session
-from flask_login import current_user, login_required
+from quart_auth import current_user, login_required
 from sqlalchemy import select
 from src.services.openai_service import OpenAIService
 from src.services.log_service import AILogService
@@ -14,9 +14,10 @@ bp = Blueprint('revision', __name__)
 
 @bp.route("/dashboard/projects/<int:project_id>/revision", methods=["GET"])
 @login_required
-def view(project_id):
-    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
-        flash("You do not have permission to view a revision.", "danger")
+async def view(project_id):
+
+    form = await request.form    if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
+        await flash("You do not have permission to view a revision.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     db_session = get_db_session()
@@ -30,40 +31,40 @@ def view(project_id):
             abort(404)
     except Exception as e:
         print("Error loading project:", e)
-        flash("Failed to load project. Please try again.", "danger")
+        await flash("Failed to load project. Please try again.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     # logic to show upload form and revision deadline
-    return render_template("revision/start.html", project_id=project_id, project=project)
+    return await render_template("revision/start.html", project_id=project_id, project=project)
 
 
 @bp.route("/dashboard/projects/<int:project_id>/revision>", methods=["POST"])
 @login_required
-def create(project_id: int):
+async def create(project_id: int):
     if not UserService.can_access_page(current_user, [Role.User.value]):
-        flash("You do not have permission to create a revision.", "danger")
+        await flash("You do not have permission to create a revision.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
-    raw_text = request.form.get("raw_text", "").strip()
-    additional_context = request.form.get("additional_context", "").strip()
-    deadline_str = request.form.get("deadline")
+    raw_text = form.get("raw_text", "").strip()
+    additional_context = form.get("additional_context", "").strip()
+    deadline_str = form.get("deadline")
 
     if not raw_text:
-        flash("Please paste reviewer comments into the text box.", "danger")
+        await flash("Please paste reviewer comments into the text box.", "danger")
         return redirect(url_for("revision.start", project_id=project_id))
 
     if not deadline_str:
-        flash("Please select a revision deadline.", "danger")
+        await flash("Please select a revision deadline.", "danger")
         return redirect(url_for("revision.start", project_id=project_id))
 
     try:
         deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
     except ValueError:
-        flash("Invalid date format for deadline.", "danger")
+        await flash("Invalid date format for deadline.", "danger")
         return redirect(url_for("revision.start", project_id=project_id))
 
     if deadline < datetime.now(timezone.utc).date():
-        flash("Revision deadline cannot be earlier than today.", "danger")
+        await flash("Revision deadline cannot be earlier than today.", "danger")
         return redirect(url_for("revision.start", project_id=project_id))
 
     milestones = []
@@ -122,5 +123,5 @@ def create(project_id: int):
 
     db_session.commit()
 
-    flash(f"{subproject_title} with {len(milestones)} milestones was created.", "success")
+    await flash(f"{subproject_title} with {len(milestones)} milestones was created.", "success")
     return redirect(url_for("subproject.view", project_id=project_id, subproject_id=new_subproject.id))

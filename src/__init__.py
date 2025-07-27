@@ -1,4 +1,4 @@
-from flask import Flask
+from quart import Quart
 from .extensions import csrf
 from dotenv import load_dotenv
 from src.db.models import User
@@ -7,7 +7,7 @@ from src.routes import dashboard, project, notes, sub_project, milestone, auth, 
     webhooks, journal, venue, academia, admin, plans, showcase
 import os
 from datetime import datetime, timezone
-from flask_login import LoginManager
+from quart_auth import AuthManager
 import stripe
 from multiprocessing import Process, Event
 from src.tasks.downgrade_users import run_downgrade_loop
@@ -23,17 +23,17 @@ _downgrade_process = None
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 
-def create_app() -> Flask:
+def create_app() -> Quart:
     load_dotenv()
 
-    app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
+    app = Quart(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
     app.secret_key = os.environ.get("APP_SECRET", "default_secret")
     app.jinja_env.globals['now'] = int(datetime.now(timezone.utc).timestamp() * 1000)
     csrf.init_app(app)
 
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-    login_manager.login_view = "auth.login"  # Redirect unauthorized users here
+    auth_manager = AuthManager()
+    auth_manager.init_app(app)
+    # Note: Quart-Auth handles login redirects differently than Flask-Login
 
 
     db_session = get_db_session()
@@ -96,10 +96,9 @@ def create_app() -> Flask:
             return value
         return value.replace("_plus", "+").replace("_", " ").title()
 
-    @login_manager.user_loader
-    def load_user(user_id):
-        return db_session.get(User, int(user_id))  # or get_db_session.query(User).get(int(user_id))
-
+    # Note: Quart-Auth uses a different pattern for user loading
+    # You'll need to implement user loading in the auth routes
+    
     @app.context_processor
     def inject_mode():
         return dict(MODE=os.environ.get("MODE"))
@@ -111,16 +110,16 @@ def start_background_downgrade_process():
     global _downgrade_process
     _downgrade_process = Process(target=run_downgrade_loop, args=(_shutdown_event,))
     _downgrade_process.start()
-    logger.info(f"[Flask] Started background downgrade process with PID {_downgrade_process.pid}")
+    logger.info(f"[Quart] Started background downgrade process with PID {_downgrade_process.pid}")
 
 
 def stop_background_downgrade_process():
     global _downgrade_process
     if _downgrade_process is not None:
-        logger.info("[Flask] Shutting down background downgrade process...")
+        logger.info("[Quart] Shutting down background downgrade process...")
         _shutdown_event.set()
         _downgrade_process.join(timeout=10)
         if _downgrade_process.is_alive():
-            logger.info("[Flask] Background process did not shut down in time.")
+            logger.info("[Quart] Background process did not shut down in time.")
         else:
-            logger.info("[Flask] Background process shut down cleanly.")
+            logger.info("[Quart] Background process shut down cleanly.")

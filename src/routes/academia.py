@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from flask_login import login_required, current_user, login_user
+from quart import Blueprint, render_template, request, redirect, url_for, session, flash
+from quart_auth import login_required, current_user, login_user
 from src.db import get_db_session
 from src.db.models import User
 from datetime import datetime, timezone
@@ -15,56 +15,62 @@ bp = Blueprint('academia', __name__)
 
 
 @bp.route("/academia")
-def view():
-    return render_template('academia/academia.html')
+async def view():
+
+
+    args = await request.args    form = await request.form    return await render_template('academia/academia.html')
 
 
 @bp.route("/academia/contact", methods=["GET", "POST"])
-def contact():
-    if request.method == "POST":
+async def contact():
+
+
+    args = await request.args    form = await request.form    if await request.method == "POST":
         try:
-            first_name = request.form.get("first_name", "").strip()
-            last_name = request.form.get("last_name", "").strip()
-            email = request.form.get("email", "").strip()
-            num_students: int = int(request.form.get("num_students", "").strip())
-            additional_information = request.form.get("additional_information", "").strip()
-            organization = request.form.get("organization", "").strip()
-            phone_number: str = request.form.get("phone", "").strip()
+            first_name = form.get("first_name", "").strip()
+            last_name = form.get("last_name", "").strip()
+            email = form.get("email", "").strip()
+            num_students: int = int(form.get("num_students", "").strip())
+            additional_information = form.get("additional_information", "").strip()
+            organization = form.get("organization", "").strip()
+            phone_number: str = form.get("phone", "").strip()
 
             # Input validation
             if not first_name or not last_name or not email or not num_students or not additional_information or not organization:
-                flash("All fields are required.", "danger")
-                return render_template("academia/contact.html")
+                await flash("All fields are required.", "danger")
+                return await render_template("academia/contact.html")
 
             MailService.send_academia_inquiry_email(first_name=first_name, last_name=last_name, email=email,
                                                     num_students=num_students, organization=organization,
                                                     additional_information=additional_information, phone_number=phone_number)
 
-            flash("Your inquiry has been sent successfully! We'll get back to you shortly.", "success")
+            await flash("Your inquiry has been sent successfully! We'll get back to you shortly.", "success")
 
         except Exception as e:
             print(f"Academia contact form error: {e}")
-            flash("An error occurred while sending your inquiry. Please try again later.", "danger")
-            return render_template("academia/contact.html")
+            await flash("An error occurred while sending your inquiry. Please try again later.", "danger")
+            return await render_template("academia/contact.html")
 
-    return render_template('academia/contact.html')
+    return await render_template('academia/contact.html')
 
 
 @bp.route("/academia/register", methods=["POST", "GET"])
-def register():
-    if request.method == "POST":
+async def register():
+
+
+    args = await request.args    form = await request.form    if await request.method == "POST":
         db_session = get_db_session()
-        first_name = request.form.get("first_name", "").strip()
-        last_name = request.form.get("last_name", "").strip()
-        org_name = request.form.get("org_name", "").strip()
-        email = request.form.get("email", "").strip().lower()
-        password: str = request.form.get("password", "").strip()
+        first_name = form.get("first_name", "").strip()
+        last_name = form.get("last_name", "").strip()
+        org_name = form.get("org_name", "").strip()
+        email = form.get("email", "").strip().lower()
+        password: str = form.get("password", "").strip()
 
         # Input validation
         if not first_name or not last_name or not org_name or not email or not password:
             error = "All fields are required."
-            flash("All fields are required.", "danger")
-            return render_template("academia/signup.html", error=error)
+            await flash("All fields are required.", "danger")
+            return await render_template("academia/signup.html", error=error)
 
         # TODO: Add email format validation regex if needed
 
@@ -72,8 +78,8 @@ def register():
         existing_user = db_session.query(User).filter_by(email=email).first()
         if existing_user:
             error = "If the email is valid and available, you'll receive a confirmation shortly."
-            flash("If the email is valid and available, you'll receive a confirmation shortly.", "warning")
-            return render_template("academia/signup.html", error=error)
+            await flash("If the email is valid and available, you'll receive a confirmation shortly.", "warning")
+            return await render_template("academia/signup.html", error=error)
 
         try:
             # get the domain of the email
@@ -111,36 +117,40 @@ def register():
             db_session.rollback()
             print(f"Academia registration error: {e}")
             error = "An error occurred during submission. Please try again later."
-            flash("An error occurred during submission. Please try again later.", "danger")
-            return render_template("academia/signup.html", error=error)
+            await flash("An error occurred during submission. Please try again later.", "danger")
+            return await render_template("academia/signup.html", error=error)
 
-    return render_template('academia/signup.html')
+    return await render_template('academia/signup.html')
 
 
 @bp.route("/academia/setup-payment", methods=["GET"])
 @login_required
-def setup_payment():
-    try:
+async def setup_payment():
+
+
+    args = await request.args    form = await request.form    try:
         intent = stripe.SetupIntent.create(
             customer=current_user.stripe_customer_id,
         )
-        return render_template("academia/setup_payment.html",
+        return await render_template("academia/setup_payment.html",
                                client_secret=intent.client_secret,
                                STRIPE_PUBLISHABLE_KEY=os.environ.get("STRIPE_PUBLISHABLE_KEY"))
     except Exception as e:
         print(f"SetupIntent error: {e}")
-        return render_template("academia/setup_payment_error.html")
+        return await render_template("academia/setup_payment_error.html")
 
 
 @bp.route("/academia/panel")
 @login_required
-def panel():
-    if not UserService.can_access_page(current_user, allowed_roles=[Role.Manager.value]):
-        flash("You do not have permission to view this page.", "danger")
+async def panel():
+
+
+    args = await request.args    form = await request.form    if not UserService.can_access_page(current_user, allowed_roles=[Role.Manager.value]):
+        await flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
-    if request.args.get("payment_setup") == "success":
-        flash("Your payment method was saved successfully!", "success")
+    if args.get("payment_setup") == "success":
+        await flash("Your payment method was saved successfully!", "success")
 
     email_form = EmailForm()
     password_form = PasswordForm()
@@ -158,7 +168,7 @@ def panel():
         total = sum(log.used_tokens or 0 for log in user.usage_logs)
         usage_summary_by_user[user.id] = total
 
-    return render_template('academia/account.html',
+    return await render_template('academia/account.html',
                            managed_users=managed_users,
                            email_form=email_form,
                            usage_summary_by_user=usage_summary_by_user,
@@ -169,12 +179,14 @@ def panel():
 
 @bp.route('/academia/managed-users/<int:user_id>/toggle-status', methods=['POST'])
 @login_required
-def toggle_user_status(user_id):
-    db_session = get_db_session()
+async def toggle_user_status(user_id):
+
+
+    args = await request.args    form = await request.form    db_session = get_db_session()
     user = db_session.get(User, user_id)
 
     if not user or user.managed_by != current_user.id:
-        flash("You do not have permission to modify this user.", "danger")
+        await flash("You do not have permission to modify this user.", "danger")
         return redirect(url_for('academia.panel'))
 
     user.active = not user.active

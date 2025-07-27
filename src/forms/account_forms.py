@@ -1,14 +1,14 @@
-from flask_wtf import FlaskForm
+from quart_wtf import QuartForm
 from wtforms import StringField, PasswordField, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 
-class EmailForm(FlaskForm):
+class EmailForm(QuartForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Current Password", validators=[DataRequired()])
 
 
-class PasswordForm(FlaskForm):
+class PasswordForm(QuartForm):
     current_password = PasswordField("Current Password", validators=[
         DataRequired(message="Please enter your current password.")
     ])
@@ -22,7 +22,7 @@ class PasswordForm(FlaskForm):
     ])
 
 
-class ThemeForm(FlaskForm):
+class ThemeForm(QuartForm):
     theme = SelectField("Design Theme", choices=[
         ("lavender-dark", "Lavender (Dark)"),
         ("lavender-light", "Lavender (Light)"),

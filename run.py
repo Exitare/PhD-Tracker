@@ -5,7 +5,7 @@ import os
 import atexit
 import logging
 from src.utils.logging_config import setup_logging
-from waitress import serve
+import asyncio
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -29,9 +29,9 @@ if __name__ == '__main__':
         setup_logging(console_level=logging.INFO)
 
         # Initialize database tables (runs once)
-    logging.info('[Flask] Initializing database...')
+    logging.info('[Quart] Initializing database...')
     init_db(mode=mode)
-    logging.info('[Flask] Database initialized successfully.')
+    logging.info('[Quart] Database initialized successfully.')
 
     app = create_app()
 
@@ -48,4 +48,10 @@ if __name__ == '__main__':
         logging.info("Running in development mode with debug enabled.")
         app.run(debug=True, port=args.port)
     else:
-        serve(app, host='0.0.0.0', port=args.port)
+        # Use Hypercorn instead of Waitress for Quart
+        import hypercorn.asyncio
+        from hypercorn import Config
+        
+        config = Config()
+        config.bind = [f"0.0.0.0:{args.port}"]
+        asyncio.run(hypercorn.asyncio.serve(app, config))

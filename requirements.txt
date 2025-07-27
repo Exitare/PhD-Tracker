@@ -1,12 +1,12 @@
-flask
+quart
 openai
-dotenv
-flask-wtf
+python-dotenv
+quart-wtf
 sqlalchemy
 wtforms
-flask-login
+quart-auth
 stripe
-Flask-Mail
+quart-mail
 PyJWT
 email-validator
 ics
@@ -16,7 +16,7 @@ google-search-results
 bs4
 tiktoken
 faiss-cpu
-waitress
+hypercorn
 pymysql
 alembic
 cryptography

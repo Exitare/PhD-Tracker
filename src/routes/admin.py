@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
-from flask_login import current_user, login_required, logout_user
+from quart import Blueprint, render_template, request, jsonify, redirect, url_for, flash
+from quart_auth import current_user, login_required, logout_user
 from src.db.models import User
 import stripe
 from src.role import Role
@@ -17,12 +17,13 @@ bp = Blueprint("admin", __name__)
 
 @bp.route("/admin/users", methods=["GET"])
 @login_required
-def manage_users():
-    db_session = get_db_session()
+async def manage_users():
+
+    form = await request.form    db_session = get_db_session()
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
     if not user or not UserService.can_access_page(user, allowed_roles=[Role.Admin.value]):
-        flash("You do not have permission to access this page.", "danger")
+        await flash("You do not have permission to access this page.", "danger")
         logout_user()
         return redirect(url_for("auth.login"))
 
@@ -38,17 +39,18 @@ def manage_users():
             "stripe_customer_id": tmp_user.stripe_customer_id
         })
 
-    return render_template('admin/user_management.html', users=display_users)
+    return await render_template('admin/user_management.html', users=display_users)
 
 
 @bp.route("/admin", methods=["GET"])
 @login_required
-def panel():
-    db_session = get_db_session()
+async def panel():
+
+    form = await request.form    db_session = get_db_session()
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
     if not user or not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
-        flash("You do not have permission to access this page.", "danger")
+        await flash("You do not have permission to access this page.", "danger")
         logout_user()
         return redirect(url_for("auth.login"))
 
@@ -64,28 +66,29 @@ def panel():
             "stripe_customer_id": tmp_user.stripe_customer_id
         })
 
-    return render_template('admin/admin_base.html')
+    return await render_template('admin/admin_base.html')
 
 
 @bp.route("/admin/price", methods=["GET", "POST"])
 @login_required
-def manage_prices():
-    db_session = get_db_session()
+async def manage_prices():
+
+    form = await request.form    db_session = get_db_session()
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
     if not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
-        flash("You do not have permission to access this page.", "danger")
+        await flash("You do not have permission to access this page.", "danger")
         logout_user()
         return redirect(url_for("auth.login"))
 
-    if request.method == "POST":
-        pricing_type = request.form.get("pricing_type")
-        interval = request.form.get("interval")
-        description = request.form.get("description")
+    if await request.method == "POST":
+        pricing_type = form.get("pricing_type")
+        interval = form.get("interval")
+        description = form.get("description")
         product_id = "prod_SZbBNUzElOhpI9"
 
         if pricing_type == "flat":
-            amount_str = request.form.get("amount")
+            amount_str = form.get("amount")
             amount = parse_dollar_amount(amount_str)
 
             stripe.Price.create(
@@ -97,9 +100,9 @@ def manage_prices():
             )
         else:
             try:
-                tier_1_max = int(request.form.get("tier_1_max").replace(",", ""))
-                tier_1_amount = request.form.get("tier_1_unit_amount").replace(",", "")
-                tier_2_amount = request.form.get("tier_2_unit_amount").replace(",", "")
+                tier_1_max = int(form.get("tier_1_max").replace(",", ""))
+                tier_1_amount = form.get("tier_1_unit_amount").replace(",", "")
+                tier_2_amount = form.get("tier_2_unit_amount").replace(",", "")
 
                 stripe.Price.create(
                     currency="usd",
@@ -120,9 +123,9 @@ def manage_prices():
                     ]
                 )
             except (InvalidOperation, ValueError):
-                flash("Invalid input in tier values. Please double-check your numbers.", "danger")
+                await flash("Invalid input in tier values. Please double-check your numbers.", "danger")
 
-        flash("Price created successfully!", "success")
+        await flash("Price created successfully!", "success")
         return redirect(url_for("admin.manage_prices"))
 
     prices = stripe.Price.list()
@@ -139,28 +142,29 @@ def manage_prices():
             "recurring": price.recurring
         })
 
-    return render_template('admin/price_management.html', prices=pr)
+    return await render_template('admin/price_management.html', prices=pr)
 
 
 @bp.route("/admin/archive-price/<price_id>", methods=["POST"])
 @login_required  # If you use login
-def archive_price(price_id):
-    try:
+async def archive_price(price_id):
+
+    form = await request.form    try:
         stripe.Price.modify(price_id, active=False)
-        flash("Price archived successfully.", "success")
+        await flash("Price archived successfully.", "success")
     except Exception as e:
-        flash(f"Error archiving price: {e}", "danger")
+        await flash(f"Error archiving price: {e}", "danger")
     return redirect(url_for("admin.manage_prices"))
 
 
 @bp.route("/admin/users/status/<int:user_id>", methods=["POST"])
 @login_required
-def toggle_user_status(user_id: int):
+async def toggle_user_status(user_id: int):
     db_session = get_db_session()
     user: User = db_session.query(User).filter_by(email=current_user.email).first()
 
     if not UserService.can_access_page(user=user, allowed_roles=[Role.Admin.value]):
-        flash("You do not have permission to access this page.", "danger")
+        await flash("You do not have permission to access this page.", "danger")
         logout_user()
         return redirect(url_for("auth.login"))
 
@@ -168,20 +172,20 @@ def toggle_user_status(user_id: int):
     target_user = db_session.query(User).filter_by(id=user_id).first()
     if not target_user:
         logger.debug(f"User with ID {user_id} not found.")
-        flash("User not found.", "danger")
+        await flash("User not found.", "danger")
         return redirect(request.referrer or url_for("admin.panel"))
 
     if target_user.active:
         target_user.active = False
         target_user.deactivated_at = int(datetime.now(timezone.utc).timestamp() * 1000)
         db_session.commit()
-        flash(f"User {target_user.email} has been deactivated.", "success")
+        await flash(f"User {target_user.email} has been deactivated.", "success")
         return redirect(request.referrer or url_for("admin.panel"))
     else:
         target_user.active = True
         target_user.deactivated_at = None
         db_session.commit()
-        flash(f"User {target_user.email} has been reactivated.", "success")
+        await flash(f"User {target_user.email} has been reactivated.", "success")
         # redirect to referer page
         return redirect(request.referrer or url_for("admin.panel"))
 

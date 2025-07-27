@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, request, abort, flash, jsonify
+from quart import Blueprint, render_template, redirect, url_for, request, abort, flash, jsonify
 from datetime import datetime, timezone
 from src.db.models import SubProject, Milestone, Project
 from src.db import get_db_session
 from src.services.openai_service import OpenAIService
-from flask_login import login_required, current_user
+from quart_auth import login_required, current_user
 from src.services import AILogService, UserService
 from src.role import Role
 from sqlalchemy import func
@@ -13,28 +13,28 @@ bp = Blueprint('subproject', __name__)
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/create", methods=["GET"])
 @login_required
-def show_sub_project_form(project_id: int):
+async def show_sub_project_form(project_id: int):
     if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
-        flash("You do not have permission to view this page.", "danger")
+        await flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     db_session = get_db_session()
     try:
         project = db_session.query(Project).filter_by(id=project_id, user_id=current_user.id).first()
         if not project:
-            return render_template("dashboard.html", projects=[], error="Project not found.")
+            return await render_template("dashboard.html", projects=[], error="Project not found.")
 
-        return render_template("create-sub-project.html", project=project, now=datetime.now(timezone.utc))
+        return await render_template("create-sub-project.html", project=project, now=datetime.now(timezone.utc))
     except Exception as e:
         print("Error loading project for subproject creation:", e)
-        return render_template("dashboard.html", projects=[], error="Failed to load project. Please try again.")
+        return await render_template("dashboard.html", projects=[], error="Failed to load project. Please try again.")
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects", methods=["POST"])
 @login_required
-def create(project_id: int):
+async def create(project_id: int):
     if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
-        flash("You do not have permission to view this page.", "danger")
+        await flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     db_session = get_db_session()
@@ -42,7 +42,7 @@ def create(project_id: int):
         project = db_session.query(Project).filter_by(id=project_id).first()
         # Ensure the project exists and belongs to the current user
         if not project or project.user_id != current_user.id:
-            return render_template("dashboard.html", projects=[], error="Project not found.")
+            return await render_template("dashboard.html", projects=[], error="Project not found.")
 
     except Exception as e:
         print("Error loading project for subproject creation:", e)
@@ -50,31 +50,31 @@ def create(project_id: int):
 
     try:
 
-        title = request.form.get("title", "").strip()
-        description = request.form.get("description", "").strip()
-        ai_option = request.form.get("ai_option", "")
-        deadline = request.form.get("deadline", "").strip()
-        sub_project_type: str = request.form.get("type", "default").strip()
+        title = form.get("title", "").strip()
+        description = form.get("description", "").strip()
+        ai_option = form.get("ai_option", "")
+        deadline = form.get("deadline", "").strip()
+        sub_project_type: str = form.get("type", "default").strip()
 
         print("Creating subproject with title:", title)
 
         if not title or not description or not deadline:
-            return render_template("project-detail.html", project_id=project_id, project=project,
+            return await render_template("project-detail.html", project_id=project_id, project=project,
                                    error="All fields are required", now=datetime.now(timezone.utc))
 
         if ai_option == "yes" and not UserService.can_use_ai(current_user):
-            return render_template("project-detail.html", project_id=project_id, project=project,
+            return await render_template("project-detail.html", project_id=project_id, project=project,
                                    error="AI-generated milestones are not only available for Student accounts.",
                                    now=datetime.now(timezone.utc))
 
-        deadline_str = request.form.get("deadline", "").strip()
+        deadline_str = form.get("deadline", "").strip()
         try:
             deadline_date = datetime.strptime(deadline_str, "%Y-%m-%d").date()
             if deadline_date < datetime.now(timezone.utc).date():
-                return render_template("project-detail.html", project_id=project_id, project=project,
+                return await render_template("project-detail.html", project_id=project_id, project=project,
                                        error="Deadline cannot be earlier than today.")
         except ValueError:
-            flash("Invalid date format for deadline.", "danger")
+            await flash("Invalid date format for deadline.", "danger")
             return redirect(url_for('subproject.show_sub_project_form', project_id=project.id))
 
         # check if the title already exists for the same user but different subproject
@@ -90,7 +90,7 @@ def create(project_id: int):
         )
 
         if duplicate:
-            flash("A goal with this title already exists.", "danger")
+            await flash("A goal with this title already exists.", "danger")
             return redirect(url_for('subproject.show_sub_project_form', project_id=project.id))
 
         new_subproject = SubProject(
@@ -133,15 +133,15 @@ def create(project_id: int):
     except Exception as e:
         db_session.rollback()
         print("Database error:", e)
-        return render_template("project-detail.html", project_id=project_id, project=project,
+        return await render_template("project-detail.html", project_id=project_id, project=project,
                                error="Failed to add subproject. Please try again.", now=datetime.now(timezone.utc))
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["GET"])
 @login_required
-def view(project_id: int, subproject_id: int):
+async def view(project_id: int, subproject_id: int):
     if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
-        flash("You do not have permission to view this page.", "danger")
+        await flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     db_session = get_db_session()
@@ -160,7 +160,7 @@ def view(project_id: int, subproject_id: int):
     if not project:
         abort(404, description="Project not found")
 
-    return render_template(
+    return await render_template(
         "sub-project-detail.html",
         project=project,
         subproject=sub,
@@ -171,9 +171,9 @@ def view(project_id: int, subproject_id: int):
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>", methods=["POST"])
 @login_required
-def edit(project_id: int, subproject_id: int):
+async def edit(project_id: int, subproject_id: int):
     if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
-        flash("You do not have permission to view this page.", "danger")
+        await flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     db_session = get_db_session()
@@ -182,12 +182,12 @@ def edit(project_id: int, subproject_id: int):
     if not sub:
         abort(404)
 
-    title = request.form.get("title", "").strip()
-    description = request.form.get("description", "").strip()
-    sub_project_type = request.form.get("type", "normal").strip()
+    title = form.get("title", "").strip()
+    description = form.get("description", "").strip()
+    sub_project_type = form.get("type", "normal").strip()
 
     if not title or not description:
-        flash("Title and description are required.", "danger")
+        await flash("Title and description are required.", "danger")
         return redirect(url_for("project.view", project_id=project_id))
 
     # Check if the new title already exists for the same user but different subproject
@@ -202,7 +202,7 @@ def edit(project_id: int, subproject_id: int):
         .first()
     )
     if duplicate:
-        flash("A subproject with this title already exists.", "danger")
+        await flash("A subproject with this title already exists.", "danger")
         return redirect(url_for("project.view", project_id=project_id))
 
     sub.title = title
@@ -211,20 +211,20 @@ def edit(project_id: int, subproject_id: int):
 
     try:
         db_session.commit()
-        flash("Subproject updated successfully.", "success")
+        await flash("Subproject updated successfully.", "success")
     except Exception as e:
         db_session.rollback()
         print("Error editing subproject:", e)
-        flash("An error occurred while saving the subproject.", "danger")
+        await flash("An error occurred while saving the subproject.", "danger")
 
     return redirect(url_for("project.view", project_id=project_id))
 
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/delete", methods=["POST"])
 @login_required
-def delete(project_id: int, subproject_id: int):
+async def delete(project_id: int, subproject_id: int):
     if not UserService.can_access_page(current_user, allowed_roles=[Role.User.value]):
-        flash("You do not have permission to view this page.", "danger")
+        await flash("You do not have permission to view this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     db_session = get_db_session()
@@ -240,7 +240,7 @@ def delete(project_id: int, subproject_id: int):
 
 @bp.route('/dashboard/projects/<int:project_id>/subprojects/check_title/', methods=['POST'])
 @login_required
-def check_subproject_title(project_id: int):
+async def check_subproject_title(project_id: int):
     data = request.get_json()
     title = data.get("title", "").strip().lower()
     db_session = get_db_session()

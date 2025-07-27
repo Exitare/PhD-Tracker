@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from quart import Blueprint, request, jsonify
 from src.db.models import Milestone
 from src.db import get_db_session
 from flask_wtf.csrf import validate_csrf
@@ -10,7 +10,7 @@ bp = Blueprint('notes', __name__)
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>/note",
           methods=["GET"])
-def get_note(project_id: int, subproject_id: int, milestone_id: int):
+async def get_note(project_id: int, subproject_id: int, milestone_id: int):
     db_session = get_db_session()
     milestone = db_session.query(Milestone).filter_by(id=milestone_id).first()
     return jsonify(note=milestone.notes if milestone else "")
@@ -18,7 +18,7 @@ def get_note(project_id: int, subproject_id: int, milestone_id: int):
 
 @bp.route("/dashboard/projects/<int:project_id>/subprojects/<int:subproject_id>/milestones/<int:milestone_id>/note",
           methods=["POST"])
-def save_note(project_id: int, subproject_id: int, milestone_id: int):
+async def save_note(project_id: int, subproject_id: int, milestone_id: int):
     csrf_token = request.headers.get("X-CSRFToken")
 
     try:

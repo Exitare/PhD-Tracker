@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from quart import Blueprint, render_template, request, redirect, url_for, flash, session
 from src.db.models import User
 from src.db import get_db_session
-from flask_login import login_required, current_user, logout_user
+from quart_auth import login_required, current_user, logout_user
 from src.forms import EmailForm, PasswordForm, ThemeForm
 from werkzeug.security import check_password_hash, generate_password_hash
 import stripe
@@ -31,9 +31,11 @@ EMAIL_REGEX = r"[^@]+@[^@]+\.[^@]+"
 
 @bp.route("/account/panel", methods=["GET"])
 @login_required
-def panel():
-    if not UserService.can_access_page(current_user, [Role.User.value]):
-        flash("You do not have permission to access this page.", "danger")
+async def panel():
+
+
+    args = await request.args    form = await request.form    if not UserService.can_access_page(current_user, [Role.User.value]):
+        await flash("You do not have permission to access this page.", "danger")
         return redirect(url_for("dashboard.dashboard"))
 
     db_session = get_db_session()
@@ -50,7 +52,7 @@ def panel():
         current_theme = session.get('theme', 'lavender-dark')
         theme_form.theme.data = current_theme
 
-        return render_template(
+        return await render_template(
             "account-panel/panel.html",
             email_form=email_form,
             password_form=password_form,
@@ -65,23 +67,25 @@ def panel():
 
 @bp.route("/account/email", methods=["POST"])
 @login_required
-def update_email():
-    form = EmailForm(request.form)
+async def update_email():
+
+
+    args = await request.args    form = await request.form    form = EmailForm(request.form)
 
     if form.validate():
         new_email = form.email.data.strip().lower()
         password = form.password.data
         db_session = get_db_session()
         if not check_password_hash(current_user.password_hash, password):
-            flash("Incorrect password.", "danger")
+            await flash("Incorrect password.", "danger")
             return redirect(url_for("account.panel"))
 
         if new_email == current_user.email:
-            flash("New email must be different from your current email.", "warning")
+            await flash("New email must be different from your current email.", "warning")
             return redirect(url_for("account.panel"))
 
         if db_session.query(User).filter(User.email == new_email).first():
-            flash("If the email is valid and available, you'll receive a verification link shortly.", "danger")
+            await flash("If the email is valid and available, you'll receive a verification link shortly.", "danger")
             return redirect(url_for("account.panel"))
 
         try:
@@ -89,64 +93,68 @@ def update_email():
             db_session.commit()
             MailService.send_verification_email(current_user)
 
-            flash("If the email is valid and available, you'll receive a verification link shortly.", "success")
+            await flash("If the email is valid and available, you'll receive a verification link shortly.", "success")
             return redirect(url_for("account.panel"))
         except IntegrityError:
             db_session.rollback()
-            flash("Could not update email due to a database error.", "danger")
+            await flash("Could not update email due to a database error.", "danger")
             return redirect(url_for("account.panel"))
 
     # If validation fails
     for field, errors in form.errors.items():
         for error in errors:
-            flash(f"{getattr(form, field).label.text}: {error}", "danger")
+            await flash(f"{getattr(form, field).label.text}: {error}", "danger")
     return redirect(url_for("account.panel"))
 
 
 @bp.route("/account/password", methods=["POST"])
 @login_required
-def update_password():
-    form = PasswordForm(request.form)
+async def update_password():
+
+
+    args = await request.args    form = await request.form    form = PasswordForm(request.form)
 
     if form.validate():
         db_session = get_db_session()
         # Check if the current password is correct
         if not check_password_hash(current_user.password_hash, form.current_password.data):
-            flash("Current password is incorrect.", "danger")
+            await flash("Current password is incorrect.", "danger")
             return redirect(url_for("account.panel"))
 
         # Prevent using the same password again
         if check_password_hash(current_user.password_hash, form.password.data):
-            flash("New password cannot be the same as the current password.", "warning")
+            await flash("New password cannot be the same as the current password.", "warning")
             return redirect(url_for("account.panel"))
 
         # Update password
         current_user.password_hash = generate_password_hash(form.password.data)
         db_session.commit()
-        flash("Your password has been updated.", "success")
+        await flash("Your password has been updated.", "success")
         # TODO: Send password change notification email
 
     else:
         # Show form validation errors
         for field, errors in form.errors.items():
             for error in errors:
-                flash(f"{getattr(form, field).label.text}: {error}", "danger")
+                await flash(f"{getattr(form, field).label.text}: {error}", "danger")
 
     return redirect(url_for("account.panel"))
 
 
 @bp.route("/account/theme", methods=["POST"])
 @login_required
-def update_theme():
-    selected_theme = request.form.get('theme')
+async def update_theme():
+
+
+    args = await request.args    form = await request.form    selected_theme = form.get('theme')
 
     if selected_theme not in ALLOWED_THEMES.keys():
-        flash("Invalid theme selected.", "danger")
+        await flash("Invalid theme selected.", "danger")
         return redirect(url_for('account.panel'))
 
     # Save theme to session (and optionally to DB for persistence)
     session['theme'] = selected_theme
-    flash(f"Theme changed to '{ALLOWED_THEMES[selected_theme]}'.", "success")
+    await flash(f"Theme changed to '{ALLOWED_THEMES[selected_theme]}'.", "success")
 
     if current_user.role == Role.User.value:
         return redirect(url_for('account.panel'))
@@ -158,15 +166,17 @@ def update_theme():
 
 @bp.route("/account/stripe", methods=["GET"])
 @login_required
-def manage_subscriptions():
-    if current_user.managed_by:
-        flash("You cannot manage subscriptions for a managed account.", "warning")
+async def manage_subscriptions():
+
+
+    args = await request.args    form = await request.form    if current_user.managed_by:
+        await flash("You cannot manage subscriptions for a managed account.", "warning")
         return redirect(url_for('account.panel'))
 
     try:
         # open stripe customer portal
         if not current_user.stripe_customer_id:
-            flash("You need to set up a Stripe customer ID first.", "warning")
+            await flash("You need to set up a Stripe customer ID first.", "warning")
             return redirect(url_for('account.panel'))
 
         stripe_customer_id = current_user.stripe_customer_id
@@ -177,7 +187,7 @@ def manage_subscriptions():
         return redirect(stripe_portal_session.url)
     except Exception as e:
         print(f"Stripe error: {e}")
-        flash("An error occurred while managing subscriptions. Please try again.", "danger")
+        await flash("An error occurred while managing subscriptions. Please try again.", "danger")
         if current_user.role == Role.User.value:
             return redirect(url_for('account.panel'))
         elif current_user.role == Role.Manager.value:
@@ -187,12 +197,14 @@ def manage_subscriptions():
 
 
 @bp.route("/account/verify-email/<token>", methods=["GET"])
-def verify_email(token):
-    try:
+async def verify_email(token):
+
+
+    args = await request.args    form = await request.form    try:
         payload: TokenPayload | None = JWTService.verify_token(token)
 
         if not payload or not payload.email:
-            flash("Invalid or expired verification link.", "error")
+            await flash("Invalid or expired verification link.", "error")
             return redirect(url_for('auth.login'))
 
         email = payload.email
@@ -201,12 +213,12 @@ def verify_email(token):
         user = db_session.query(User).filter_by(email=email).first()
         if not user:
             print("User not found for email:", email)
-            flash("Token invalid.", "error")
+            await flash("Token invalid.", "error")
             return redirect(url_for('auth.login'))
 
         if user.email_verified:
             print("Email already verified.")
-            flash("Token invalid.", "info")
+            await flash("Token invalid.", "info")
             return redirect(url_for('auth.login'))
 
         if user.pending_email == email:
@@ -218,20 +230,22 @@ def verify_email(token):
         user.email_verified_at = int(datetime.now(timezone.utc).timestamp() * 1000)
         db_session.commit()
 
-        flash("Email successfully verified! You can now log in.", "success")
+        await flash("Email successfully verified! You can now log in.", "success")
         return redirect(url_for('auth.login'))
 
     except Exception as e:
         print(f"Error verifying email: {e}")
-        flash("An error occurred while verifying your email. Please try again.", "error")
+        await flash("An error occurred while verifying your email. Please try again.", "error")
         return redirect(url_for('auth.login'))
 
 
 @bp.route("/account/code-refresh", methods=["POST"])
 @login_required
-def refresh_access_code():
-    if not current_user or current_user.role != Role.Manager.value:
-        flash("You do not have permission to perform this action.", "danger")
+async def refresh_access_code():
+
+
+    args = await request.args    form = await request.form    if not current_user or current_user.role != Role.Manager.value:
+        await flash("You do not have permission to perform this action.", "danger")
         return redirect(url_for('account.panel'))
 
     db_session = get_db_session()
@@ -241,46 +255,50 @@ def refresh_access_code():
         current_user.access_code = UserService.create_access_token()
         db_session.commit()
 
-        flash("Access code refreshed successfully.", "success")
+        await flash("Access code refreshed successfully.", "success")
         return redirect(url_for('academia.panel'))
 
     except Exception as e:
         print(f"Error refreshing access code: {e}")
-        flash("An error occurred while refreshing the access code. Please try again.", "danger")
+        await flash("An error occurred while refreshing the access code. Please try again.", "danger")
         return redirect(url_for('academia.panel'))
 
 
 @bp.route("/account/resend_activation_email", methods=["GET"])
 @login_required
-def resend_activation_email():
-    if not current_user.email_verified:
+async def resend_activation_email():
+
+
+    args = await request.args    form = await request.form    if not current_user.email_verified:
         try:
             MailService.send_verification_email(current_user)
             current_user.activation_email_triggered_at = int(datetime.now(timezone.utc).timestamp() * 1000)
             db_session = get_db_session()
             db_session.commit()
-            flash("Activation email resent successfully. Please check your inbox.", "success")
+            await flash("Activation email resent successfully. Please check your inbox.", "success")
         except Exception as e:
             print(f"Error sending activation email: {e}")
-            flash("An error occurred while resending the activation email. Please try again.", "danger")
+            await flash("An error occurred while resending the activation email. Please try again.", "danger")
     else:
-        flash("Your email is already verified.", "info")
+        await flash("Your email is already verified.", "info")
 
     return redirect(request.referrer or url_for('dashboard.dashboard'))
 
 
 @bp.route("/account/choose-plan", methods=["POST"])
 @login_required
-def choose_plan():
-    plan: str = request.form.get('plan')
+async def choose_plan():
+
+
+    args = await request.args    form = await request.form    plan: str = form.get('plan')
     user: User = current_user
 
     if not user or not UserService.can_access_page(user, [Role.User.value]):
-        flash("You do not have permission to access this page.", "danger")
+        await flash("You do not have permission to access this page.", "danger")
         return redirect(url_for('dashboard.dashboard'))
 
     if plan not in [Plans.Student.value, Plans.StudentPlus.value, Plans.StudentPro.value]:
-        flash("Please select a valid plan option.", "warning")
+        await flash("Please select a valid plan option.", "warning")
         return redirect(url_for('account.panel'))
 
     db_session = get_db_session()
@@ -303,7 +321,7 @@ def choose_plan():
                 current_user.stripe_subscription_canceled = bool(subscription["cancel_at_period_end"])
                 db_session.commit()
 
-            flash(
+            await flash(
                 "Your subscription will be cancelled at the end of the current period and downgraded to the free Student plan.",
                 "success")
             return redirect(url_for("account.panel"))
@@ -345,7 +363,7 @@ def choose_plan():
                 user.stripe_subscription_expires_at = int(updated["items"].data[0]["current_period_end"] * 1000)
             db_session.commit()
 
-            flash("Your subscription was successfully updated.", "success")
+            await flash("Your subscription was successfully updated.", "success")
             return redirect(url_for("account.panel"))
 
         elif user.stripe_customer_id:
@@ -360,21 +378,23 @@ def choose_plan():
             return redirect(checkout_session.url)
 
         else:
-            flash("Stripe customer not found for this account.", "danger")
+            await flash("Stripe customer not found for this account.", "danger")
             return redirect(url_for("account.panel"))
 
     except Exception as e:
         logger.exception("Stripe subscription error")
-        flash("An error occurred while processing your subscription. Please try again.", "danger")
+        await flash("An error occurred while processing your subscription. Please try again.", "danger")
         return redirect(url_for("account.panel"))
 
 
 @bp.route("/account/stripe/success", methods=["GET"])
 @login_required
-def stripe_success():
-    session_id = request.args.get("session_id")
+async def stripe_success():
+
+
+    args = await request.args    form = await request.form    session_id = args.get("session_id")
     if not session_id:
-        flash("No session ID provided.", "danger")
+        await flash("No session ID provided.", "danger")
         return redirect(url_for("account.panel"))
 
     db_session = get_db_session()
@@ -383,12 +403,12 @@ def stripe_success():
 
         # if not paid or not completed
         if session["payment_status"] != "paid" or session["status"] != "complete":
-            flash("Payment was not successful. Please try again.", "danger")
+            await flash("Payment was not successful. Please try again.", "danger")
             return redirect(url_for("account.panel"))
 
         subscription_id = session.get("subscription")
         if not subscription_id:
-            flash("No subscription found in the session.", "danger")
+            await flash("No subscription found in the session.", "danger")
             return redirect(url_for('account.panel'))
 
         subscription = stripe.Subscription.retrieve(subscription_id)
@@ -415,16 +435,16 @@ def stripe_success():
                     subscription["items"].data[0]["current_period_end"] * 1000)
                 current_user.stripe_subscription_canceled = bool(subscription["cancel_at_period_end"])
                 db_session.commit()
-                flash(f"Your {current_user.plan} subscription is now active!", "success")
+                await flash(f"Your {current_user.plan} subscription is now active!", "success")
             else:
-                flash("No subscription items found. Contact support.", "danger")
+                await flash("No subscription items found. Contact support.", "danger")
 
         except Exception as e:
             logger.exception("Error processing subscription items")
-            flash("An error occurred while processing your subscription. Please try again.", "danger")
+            await flash("An error occurred while processing your subscription. Please try again.", "danger")
 
     except Exception as e:
         logger.exception("Error retrieving Stripe session")
-        flash("An error occurred while processing your payment. Please try again.", "danger")
+        await flash("An error occurred while processing your payment. Please try again.", "danger")
 
     return redirect(url_for("account.panel"))
