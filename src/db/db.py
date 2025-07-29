@@ -9,11 +9,13 @@ logger = logging.getLogger(__name__)
 db_session = None
 Base = declarative_base()
 
+
 def get_db_session():
     global db_session
     if db_session is None:
         raise RuntimeError("Database session not initialized. Call init_db() first.")
     return db_session
+
 
 def init_db(mode: str):
     if mode == "dev":
@@ -33,7 +35,10 @@ def init_db(mode: str):
         if not all([db_user, db_password, db_host, db_port, db_name]):
             raise ValueError("Missing one or more required DB environment variables.")
 
-    engine = create_engine(db_url)
+    engine = create_engine(db_url,
+                           pool_pre_ping=True,  # checks connection is alive before using it
+                           pool_recycle=3600  # closes & refreshes connections every 1 hour
+                           )
     global db_session
     logger.info('[Flask] Engine created with URL: %s', db_url)
     db_session = scoped_session(sessionmaker(bind=engine))
